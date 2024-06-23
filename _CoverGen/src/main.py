@@ -18,6 +18,8 @@ from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
+import sys
+sys.path.append('/content/CoverGen/_CoverGen/src')
 from mdx import run_mdx
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
