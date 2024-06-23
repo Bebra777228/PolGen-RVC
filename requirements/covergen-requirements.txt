@@ -2,7 +2,7 @@ deemix
 fairseq==0.12.2
 faiss-cpu==1.7.3
 ffmpeg-python>=0.2.0
-gradio==3.39.0
+gradio
 lib==4.0.0
 librosa==0.9.1
 numpy==1.23.5
@@ -20,3 +20,4 @@ torchcrepe==0.0.20
 tqdm==4.65.0
 yt_dlp==2023.7.6
 sox==1.4.1
+tensorboardX
