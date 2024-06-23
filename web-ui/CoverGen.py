@@ -93,8 +93,8 @@ def download_online_model(url, dir_name, progress=gr.Progress()):
 
         elif 'mega.nz' in url:
             m = Mega()
-            m.download_url(url, '/content/zips')
-            shutil.move('/content/zips/' + zip_name, '.')
+            m.download_url(url, extraction_folder)
+            shutil.move(extraction_folder + zip_name, '.')
 
         elif '/tree/main' in url:
             response = requests.get(url)
