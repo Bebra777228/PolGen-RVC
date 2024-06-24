@@ -1,3 +1,4 @@
+beautifulsoup4
 deemix
 fairseq==0.12.2
 faiss-cpu==1.7.3
