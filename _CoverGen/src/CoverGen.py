@@ -136,8 +136,8 @@ if __name__ == '__main__':
                         song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
     
                     with gr.Column():
-                        pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона (только вокал)', info='-24 - мужской голос || 24 - женский голос')
-                        pitch_all = gr.Slider(-12, 12, value=0, step=0.5, label='Общее изменение тона', info='Изменяет тон/тональность вокала и инструментов вместе. Незначительное изменение этого параметра ухудшает качество звука.')
+                        pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона (только вокал)', info='-24 - мужской голос || 24 - женский голос')
+                        pitch_all = gr.Slider(-12, 12, value=0, step=1, label='Общее изменение тона', info='Изменяет тон/тональность вокала и инструментов вместе. Незначительное изменение этого параметра ухудшает качество звука.')
                     show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                     show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
 
