@@ -23,3 +23,4 @@ yt_dlp==2023.7.6
 sox==1.4.1
 soxr==0.3.7
 tensorboardX
+audio_upscaler==0.1.4
