@@ -114,7 +114,7 @@ if __name__ == '__main__':
     with open(os.path.join(rvc_models_dir, 'public_models.json'), encoding='utf8') as infile:
         public_models = json.load(infile)
 
-    with gr.Blocks(title='CoverGen - Politrees') as app:
+    with gr.Blocks(title='CoverGen - Politrees (v0.1)') as app:
 
         with gr.Tab("Контакты"):
                 gr.Image(value=image_path)
