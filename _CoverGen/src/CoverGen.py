@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
                     with gr.Column() as yt_link_col:
                         song_input = gr.Text(label='Входная песня', info='Ссылка на песню на YouTube или полный путь к локальному файлу')
-                        show_file_upload_button = gr.Button('Загрузить файл с компьютера')
+                        show_file_upload_button = gr.Button('Загрузить файл с устройства')
     
                     with gr.Column(visible=False) as file_upload_col:
                         local_file = gr.File(label='Аудио-файл')
@@ -200,7 +200,7 @@ if __name__ == '__main__':
 
                 with gr.Row():
                     dl_output_message = gr.Text(label='Сообщение вывода', interactive=False, scale=3)
-                    download_btn = gr.Button('Загрузить модель', variant='primary', scale=1)
+                    download_btn = gr.Button('Загрузить модель', variant='primary', scale=1.5)
 
                 download_btn.click(download_online_model, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
@@ -224,7 +224,7 @@ if __name__ == '__main__':
                     model_upload_button.click(upload_local_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
 
     app.launch(
-        share=args.share_enabled,
+        share=True,
         enable_queue=True,
         server_name=None if not args.listen else (args.listen_host or '0.0.0.0'),
         server_port=args.listen_port,
