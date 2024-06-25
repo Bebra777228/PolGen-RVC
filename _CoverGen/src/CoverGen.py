@@ -115,8 +115,18 @@ if __name__ == '__main__':
 
     with gr.Blocks(title='CoverGen - Politrees (v0.1)') as app:
 
-        with gr.Tab("Контакты"):
-                gr.Image(value=image_path)
+        with gr.Tab("Велком/Контакты"):
+            gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
+            gr.Markdown("<center><h1>Добро пожаловать в CoverGen - Politrees (v0.1)</h1></center>")
+            with gr.Row():
+                with gr.Column():
+                    gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
+                    gr.HTML("<center><h2><a href='https://vk.com/artem__bebroy'>ВКонтакте (страница)</a></h2></center>")
+                with gr.Column():
+                    gr.HTML("<center><h2><a href='https://t.me/pol1trees'>Telegram Канал</a></h2></center>")
+                    gr.HTML("<center><h2><a href='https://t.me/+GMTP7hZqY0E4OGRi'>Telegram Чат</a></h2></center>")
+
+            gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub проекта</a></h2></center>")
 
         with gr.Tab("CoverGen"):
             with gr.Accordion('Основные настройки'):
@@ -154,20 +164,20 @@ if __name__ == '__main__':
                 keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал')
 
             with gr.Accordion('Настройки сведения аудио', open=False):
-                gr.Markdown('### Изменение громкости (децибел)')
-                with gr.Row():
+                gr.Markdown('<center><h3>Изменение громкости (децибел)</h3></center>')
+                with gr.Row(equal_height=False):
                     main_gain = gr.Slider(-20, 20, value=0, step=1, label='Основной вокал')
                     backup_gain = gr.Slider(-20, 20, value=0, step=1, label='Дополнительный вокал (бэки)')
                     inst_gain = gr.Slider(-20, 20, value=0, step=1, label='Музыка')
 
-                gr.Markdown('### Управление реверберацией в AI-вокале')
-                with gr.Row():
+
+                gr.Markdown('<center><h3>Управление реверберацией в AI-вокале</h3></center>')
+                with gr.Row(equal_height=False):
                     reverb_rm_size = gr.Slider(0, 1, value=0.15, label='Размер комнаты', info='Чем больше комната, тем дольше время реверберации')
                     reverb_wet = gr.Slider(0, 1, value=0.2, label='Уровень влажности', info='Уровень AI-вокала с реверберацией')
                     reverb_dry = gr.Slider(0, 1, value=0.8, label='Уровень сухости', info='Уровень AI-вокала без реверберации')
                     reverb_damping = gr.Slider(0, 1, value=0.7, label='Уровень демпфирования', info='Поглощение высоких частот в реверберации')
 
-                gr.Markdown('### Формат выходного аудио')
                 output_format = gr.Dropdown(['mp3', 'wav'], value='mp3', label='Тип выходного файла', info='mp3: малый размер файла, хорошее качество. wav: большой размер файла, лучшее качество')
 
             with gr.Row():
@@ -200,7 +210,7 @@ if __name__ == '__main__':
 
                 with gr.Row():
                     dl_output_message = gr.Text(label='Сообщение вывода', interactive=False, scale=3)
-                    download_btn = gr.Button('Загрузить модель', variant='primary', scale=1.5)
+                    download_btn = gr.Button('Загрузить модель', variant='primary', scale=1)
 
                 download_btn.click(download_online_model, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
