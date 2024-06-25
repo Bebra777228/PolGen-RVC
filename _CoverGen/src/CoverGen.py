@@ -164,26 +164,26 @@ if __name__ == '__main__':
                 keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал')
 
             with gr.Accordion('Настройки сведения аудио', open=False):
-                gr.Markdown('<center><h3>Изменение громкости (децибел)</h3></center>')
+                gr.Markdown('<center><h2>Изменение громкости (децибел)</h2></center>')
                 with gr.Row():
                     main_gain = gr.Slider(-20, 20, value=0, step=1, label='Основной вокал')
                     backup_gain = gr.Slider(-20, 20, value=0, step=1, label='Дополнительный вокал (бэки)')
                     inst_gain = gr.Slider(-20, 20, value=0, step=1, label='Музыка')
 
 
-                gr.Markdown('<center><h3>Управление реверберацией в AI-вокале</h3></center>')
+                gr.Markdown('<center><h2>Управление реверберацией в AI-вокале</h2></center>')
                 with gr.Row():
                     reverb_rm_size = gr.Slider(0, 1, value=0.15, label='Размер комнаты', info='Чем больше комната, тем дольше время реверберации')
                     reverb_wet = gr.Slider(0, 1, value=0.2, label='Уровень влажности', info='Уровень AI-вокала с реверберацией')
                     reverb_dry = gr.Slider(0, 1, value=0.8, label='Уровень сухости', info='Уровень AI-вокала без реверберации')
                     reverb_damping = gr.Slider(0, 1, value=0.7, label='Уровень демпфирования', info='Поглощение высоких частот в реверберации')
 
-                output_format = gr.Dropdown(['mp3', 'wav'], value='mp3', label='Тип выходного файла', info='mp3: малый размер файла, хорошее качество. wav: большой размер файла, лучшее качество')
 
             with gr.Row():
                 generate_btn = gr.Button("Генерировать", variant='primary', scale = 2)
                 ai_cover = gr.Audio(label='AI-кавер', show_share_button=False, scale = 5)
-                clear_btn = gr.ClearButton(value='Сброс параметров', components=[song_input, rvc_model, keep_files, local_file], scale = 0.5)
+                output_format = gr.Dropdown(['mp3', 'wav'], value='mp3', label='Тип выходного файла')
+                clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file], scale = 0.5)
 
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
