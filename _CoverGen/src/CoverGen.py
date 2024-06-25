@@ -162,7 +162,7 @@ if __name__ == '__main__':
                         f0_method = gr.Dropdown(['rmvpe', 'mangio-crepe'], value='rmvpe', label='Метод выделения тона', info='Лучший вариант - rmvpe (чистота голоса), затем mangio-crepe (более плавный голос)')
                         crepe_hop_length = gr.Slider(32, 320, value=128, step=1, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
-                keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал')
+                keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал', visible=False)
 
             with gr.Accordion('Настройки сведения аудио', open=False):
                 gr.Markdown('<center><h2>Изменение громкости (децибел)</h2></center>')
@@ -181,24 +181,33 @@ if __name__ == '__main__':
 
 
             with gr.Row():
-                generate_btn = gr.Button("Генерировать", variant='primary', scale = 2)
-                ai_cover = gr.Audio(label='AI-кавер', show_share_button=False, scale = 5)
-                output_format = gr.Dropdown(['mp3', 'wav'], value='mp3', label='Тип выходного файла')
-                clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file], scale = 0.5)
+                with gr.Column(scale=2, min_width=100, min_height=100):
+                    generate_btn = gr.Button("Генерировать", variant='primary', scale=1, min_width=100, min_height=100)
+
+                with gr.Column(scale=5):
+                    ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
+                    with gr.Accordion("Промежуточные аудиофайлы", open=False):
+                        main_vocals_dereverb = gr.Audio(label='Вокал', show_share_button=False)
+                        backup_vocals = gr.Audio(label='Бэк вокал', show_share_button=False)
+                        instrumentals = gr.Audio(label='Инструментал', show_share_button=False)
+
+                with gr.Column(scale=1, min_width=100, min_height=100):
+                    output_format = gr.Dropdown(['mp3', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
+                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file], min_width=100, min_height=100)
 
 
-            ref_btn.click(update_models_list, None, outputs=rvc_model)
+            ref_btn.click(lambda: [None, update_models_list()], outputs=[rvc_model, rvc_model])
             is_webui = gr.Number(value=1, visible=False)
             generate_btn.click(song_cover_pipeline,
                                inputs=[song_input, rvc_model, pitch, keep_files, is_webui, main_gain, backup_gain,
                                        inst_gain, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length,
                                        protect, pitch_all, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                                        output_format],
-                               outputs=[ai_cover])
-            clear_btn.click(lambda: [0, 0, 0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe', 128, 0, 0.15, 0.2, 0.8, 0.7, 'mp3', None],
+                               outputs=[ai_cover, main_vocals_dereverb, backup_vocals, instrumentals])
+            clear_btn.click(lambda: [0, 0, 0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe', 128, 0, 0.15, 0.2, 0.8, 0.7, 'mp3', None, None, None, None],
                             outputs=[pitch, main_gain, backup_gain, inst_gain, index_rate, filter_radius, rms_mix_rate,
-                                     protect, f0_method, crepe_hop_length, pitch_all, reverb_rm_size, reverb_wet,
-                                     reverb_dry, reverb_damping, output_format, ai_cover])
+                                    protect, f0_method, crepe_hop_length, pitch_all, reverb_rm_size, reverb_wet,
+                                    reverb_dry, reverb_damping, output_format, ai_cover, main_vocals_dereverb, backup_vocals, instrumentals])
 
 #        with gr.Tab("Video-CoverGen"):
 #            gr.Label('Это на будущее, если найду силы сделать)', show_label=False)
