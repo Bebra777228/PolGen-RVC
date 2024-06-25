@@ -165,14 +165,14 @@ if __name__ == '__main__':
 
             with gr.Accordion('Настройки сведения аудио', open=False):
                 gr.Markdown('<center><h3>Изменение громкости (децибел)</h3></center>')
-                with gr.Row(equal_height=False):
+                with gr.Row():
                     main_gain = gr.Slider(-20, 20, value=0, step=1, label='Основной вокал')
                     backup_gain = gr.Slider(-20, 20, value=0, step=1, label='Дополнительный вокал (бэки)')
                     inst_gain = gr.Slider(-20, 20, value=0, step=1, label='Музыка')
 
 
                 gr.Markdown('<center><h3>Управление реверберацией в AI-вокале</h3></center>')
-                with gr.Row(equal_height=False):
+                with gr.Row():
                     reverb_rm_size = gr.Slider(0, 1, value=0.15, label='Размер комнаты', info='Чем больше комната, тем дольше время реверберации')
                     reverb_wet = gr.Slider(0, 1, value=0.2, label='Уровень влажности', info='Уровень AI-вокала с реверберацией')
                     reverb_dry = gr.Slider(0, 1, value=0.8, label='Уровень сухости', info='Уровень AI-вокала без реверберации')
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
                 with gr.Row():
                     dl_output_message = gr.Text(label='Сообщение вывода', interactive=False, scale=3)
-                    download_btn = gr.Button('Загрузить модель', variant='primary', scale=1)
+                    download_btn = gr.Button('Загрузить модель', variant='primary', scale=1.5)
 
                 download_btn.click(download_online_model, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
