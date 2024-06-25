@@ -216,6 +216,17 @@ def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb
     )
 
     with AudioFile(audio_path) as f:
+        with AudioFile(output_path, 'w', f.samplerate, 2) as o:
+            while f.tell() < f.frames:
+                chunk = f.read(int(f.samplerate))
+                chunk = np.tile(chunk, (2, 1)).T
+                effected = board(chunk, f.samplerate, reset=False)
+                o.write(effected)
+
+    return output_path
+
+'''''  -  старый реверб
+    with AudioFile(audio_path) as f:
         with AudioFile(output_path, 'w', f.samplerate, f.num_channels) as o:
             while f.tell() < f.frames:
                 chunk = f.read(int(f.samplerate))
@@ -223,15 +234,6 @@ def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb
                 o.write(effected)
 
     return output_path
-
-'''''  -  это на замену верхнему
-    with AudioFile(audio_path) as f:
-        with AudioFile(output_path, 'w', f.samplerate, 2) as o:
-            while f.tell() < f.frames:
-                chunk = f.read(int(f.samplerate))
-                chunk = np.tile(chunk, (2, 1)).T
-                effected = board(chunk, f.samplerate, reset=False)
-            o.write(effected)
 '''''
 
 
