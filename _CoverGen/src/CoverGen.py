@@ -137,18 +137,19 @@ if __name__ == '__main__':
 
                     with gr.Column() as yt_link_col:
                         song_input = gr.Text(label='Входная песня', info='Ссылка на песню на YouTube или полный путь к локальному файлу')
-                        show_file_upload_button = gr.Button('Загрузить файл с устройства')
+                        #show_file_upload_button = gr.Button('Загрузить файл с устройства')
+                        song_input_file = gr.UploadButton('Загрузить файл с устройства', file_types=['audio'], variant='primary')
     
                     with gr.Column(visible=False) as file_upload_col:
                         local_file = gr.File(label='Аудио-файл')
-                        song_input_file = gr.UploadButton('Загрузить 📂', file_types=['audio'], variant='primary')
+                        #song_input_file = gr.UploadButton('Загрузить 📂', file_types=['audio'], variant='primary')
                         show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к файлу')
                         song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
     
                     with gr.Column():
                         pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона (только вокал)', info='-24 - мужской голос || 24 - женский голос')
                         pitch_all = gr.Slider(-12, 12, value=0, step=1, label='Общее изменение тона', info='Изменяет тон/тональность вокала и инструментов вместе. Незначительное изменение этого параметра ухудшает качество звука.')
-                    show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
+                    #show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                     show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
