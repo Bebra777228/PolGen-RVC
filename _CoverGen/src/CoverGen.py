@@ -187,6 +187,7 @@ if __name__ == '__main__':
                 with gr.Column(scale=5):
                     ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
                     with gr.Accordion("Промежуточные аудиофайлы", open=False):
+                        ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
                         main_vocals_dereverb = gr.Audio(label='Вокал', show_share_button=False)
                         backup_vocals = gr.Audio(label='Бэк вокал', show_share_button=False)
                         instrumentals = gr.Audio(label='Инструментал', show_share_button=False)
@@ -203,11 +204,11 @@ if __name__ == '__main__':
                                        inst_gain, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length,
                                        protect, pitch_all, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                                        output_format],
-                               outputs=[ai_cover, main_vocals_dereverb, backup_vocals, instrumentals])
-            clear_btn.click(lambda: [0, 0, 0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe', 128, 0, 0.15, 0.2, 0.8, 0.7, 'mp3', None, None, None, None],
+                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
+            clear_btn.click(lambda: [0, 0, 0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe', 128, 0, 0.15, 0.2, 0.8, 0.7, 'mp3', None, None, None, None, None],
                             outputs=[pitch, main_gain, backup_gain, inst_gain, index_rate, filter_radius, rms_mix_rate,
                                     protect, f0_method, crepe_hop_length, pitch_all, reverb_rm_size, reverb_wet,
-                                    reverb_dry, reverb_damping, output_format, ai_cover, main_vocals_dereverb, backup_vocals, instrumentals])
+                                    reverb_dry, reverb_damping, output_format, ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
 
 #        with gr.Tab("Video-CoverGen"):
 #            gr.Label('Это на будущее, если найду силы сделать)', show_label=False)
