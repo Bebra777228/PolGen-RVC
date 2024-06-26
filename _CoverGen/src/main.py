@@ -14,7 +14,7 @@ import numpy as np
 import soundfile as sf
 import sox
 import yt_dlp
-from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter
+from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, Limiter, Delay, NoiseGate
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
@@ -203,15 +203,24 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     gc.collect()
 
 
-def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping):
+def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, 
+                    low_shelf_gain, high_shelf_gain, limiter_threshold, 
+                    compressor_ratio, compressor_threshold, delay_time, delay_feedback, 
+                    noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release):
+
     output_path = f'{os.path.splitext(audio_path)[0]}_mixed.wav'
 
     # Initialize audio effects plugins
     board = Pedalboard(
         [
             HighpassFilter(),
-            Compressor(ratio=4, threshold_db=-15),
-            Reverb(room_size=reverb_rm_size, dry_level=reverb_dry, wet_level=reverb_wet, damping=reverb_damping)
+            Compressor(ratio=compressor_ratio, threshold_db=compressor_threshold),
+            NoiseGate(threshold_db=noise_gate_threshold, ratio=noise_gate_ratio, attack_ms=noise_gate_attack, release_ms=noise_gate_release),
+            Reverb(room_size=reverb_rm_size, dry_level=reverb_dry, wet_level=reverb_wet, damping=reverb_damping),
+            LowShelfFilter(gain_db=low_shelf_gain),
+            HighShelfFilter(gain_db=high_shelf_gain),
+            Limiter(threshold_db=limiter_threshold),
+            Delay(delay_seconds=delay_time, feedback=delay_feedback)
          ]
     )
 
@@ -247,8 +256,11 @@ def combine_audio(audio_paths, output_path, main_gain, backup_gain, inst_gain, o
 def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                         is_webui=0, main_gain=0, backup_gain=0, inst_gain=0, index_rate=0.5, filter_radius=3,
                         rms_mix_rate=0.25, f0_method='rmvpe', crepe_hop_length=128, protect=0.33, pitch_change_all=0,
-                        reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, output_format='mp3',
-                        progress=gr.Progress()):
+                        reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7,
+                        low_shelf_gain=0, high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15,
+                        delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2, 
+                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress()):
+
     try:
         if not song_input or not voice_model:
             raise_exception('Ensure that the song input field and voice model field is filled.', is_webui)
@@ -308,7 +320,10 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
             voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
 
         display_progress('[~] Applying audio effects to Vocals...', 0.8, is_webui, progress)
-        ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping)
+        ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
+                                                  low_shelf_gain, high_shelf_gain, limiter_threshold,
+                                                  compressor_ratio, compressor_threshold, delay_time, delay_feedback,
+                                                  noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release)
 
         if pitch_change_all != 0:
             display_progress('[~] Applying overall pitch change', 0.85, is_webui, progress)
