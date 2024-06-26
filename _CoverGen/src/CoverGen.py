@@ -113,11 +113,11 @@ if __name__ == '__main__':
     with open(os.path.join(rvc_models_dir, 'public_models.json'), encoding='utf8') as infile:
         public_models = json.load(infile)
 
-    with gr.Blocks(title='CoverGen - Politrees (v0.2)') as app:
+    with gr.Blocks(title='CoverGen - Politrees (v0.3)') as app:
 
         with gr.Tab("Велком/Контакты"):
             gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
-            gr.Markdown("<center><h1>Добро пожаловать в CoverGen - Politrees (v0.2)</h1></center>")
+            gr.Markdown("<center><h1>Добро пожаловать в CoverGen - Politrees (v0.3)</h1></center>")
             with gr.Row():
                 with gr.Column():
                     gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
