@@ -149,6 +149,7 @@ if __name__ == '__main__':
                     with gr.Column():
                         pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона (только вокал)', info='-24 - мужской голос || 24 - женский голос')
                         pitch_all = gr.Slider(-12, 12, value=0, step=1, visible=False, label='Общее изменение тона', info='Изменяет тон/тональность вокала и инструментов вместе. Незначительное изменение этого параметра ухудшает качество звука.')
+                        pitch_change_ai_vocals = gr.Checkbox(label='Применить преобразованный вокал к общему изменению тона')
                     #show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                     show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
 
@@ -218,7 +219,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
                     output_format = gr.Dropdown(['mp3', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
-                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file], min_width=100, min_height=100)
+                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file, pitch_change_ai_vocals], min_width=100, min_height=100)
 
 
             ref_btn.click(lambda: [None, update_models_list()], outputs=[rvc_model, rvc_model])
@@ -229,7 +230,7 @@ if __name__ == '__main__':
                                       protect, pitch_all, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                                       low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio,
                                       compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
-                                      noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format],
+                                      noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format, pitch_change_ai_vocals],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
             clear_btn.click(lambda: [0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe', 128, 
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0, 
