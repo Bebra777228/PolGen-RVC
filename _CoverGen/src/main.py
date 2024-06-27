@@ -259,7 +259,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                         reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0,
                         low_shelf_gain=0, high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15,
                         delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2,
-                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), ai_vocals_mixed_path=False):
+                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), pitch_change_ai_vocals=False):
 
     try:
         if not song_input or not voice_model:
