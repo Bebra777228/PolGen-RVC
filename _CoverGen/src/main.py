@@ -96,7 +96,7 @@ def get_rvc_model(voice_model, is_webui):
             rvc_index_filename = file
 
     if rvc_model_filename is None:
-        error_msg = f'No model file exists in {model_dir}.'
+        error_msg = f'В каталоге {model_dir} отсутствует файл модели.'
         raise_exception(error_msg, is_webui)
 
     return os.path.join(model_dir, rvc_model_filename), os.path.join(model_dir, rvc_index_filename) if rvc_index_filename else ''
@@ -166,7 +166,7 @@ def display_progress(message, percent, is_webui, progress=None):
 def preprocess_song(song_input, mdx_model_params, song_id, is_webui, input_type, progress=None):
     keep_orig = False
     if input_type == 'yt':
-        display_progress('[~] Downloading song...', 0, is_webui, progress)
+        display_progress('[~] Загрузка песни...', 0, is_webui, progress)
         song_link = song_input.split('&')[0]
         orig_song_path = yt_download(song_link)
     elif input_type == 'local':
@@ -178,13 +178,13 @@ def preprocess_song(song_input, mdx_model_params, song_id, is_webui, input_type,
     song_output_dir = os.path.join(output_dir, song_id)
     orig_song_path = convert_to_stereo(orig_song_path)
 
-    display_progress('[~] Separating Vocals from Instrumental...', 0.1, is_webui, progress)
+    display_progress('[~] Отделение вокала от инструментала...', 0.1, is_webui, progress)
     vocals_path, instrumentals_path = run_mdx(mdx_model_params, song_output_dir, os.path.join(mdxnet_models_dir, 'UVR-MDX-NET-Voc_FT.onnx'), orig_song_path, denoise=True, keep_orig=keep_orig)
 
-    display_progress('[~] Separating Main Vocals from Backup Vocals...', 0.2, is_webui, progress)
+    display_progress('[~] Разделение основного вокала и бэк-вокала...', 0.2, is_webui, progress)
     backup_vocals_path, main_vocals_path = run_mdx(mdx_model_params, song_output_dir, os.path.join(mdxnet_models_dir, 'UVR_MDXNET_KARA_2.onnx'), vocals_path, suffix='Backup', invert_suffix='Main', denoise=True)
 
-    display_progress('[~] Applying DeReverb to Vocals...', 0.3, is_webui, progress)
+    display_progress('[~] Применение DeReverb к вокалу...', 0.3, is_webui, progress)
     _, main_vocals_dereverb_path = run_mdx(mdx_model_params, song_output_dir, os.path.join(mdxnet_models_dir, 'Reverb_HQ_By_FoxJoy.onnx'), main_vocals_path, invert_suffix='DeReverb', exclude_main=True, denoise=True)
 
     return orig_song_path, vocals_path, instrumentals_path, main_vocals_path, backup_vocals_path, main_vocals_dereverb_path
@@ -263,9 +263,9 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
 
     try:
         if not song_input or not voice_model:
-            raise_exception('Ensure that the song input field and voice model field is filled.', is_webui)
+            raise_exception('Убедитесь, что поле ввода песни и поле модели голоса заполнены.', is_webui)
 
-        display_progress('[~] Starting AI Cover Generation Pipeline...', 0, is_webui, progress)
+        display_progress('[~] Запуск конвейера генерации AI-кавера...', 0, is_webui, progress)
 
         with open(os.path.join(mdxnet_models_dir, 'model_data.json')) as infile:
             mdx_model_params = json.load(infile)
@@ -275,7 +275,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
             input_type = 'yt'
             song_id = get_youtube_video_id(song_input)
             if song_id is None:
-                error_msg = 'Invalid YouTube url.'
+                error_msg = 'Неверный URL-адрес YouTube.'
                 raise_exception(error_msg, is_webui)
 
         # local audio file
@@ -285,7 +285,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
             if os.path.exists(song_input):
                 song_id = get_hash(song_input)
             else:
-                error_msg = f'{song_input} does not exist.'
+                error_msg = f'{song_input} не существует.'
                 song_id = None
                 raise_exception(error_msg, is_webui)
 
@@ -316,25 +316,25 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
             os.remove(ai_cover_path)
 
         if not os.path.exists(ai_vocals_path):
-            display_progress('[~] Converting voice using RVC...', 0.5, is_webui, progress)
+            display_progress('[~] Преобразование голоса с помощью RVC...', 0.5, is_webui, progress)
             voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
 
-        display_progress('[~] Applying audio effects to Vocals...', 0.8, is_webui, progress)
+        display_progress('[~] Применение аудиоэффектов к вокалу...', 0.8, is_webui, progress)
         ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                                                   low_shelf_gain, high_shelf_gain, limiter_threshold,
                                                   compressor_ratio, compressor_threshold, delay_time, delay_feedback,
                                                   noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release)
 
         if pitch_change_all != 0:
-            display_progress('[~] Applying overall pitch change', 0.85, is_webui, progress)
+            display_progress('[~] Общее изменение высоты тона...', 0.85, is_webui, progress)
             instrumentals_path = pitch_shift(instrumentals_path, pitch_change_all)
             backup_vocals_path = pitch_shift(backup_vocals_path, pitch_change_all)
 
-        display_progress('[~] Combining AI Vocals and Instrumentals...', 0.9, is_webui, progress)
+        display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
         combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
 
         if not keep_files:
-            display_progress('[~] Removing intermediate audio files...', 0.95, is_webui, progress)
+            display_progress('[~] Удаление промежуточных аудиофайлов...', 0.95, is_webui, progress)
             intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
             if pitch_change_all != 0:
                 intermediate_files += [instrumentals_path, backup_vocals_path]
@@ -372,7 +372,7 @@ if __name__ == '__main__':
 
     rvc_dirname = args.rvc_dirname
     if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
-        raise Exception(f'The folder {os.path.join(rvc_models_dir, rvc_dirname)} does not exist.')
+        raise Exception(f'Папка {os.path.join(rvc_models_dir, rvc_dirname)} не найдена.')
 
     cover_path = song_cover_pipeline(args.song_input, rvc_dirname, args.pitch_change, args.keep_files,
                                      main_gain=args.main_vol, backup_gain=args.backup_vol, inst_gain=args.inst_vol,
@@ -383,4 +383,4 @@ if __name__ == '__main__':
                                      reverb_rm_size=args.reverb_size, reverb_wet=args.reverb_wetness,
                                      reverb_dry=args.reverb_dryness, reverb_damping=args.reverb_damping,
                                      output_format=args.output_format)
-    print(f'[+] Cover generated at {cover_path}')
+    print(f'[+] Кавер создан по пути {cover_path}')
