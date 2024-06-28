@@ -326,29 +326,35 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                                                 noise_gate_attack, noise_gate_release)
 
         if pitch_change_all != 0:
-            display_progress('[~] Общее изменение тона...', 0.85, is_webui, progress)
             backup_vocals_path_ap = pitch_shift(backup_vocals_path, pitch_change_all)
             instrumentals_path_ap = pitch_shift(instrumentals_path, pitch_change_all)
 
             if pitch_change_ai_vocals:
-                ai_vocals_mixed_path = pitch_shift(ai_vocals_mixed_path, pitch_change_all)
+                ai_vocals_mixed_path_ap = pitch_shift(ai_vocals_mixed_path, pitch_change_all)
+                vocals_to_combine = ai_vocals_mixed_path_ap
+            else:
+                vocals_to_combine = ai_vocals_mixed_path
 
             display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
-            combine_audio([ai_vocals_mixed_path, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+            combine_audio([vocals_to_combine, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+
+            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path, backup_vocals_path_ap, instrumentals_path_ap]
+            if pitch_change_ai_vocals:
+                intermediate_files.append(ai_vocals_mixed_path_ap)
         else:
             display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
             combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
 
+            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
+
         if not keep_files:
             display_progress('[~] Удаление промежуточных аудиофайлов...', 0.95, is_webui, progress)
-            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
-            if pitch_change_all != 0:
-                intermediate_files += [backup_vocals_path_ap, instrumentals_path_ap]
             for file in intermediate_files:
                 if file and os.path.exists(file):
                     os.remove(file)
 
         return [ai_cover_path, ai_vocals_path, main_vocals_dereverb_path, backup_vocals_path, instrumentals_path]
+
 
     except Exception as e:
         raise_exception(str(e), is_webui)
