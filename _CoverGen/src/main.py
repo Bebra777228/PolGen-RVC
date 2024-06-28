@@ -14,7 +14,13 @@ import numpy as np
 import soundfile as sf
 import sox
 import yt_dlp
-from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, Limiter, Delay, NoiseGate
+
+from pedalboard import (
+    Pedalboard, Reverb, Compressor, HighpassFilter, 
+    LowShelfFilter, HighShelfFilter, Limiter, Delay, 
+    NoiseGate, Distortion, Chorus, Clipping
+    )
+
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
@@ -206,7 +212,8 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
 def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                     low_shelf_gain, high_shelf_gain, limiter_threshold,
                     compressor_ratio, compressor_threshold, delay_time, delay_feedback,
-                    noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release):
+                    noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
+                    drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold):
 
     output_path = f'{os.path.splitext(audio_path)[0]}_mixed.wav'
 
@@ -220,7 +227,10 @@ def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb
             LowShelfFilter(gain_db=low_shelf_gain),
             HighShelfFilter(gain_db=high_shelf_gain),
             Limiter(threshold_db=limiter_threshold),
-            Delay(delay_seconds=delay_time, feedback=delay_feedback)
+            Delay(delay_seconds=delay_time, feedback=delay_feedback),
+            Distortion(drive_db=drive_db),
+            Chorus(rate_hz=chorus_rate_hz, depth=chorus_depth, centre_delay_ms=chorus_centre_delay_ms, feedback=chorus_feedback, mix=chorus_mix),
+            Clipping(threshold_db=clipping_threshold)
          ]
     )
 
@@ -259,7 +269,8 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                         reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0,
                         low_shelf_gain=0, high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15,
                         delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2,
-                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), pitch_change_ai_vocals=False):
+                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), pitch_change_ai_vocals=False,
+                        drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, chorus_mix=0.5, clipping_threshold=-6.0):
 
     try:
         if not song_input or not voice_model:
@@ -320,10 +331,11 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
 
         display_progress('[~] Применение аудиоэффектов к вокалу...', 0.8, is_webui, progress)
         ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry,
-                                                reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain, 
-                                                limiter_threshold, compressor_ratio, compressor_threshold, 
-                                                delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio, 
-                                                noise_gate_attack, noise_gate_release)
+                                                reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain,
+                                                limiter_threshold, compressor_ratio, compressor_threshold,
+                                                delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio,
+                                                noise_gate_attack, noise_gate_release, drive_db, chorus_rate_hz, 
+                                                chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold)
 
         if pitch_change_all != 0:
             backup_vocals_path_ap = pitch_shift(backup_vocals_path, pitch_change_all)
