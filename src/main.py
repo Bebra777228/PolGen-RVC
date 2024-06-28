@@ -14,7 +14,13 @@ import numpy as np
 import soundfile as sf
 import sox
 import yt_dlp
-from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, Limiter, Delay, NoiseGate
+
+from pedalboard import (
+    Pedalboard, Reverb, Compressor, HighpassFilter, 
+    LowShelfFilter, HighShelfFilter, Limiter, Delay, 
+    NoiseGate, Distortion, Chorus, Clipping
+    )
+
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
@@ -136,7 +142,7 @@ def convert_to_stereo(audio_path):
 
 
 def pitch_shift(audio_path, pitch_change):
-    output_path = f'{os.path.splitext(audio_path)[0]}_p{pitch_change}.wav'
+    output_path = f'{os.path.splitext(audio_path)[0]}_overall_pitch.wav'
     if not os.path.exists(output_path):
         y, sr = sf.read(audio_path)
         tfm = sox.Transformer()
@@ -203,10 +209,11 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     gc.collect()
 
 
-def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, 
-                    low_shelf_gain, high_shelf_gain, limiter_threshold, 
-                    compressor_ratio, compressor_threshold, delay_time, delay_feedback, 
-                    noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release):
+def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
+                    low_shelf_gain, high_shelf_gain, limiter_threshold,
+                    compressor_ratio, compressor_threshold, delay_time, delay_feedback,
+                    noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
+                    drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold):
 
     output_path = f'{os.path.splitext(audio_path)[0]}_mixed.wav'
 
@@ -216,11 +223,14 @@ def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb
             HighpassFilter(),
             Compressor(ratio=compressor_ratio, threshold_db=compressor_threshold),
             NoiseGate(threshold_db=noise_gate_threshold, ratio=noise_gate_ratio, attack_ms=noise_gate_attack, release_ms=noise_gate_release),
-            Reverb(room_size=reverb_rm_size, dry_level=reverb_dry, wet_level=reverb_wet, damping=reverb_damping),
+            Reverb(room_size=reverb_rm_size, dry_level=reverb_dry, wet_level=reverb_wet, damping=reverb_damping, width=reverb_width),
             LowShelfFilter(gain_db=low_shelf_gain),
             HighShelfFilter(gain_db=high_shelf_gain),
             Limiter(threshold_db=limiter_threshold),
-            Delay(delay_seconds=delay_time, feedback=delay_feedback)
+            Delay(delay_seconds=delay_time, feedback=delay_feedback),
+            Distortion(drive_db=drive_db),
+            Chorus(rate_hz=chorus_rate_hz, depth=chorus_depth, centre_delay_ms=chorus_centre_delay_ms, feedback=chorus_feedback, mix=chorus_mix),
+            Clipping(threshold_db=clipping_threshold)
          ]
     )
 
@@ -256,10 +266,11 @@ def combine_audio(audio_paths, output_path, main_gain, backup_gain, inst_gain, o
 def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                         is_webui=0, main_gain=0, backup_gain=0, inst_gain=0, index_rate=0.5, filter_radius=3,
                         rms_mix_rate=0.25, f0_method='rmvpe', crepe_hop_length=128, protect=0.33, pitch_change_all=0,
-                        reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7,
+                        reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0,
                         low_shelf_gain=0, high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15,
-                        delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2, 
-                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress()):
+                        delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2,
+                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), pitch_change_ai_vocals=False,
+                        drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, chorus_mix=0.5, clipping_threshold=-6.0):
 
     try:
         if not song_input or not voice_model:
@@ -306,43 +317,56 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                 orig_song_path, instrumentals_path, main_vocals_dereverb_path, backup_vocals_path = paths
 
         # pitch_change = pitch_change * 12 + pitch_change_all
-        ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_p{pitch_change}_i{index_rate}_fr{filter_radius}_rms{rms_mix_rate}_pro{protect}_{f0_method}{"" if f0_method != "mangio-crepe" else f"_{crepe_hop_length}"}.wav')
+        ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_voice.wav')
         ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
 
-        # Remove old files
-        if os.path.exists(ai_vocals_path):
-            os.remove(ai_vocals_path)
         if os.path.exists(ai_cover_path):
             os.remove(ai_cover_path)
+        if os.path.exists(ai_vocals_path):
+            os.remove(ai_vocals_path)
 
         if not os.path.exists(ai_vocals_path):
             display_progress('[~] Преобразование голоса с помощью RVC...', 0.5, is_webui, progress)
             voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
 
         display_progress('[~] Применение аудиоэффектов к вокалу...', 0.8, is_webui, progress)
-        ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
-                                                  low_shelf_gain, high_shelf_gain, limiter_threshold,
-                                                  compressor_ratio, compressor_threshold, delay_time, delay_feedback,
-                                                  noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release)
+        ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry,
+                                                reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain,
+                                                limiter_threshold, compressor_ratio, compressor_threshold,
+                                                delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio,
+                                                noise_gate_attack, noise_gate_release, drive_db, chorus_rate_hz, 
+                                                chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold)
 
         if pitch_change_all != 0:
-            display_progress('[~] Общее изменение высоты тона...', 0.85, is_webui, progress)
-            instrumentals_path = pitch_shift(instrumentals_path, pitch_change_all)
-            backup_vocals_path = pitch_shift(backup_vocals_path, pitch_change_all)
+            backup_vocals_path_ap = pitch_shift(backup_vocals_path, pitch_change_all)
+            instrumentals_path_ap = pitch_shift(instrumentals_path, pitch_change_all)
 
-        display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
-        combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+            if pitch_change_ai_vocals:
+                ai_vocals_mixed_path_ap = pitch_shift(ai_vocals_mixed_path, pitch_change_all)
+                vocals_to_combine = ai_vocals_mixed_path_ap
+            else:
+                vocals_to_combine = ai_vocals_mixed_path
+
+            display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
+            combine_audio([vocals_to_combine, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+
+            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path, backup_vocals_path_ap, instrumentals_path_ap]
+            if pitch_change_ai_vocals:
+                intermediate_files.append(ai_vocals_mixed_path_ap)
+        else:
+            display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
+            combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+
+            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
 
         if not keep_files:
             display_progress('[~] Удаление промежуточных аудиофайлов...', 0.95, is_webui, progress)
-            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
-            if pitch_change_all != 0:
-                intermediate_files += [instrumentals_path, backup_vocals_path]
             for file in intermediate_files:
                 if file and os.path.exists(file):
                     os.remove(file)
 
         return [ai_cover_path, ai_vocals_path, main_vocals_dereverb_path, backup_vocals_path, instrumentals_path]
+
 
     except Exception as e:
         raise_exception(str(e), is_webui)
