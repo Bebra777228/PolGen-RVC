@@ -260,11 +260,6 @@ def combine_audio(audio_paths, output_path, main_gain, backup_gain, inst_gain, o
     main_vocal_audio = AudioSegment.from_wav(audio_paths[0]) - 4 + main_gain
     backup_vocal_audio = AudioSegment.from_wav(audio_paths[1]) - 6 + backup_gain
     instrumental_audio = AudioSegment.from_wav(audio_paths[2]) - 7 + inst_gain
-    
-    main_vocal_audio = main_vocal_audio.set_channels(2)
-    backup_vocal_audio = backup_vocal_audio.set_channels(2)
-    instrumental_audio = instrumental_audio.set_channels(2)
-    
     main_vocal_audio.overlay(backup_vocal_audio).overlay(instrumental_audio).export(output_path, format=output_format)
 
 
