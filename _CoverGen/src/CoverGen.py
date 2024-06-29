@@ -4,6 +4,7 @@ import sys
 import shutil
 import urllib.request
 import zipfile
+import gdown
 from argparse import ArgumentParser
 
 import gradio as gr
