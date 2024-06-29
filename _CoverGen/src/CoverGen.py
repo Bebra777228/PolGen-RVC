@@ -20,7 +20,7 @@ image_path = "/content/CoverGen/content/CoverGen.png"
 
 def get_current_models(models_dir):
     models_list = os.listdir(models_dir)
-    items_to_remove = ['hubert_base.pt', 'MODELS.txt', 'public_models.json', 'rmvpe.pt']
+    items_to_remove = ['hubert_base.pt', 'MODELS.txt', 'rmvpe.pt']
     return [item for item in models_list if item not in items_to_remove]
 
 def update_models_list():
