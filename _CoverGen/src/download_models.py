@@ -2,7 +2,8 @@ from pathlib import Path
 import requests
 
 MDX_DOWNLOAD_LINK = 'https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/'
-RVC_DOWNLOAD_LINK = 'https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/'
+RVC_other_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/'
+RVC_hubert_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 mdxnet_models_dir = BASE_DIR / 'mdxnet_models'
@@ -23,9 +24,14 @@ if __name__ == '__main__':
         print(f'Downloading {model}...')
         dl_model(MDX_DOWNLOAD_LINK, model, mdxnet_models_dir)
 
-    rvc_model_names = ['hubert_base.pt', 'rmvpe.pt']
-    for model in rvc_model_names:
+    rvc_other_names = ['rmvpe.pt', 'fcpe.pt']
+    for model in rvc_other_names:
         print(f'Downloading {model}...')
-        dl_model(RVC_DOWNLOAD_LINK, model, rvc_models_dir)
+        dl_model(RVC_other_DOWNLOAD_LINK, model, rvc_models_dir)
+
+    rvc_hubert_names = ['hubert_base.pt']
+    for model in rvc_hubert_names:
+        print(f'Downloading {model}...')
+        dl_model(RVC_hubert_DOWNLOAD_LINK, model, rvc_models_dir)
 
     print('All models downloaded!')
