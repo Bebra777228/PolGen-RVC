@@ -317,20 +317,36 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                 orig_song_path, instrumentals_path, main_vocals_dereverb_path, backup_vocals_path = paths
 
         # pitch_change = pitch_change * 12 + pitch_change_all
-        ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_voice.wav')
+        ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_lead_voice.wav')
+        ai_backing_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_back_voice.wav')
+        
         ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
+        ai_cover_backing_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver With Backing).{output_format}')
 
-        if os.path.exists(ai_cover_path):
-            os.remove(ai_cover_path)
-        if os.path.exists(ai_vocals_path):
+       if os.path.exists(ai_vocals_path):
             os.remove(ai_vocals_path)
+        if os.path.exists(ai_backing_path):
+            os.remove(ai_backing_path)
+       if os.path.exists(ai_cover_path):
+            os.remove(ai_cover_path)
+        if os.path.exists(ai_cover_backing_path):
+            os.remove(ai_cover_backing_path)
 
         if not os.path.exists(ai_vocals_path):
-            display_progress('[~] Преобразование голоса с помощью RVC...', 0.5, is_webui, progress)
+            display_progress('[~] Преобразование вокала...', 0.5, is_webui, progress)
             voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
+
+            display_progress('[~] Преобразование бэк-вокала...', 0.65, is_webui, progress)
+            voice_change(voice_model, backup_vocals_path, ai_backing_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
 
         display_progress('[~] Применение аудиоэффектов к вокалу...', 0.8, is_webui, progress)
         ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry,
+                                                reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain,
+                                                limiter_threshold, compressor_ratio, compressor_threshold,
+                                                delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio,
+                                                noise_gate_attack, noise_gate_release, drive_db, chorus_rate_hz, 
+                                                chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold)
+        ai_backing_mixed_path = add_audio_effects(ai_backing_path, reverb_rm_size, reverb_wet, reverb_dry,
                                                 reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain,
                                                 limiter_threshold, compressor_ratio, compressor_threshold,
                                                 delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio,
@@ -343,21 +359,26 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
 
             if pitch_change_ai_vocals:
                 ai_vocals_mixed_path_ap = pitch_shift(ai_vocals_mixed_path, pitch_change_all)
-                vocals_to_combine = ai_vocals_mixed_path_ap
+                ai_backing_mixed_path_ap = pitch_shift(ai_backing_mixed_path, pitch_change_all)
+                vocal_mix = ai_vocals_mixed_path_ap
+                back_mix = ai_backing_mixed_path_ap
             else:
-                vocals_to_combine = ai_vocals_mixed_path
+                vocal_mix = ai_vocals_mixed_path
+                back_mix = ai_backing_mixed_path
 
             display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
-            combine_audio([vocals_to_combine, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+            combine_audio([vocal_mix, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+            combine_audio([vocal_mix, back_mix, instrumentals_path_ap], ai_cover_backing_path, main_gain, backup_gain, inst_gain, output_format)
 
-            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path, backup_vocals_path_ap, instrumentals_path_ap]
+            intermediate_files = [vocals_path, main_vocals_path, vocal_mix, back_mix, backup_vocals_path_ap, instrumentals_path_ap]
             if pitch_change_ai_vocals:
-                intermediate_files.append(ai_vocals_mixed_path_ap)
+                intermediate_files.append(vocal_mix, back_mix)
         else:
             display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
             combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+            combine_audio([ai_vocals_mixed_path, ai_backing_mixed_path, instrumentals_path], ai_cover_backing_path, main_gain, backup_gain, inst_gain, output_format)
 
-            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
+            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path, ai_backing_mixed_path]
 
         if not keep_files:
             display_progress('[~] Удаление промежуточных аудиофайлов...', 0.95, is_webui, progress)
@@ -365,7 +386,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                 if file and os.path.exists(file):
                     os.remove(file)
 
-        return [ai_cover_path, ai_vocals_path, main_vocals_dereverb_path, backup_vocals_path, instrumentals_path]
+        return [ai_cover_path, ai_cover_backing_path, ai_vocals_path, main_vocals_dereverb_path, backup_vocals_path, instrumentals_path]
 
 
     except Exception as e:
