@@ -37,7 +37,6 @@ def extract_zip(extraction_folder, zip_name):
         for name in files:
             if name.endswith('.index') and os.stat(os.path.join(root, name)).st_size > 1024 * 100:
                 index_filepath = os.path.join(root, name)
-
             if name.endswith('.pth') and os.stat(os.path.join(root, name)).st_size > 1024 * 1024 * 40:
                 model_filepath = os.path.join(root, name)
 
@@ -60,15 +59,21 @@ def download_online_model(url, dir_name, progress=gr.Progress()):
         if os.path.exists(extraction_folder):
             raise gr.Error(f'Директория голосовой модели {dir_name} уже существует! Выберите другое имя для вашей голосовой модели.')
 
-        if 'pixeldrain.com' in url:
+        if 'huggingface.co' in url:
+            urllib.request.urlretrieve(url, zip_name)
+        elif 'pixeldrain.com' in url:
+            zip_name = dir_name + '.zip'
             url = f'https://pixeldrain.com/api/file/{zip_name}'
-
-        urllib.request.urlretrieve(url, zip_name)
+            urllib.request.urlretrieve(url, zip_name)
+        elif 'drive.google.com' in url:
+            zip_name = dir_name + '.zip'
+            file_id = url.split('/')[-2]
+            output = os.path.join('.', f'{dir_name}.zip')
+            gdown.download(id=file_id, output=output, quiet=False)
 
         progress(0.5, desc='[~] Распаковка zip-файла...')
         extract_zip(extraction_folder, zip_name)
         return f'[+] Модель {dir_name} успешно загружена!'
-
     except Exception as e:
         raise gr.Error(str(e))
 
@@ -240,7 +245,7 @@ if __name__ == '__main__':
                     clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file, pitch_change_ai_vocals], min_width=100, min_height=100)
 
 
-            ref_btn.click(lambda: [None, update_models_list()], outputs=[rvc_model, rvc_model])
+            ref_btn.click(update_models_list, None, outputs=rvc_model)
             is_webui = gr.Number(value=1, visible=False)
             generate_btn.click(song_cover_pipeline,
                               inputs=[song_input, rvc_model, pitch, keep_files, is_webui, main_gain, backup_gain,
