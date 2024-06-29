@@ -233,7 +233,8 @@ if __name__ == '__main__':
                     generate_btn = gr.Button("Генерировать", variant='primary', scale=1, min_width=100, min_height=100)
 
                 with gr.Column(scale=5):
-                    ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
+                    ai_cover = gr.Audio(label='AI-кавер с бэками', show_share_button=False)
+                    ai_cover_backing_path = gr.Audio(label='AI-кавер без бэков', show_share_button=False)
                     with gr.Accordion("Промежуточные аудиофайлы", open=False):
                         ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
                         main_vocals_dereverb = gr.Audio(label='Вокал', show_share_button=False)
@@ -255,19 +256,19 @@ if __name__ == '__main__':
                                       compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
                                       noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format, pitch_change_ai_vocals,
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold],
-                              outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
+                              outputs=[ai_cover, ai_cover_backing_path, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
             clear_btn.click(lambda: [0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe', 128,
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
                                     0, 0, 0, 0, 0,
-                                    None, None, None, None, None, 'mp3'],
+                                    None, None, None, None, None, None, 'mp3'],
                             outputs=[pitch, pitch_all, index_rate, filter_radius, rms_mix_rate, protect, f0_method,
                                     crepe_hop_length, main_gain, backup_gain, inst_gain, reverb_rm_size, reverb_width,
                                     reverb_wet, reverb_dry, reverb_damping, delay_time, delay_feedback, compressor_ratio,
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                                     drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold,
-                                    ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals, output_format])
+                                    ai_cover, ai_cover_backing_path, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals, output_format])
 
 
 #        with gr.Tab("Video-CoverGen"):
