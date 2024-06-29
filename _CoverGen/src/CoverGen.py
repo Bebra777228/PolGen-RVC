@@ -242,7 +242,7 @@ if __name__ == '__main__':
                         instrumentals = gr.Audio(label='Инструментал', show_share_button=False)
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
-                    output_format = gr.Dropdown(['mp3', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
+                    output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
                     clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file, pitch_change_ai_vocals], min_width=100, min_height=100)
 
 
