@@ -76,45 +76,21 @@ class VC(object):
         self.t_center = self.sr * self.x_center
         self.t_max = self.sr * self.x_max
         self.device = config.device
-        self.ref_freqs = [
-            65.41,
-            82.41,
-            110.00,
-            146.83,
-            196.00,
-            246.94,
-            329.63,
-            440.00,
-            587.33,
-            783.99,
-            1046.50,
+        
+        self.note_dict = [
+            65.41, 69.30, 73.42, 77.78, 82.41, 87.31,
+            92.50, 98.00, 103.83, 110.00, 116.54, 123.47,
+            130.81, 138.59, 146.83, 155.56, 164.81, 174.61,
+            185.00, 196.00, 207.65, 220.00, 233.08, 246.94,
+            261.63, 277.18, 293.66, 311.13, 329.63, 349.23,
+            369.99, 392.00, 415.30, 440.00, 466.16, 493.88,
+            523.25, 554.37, 587.33, 622.25, 659.25, 698.46,
+            739.99, 783.99, 830.61, 880.00, 932.33, 987.77,
+            1046.50, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91,
+            1479.98, 1567.98, 1661.22, 1760.00, 1864.66, 1975.53,
+            2093.00, 2217.46, 2349.32, 2489.02, 2637.02, 2793.83,
+            2959.96, 3135.96, 3322.44, 3520.00, 3729.31, 3951.07
         ]
-        # Generate interpolated frequencies
-        self.note_dict = self.generate_interpolated_frequencies()
-
-    def generate_interpolated_frequencies(self):
-        # Generate interpolated frequencies based on the reference frequencies.
-        note_dict = []
-        for i in range(len(self.ref_freqs) - 1):
-            freq_low = self.ref_freqs[i]
-            freq_high = self.ref_freqs[i + 1]
-            # Interpolate between adjacent reference frequencies
-            interpolated_freqs = np.linspace(
-                freq_low, freq_high, num=10, endpoint=False
-            )
-            note_dict.extend(interpolated_freqs)
-        # Add the last reference frequency
-        note_dict.append(self.ref_freqs[-1])
-        return note_dict
-
-    def autotune_f0(self, f0):
-        # Autotunes the given fundamental frequency (f0) to the nearest musical note.
-        autotuned_f0 = np.zeros_like(f0)
-        for i, freq in enumerate(f0):
-            # Find the closest note
-            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
-            autotuned_f0[i] = closest_note
-        return autotuned_f0
 
     def get_optimal_torch_device(self, index: int = 0) -> torch.device:
         if torch.cuda.is_available():
@@ -129,7 +105,7 @@ class VC(object):
         f0_min,
         f0_max,
         p_len,
-        hop_length,
+        hop_length=160,
         model="full",
     ):
         x = x.astype(np.float32)
@@ -255,13 +231,15 @@ class VC(object):
         f0_method,
         filter_radius,
         crepe_hop_length,
-        f0autotune,
         inp_f0=None,
+        f0_autotune=False,
+        f0_min=50,
+        f0_max=1100,
     ):
         global input_audio_path2wav
         time_step = self.window / self.sr * 1000
-        f0_min = 50
-        f0_max = 1100
+        #f0_min = 50
+        #f0_max = 1100
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
         if f0_method == "pm":
@@ -277,14 +255,14 @@ class VC(object):
             )
             pad_size = (p_len - len(f0) + 1) // 2
             if pad_size > 0 or p_len - len(f0) - pad_size > 0:
-                f0 = np.pad(
-                    f0, [[pad_size, p_len - len(f0) - pad_size]], mode="constant"
-                )
+                f0 = np.pad(f0, [[pad_size, p_len - len(f0) - pad_size]], mode="constant")
+        
         elif f0_method == "harvest":
             input_audio_path2wav[input_audio_path] = x.astype(np.double)
             f0 = cache_harvest_f0(input_audio_path, self.sr, f0_max, f0_min, 10)
             if int(filter_radius) > 2:
                 f0 = signal.medfilt(f0, 3)
+        
         elif f0_method == "dio":
             f0, t = pyworld.dio(
                 x.astype(np.double),
@@ -295,10 +273,10 @@ class VC(object):
             )
             f0 = pyworld.stonemask(x.astype(np.double), f0, t, self.sr)
             f0 = signal.medfilt(f0, 3)
+        
         elif f0_method == "mangio-crepe":
-            f0 = self.get_f0_crepe_computation(
-                x, f0_min, f0_max, p_len, crepe_hop_length
-            )
+            f0 = self.get_f0_crepe_computation(x, f0_min, f0_max, p_len, crepe_hop_length)
+        
         elif f0_method == "rmvpe":
             if hasattr(self, "model_rmvpe") == False:
                 from predictor.RMVPE import RMVPE
@@ -307,6 +285,14 @@ class VC(object):
                     os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
                 )
             f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
+        
+        elif f0_method == "rmvpe+":
+            params = {'x': x, 'p_len': p_len, 'f0_up_key': f0_up_key, 'f0_min': f0_min, 
+                      'f0_max': f0_max, 'time_step': time_step, 'filter_radius': filter_radius, 
+                      'crepe_hop_length': crepe_hop_length, 'model': "full"
+                      }
+            f0 = self.get_pitch_dependant_rmvpe(**params)
+        
         elif f0_method == "fcpe":
             self.model_fcpe = FCPEF0Predictor(
                 os.path.join(BASE_DIR, 'rvc_models', 'fcpe.pt'),
@@ -320,6 +306,7 @@ class VC(object):
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
             del self.model_fcpe
             gc.collect()
+        
         elif "hybrid" in f0_method:
             input_audio_path2wav[input_audio_path] = x.astype(np.double)
             f0 = self.get_f0_hybrid_computation(
@@ -334,7 +321,7 @@ class VC(object):
                 time_step,
             )
 
-        if f0autotune == "True":
+        if f0autotune == True:
             f0 = self.autotune_f0(f0)
 
         f0 *= pow(2, f0_up_key / 12)
@@ -361,6 +348,27 @@ class VC(object):
 
         return f0_coarse, f0bak
 
+    def get_pitch_dependant_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
+        if not hasattr(self, "model_rmvpe"):
+            from rmvpe import RMVPE
+            
+            self.model_rmvpe = RMVPE(
+                os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'),
+                is_half=self.is_half,
+                device=self.device,
+            )
+            
+        f0 = self.model_rmvpe.infer_from_audio_with_pitch(x, thred=0.03, f0_min=f0_min, f0_max=f0_max)   
+            
+        return f0
+        
+    def autotune_f0(self, f0):
+        autotuned_f0 = []
+        for freq in f0:
+            closest_notes = [x for x in self.note_dict if abs(x - freq) == min(abs(n - freq) for n in self.note_dict)]
+            autotuned_f0.append(random.choice(closest_notes))
+        return np.array(autotuned_f0, np.float64)
+    
     def vc(
         self,
         model,
@@ -480,8 +488,10 @@ class VC(object):
         version,
         protect,
         crepe_hop_length,
-        f0autotune,
         f0_file=None,
+        f0_autotune=False,
+        f0_min=50,
+        f0_max=1100,
     ):
         if file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
@@ -536,8 +546,10 @@ class VC(object):
                 f0_method,
                 filter_radius,
                 crepe_hop_length,
-                f0autotune,
                 inp_f0,
+                f0_autotune,
+                f0_min,
+                f0_max,
             )
             pitch = pitch[:p_len]
             pitchf = pitchf[:p_len]
