@@ -35,13 +35,6 @@ output_dir = os.path.join(BASE_DIR, 'song_output')
 
 
 def get_youtube_video_id(url, ignore_playlist=True):
-    """
-    Examples:
-    http://youtu.be/SA2iWivDJiE
-    http://www.youtube.com/watch?v=_oPAwA_Udwc&feature=feedu
-    http://www.youtube.com/embed/SA2iWivDJiE
-    http://www.youtube.com/v/SA2iWivDJiE?version=3&amp;hl=en_US
-    """
     query = urlparse(url)
     if query.hostname == 'youtu.be':
         if query.path[1:] == 'watch':
@@ -50,7 +43,6 @@ def get_youtube_video_id(url, ignore_playlist=True):
 
     if query.hostname in {'www.youtube.com', 'youtube.com', 'music.youtube.com'}:
         if not ignore_playlist:
-            # use case: get playlist id not current video in playlist
             with suppress(KeyError):
                 return parse_qs(query.query)['list'][0]
         if query.path == '/watch':
@@ -62,7 +54,6 @@ def get_youtube_video_id(url, ignore_playlist=True):
         if query.path[:3] == '/v/':
             return query.path.split('/')[2]
 
-    # returns None for invalid YouTube url
     return None
 
 
@@ -130,8 +121,6 @@ def get_audio_paths(song_dir):
 
 def convert_to_stereo(audio_path):
     wave, sr = librosa.load(audio_path, mono=False, sr=44100)
-
-    # check if mono
     if type(wave[0]) != np.ndarray:
         stereo_path = f'{os.path.splitext(audio_path)[0]}_stereo.wav'
         command = shlex.split(f'ffmpeg -y -loglevel error -i "{audio_path}" -ac 2 -f wav "{stereo_path}"')
@@ -203,23 +192,18 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     hubert_model = load_hubert(device, config.is_half, os.path.join(rvc_models_dir, 'hubert_base.pt'))
     cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
-    # convert main vocals
-    rvc_infer(rvc_index_path, index_rate, vocals_path, output_path, pitch_change,
-              f0_method, cpt, version, net_g, filter_radius, tgt_sr, rms_mix_rate,
-              protect, crepe_hop_length, vc, hubert_model, f0_autotune, f0_min, f0_max)
+    rvc_infer(rvc_index_path, index_rate, vocals_path, output_path, pitch_change, f0_method, cpt, version, net_g, 
+              filter_radius, tgt_sr, rms_mix_rate, protect, crepe_hop_length, vc, hubert_model, f0_autotune, f0_min, f0_max)
     del hubert_model, cpt
     gc.collect()
 
 
-def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
-                    low_shelf_gain, high_shelf_gain, limiter_threshold,
-                    compressor_ratio, compressor_threshold, delay_time, delay_feedback,
-                    noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
-                    drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold):
+def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio, 
+                      compressor_threshold, delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release, drive_db, chorus_rate_hz, 
+                      chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold):
 
     output_path = f'{os.path.splitext(audio_path)[0]}_mixed.wav'
 
-    # Initialize audio effects plugins
     board = Pedalboard(
         [
             HighpassFilter(),
@@ -246,18 +230,6 @@ def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb
 
     return output_path
 
-'''''  -  старый реверб
-    with AudioFile(audio_path) as f:
-        with AudioFile(output_path, 'w', f.samplerate, f.num_channels) as o:
-            while f.tell() < f.frames:
-                chunk = f.read(int(f.samplerate))
-                effected = board(chunk, f.samplerate, reset=False)
-                o.write(effected)
-
-    return output_path
-'''''
-
-
 def combine_audio(audio_paths, output_path, main_gain, backup_gain, inst_gain, output_format):
     main_vocal_audio = AudioSegment.from_wav(audio_paths[0]) - 4 + main_gain
     backup_vocal_audio = AudioSegment.from_wav(audio_paths[1]) - 6 + backup_gain
@@ -265,14 +237,11 @@ def combine_audio(audio_paths, output_path, main_gain, backup_gain, inst_gain, o
     main_vocal_audio.overlay(backup_vocal_audio).overlay(instrumental_audio).export(output_path, format=output_format)
 
 
-def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
-                        is_webui=0, main_gain=0, backup_gain=0, inst_gain=0, index_rate=0.5, filter_radius=3,
-                        rms_mix_rate=0.25, f0_method='rmvpe', crepe_hop_length=128, protect=0.33, pitch_change_all=0,
-                        reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0,
-                        low_shelf_gain=0, high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15,
-                        delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2,
-                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), pitch_change_ai_vocals=False,
-                        drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, chorus_mix=0.5, clipping_threshold=-6.0, f0_autotune=False, f0_min=50, f0_max=1100):
+def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_webui=0, main_gain=0, backup_gain=0, inst_gain=0, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe', 
+                        crepe_hop_length=128, protect=0.33, reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0, low_shelf_gain=0, high_shelf_gain=0, 
+                        limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15, delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2, noise_gate_attack=10, 
+                        noise_gate_release=100, output_format='mp3', progress=gr.Progress(), drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, 
+                        chorus_mix=0.5, clipping_threshold=-6.0, f0_autotune=False, f0_min=50, f0_max=1100):
 
     try:
         if not song_input or not voice_model:
@@ -283,15 +252,12 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
         with open(os.path.join(mdxnet_models_dir, 'model_data.json')) as infile:
             mdx_model_params = json.load(infile)
 
-        # if youtube url
         if urlparse(song_input).scheme == 'https':
             input_type = 'yt'
             song_id = get_youtube_video_id(song_input)
             if song_id is None:
                 error_msg = 'Неверный URL-адрес YouTube.'
                 raise_exception(error_msg, is_webui)
-
-        # local audio file
         else:
             input_type = 'local'
             song_input = song_input.strip('\"')
@@ -307,18 +273,15 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
         if not os.path.exists(song_dir):
             os.makedirs(song_dir)
             orig_song_path, vocals_path, instrumentals_path, main_vocals_path, backup_vocals_path, main_vocals_dereverb_path = preprocess_song(song_input, mdx_model_params, song_id, is_webui, input_type, progress)
-
         else:
             vocals_path, main_vocals_path = None, None
             paths = get_audio_paths(song_dir)
 
-            # if any of the audio files aren't available or keep intermediate files, rerun preprocess
             if any(path is None for path in paths) or keep_files:
                 orig_song_path, vocals_path, instrumentals_path, main_vocals_path, backup_vocals_path, main_vocals_dereverb_path = preprocess_song(song_input, mdx_model_params, song_id, is_webui, input_type, progress)
             else:
                 orig_song_path, instrumentals_path, main_vocals_dereverb_path, backup_vocals_path = paths
 
-        # pitch_change = pitch_change * 12 + pitch_change_all
         ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_voice.wav')
         ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
 
@@ -329,37 +292,18 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
 
         if not os.path.exists(ai_vocals_path):
             display_progress('[~] Преобразование вокала...', 0.5, is_webui, progress)
-            voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, f0_autotune, f0_min, f0_max, is_webui)
+            voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate, 
+                         filter_radius, rms_mix_rate, protect, crepe_hop_length, f0_autotune, f0_min, f0_max, is_webui)
 
         display_progress('[~] Применение аудиоэффектов к вокалу...', 0.8, is_webui, progress)
-        ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry,
-                                                reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain,
-                                                limiter_threshold, compressor_ratio, compressor_threshold,
-                                                delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio,
-                                                noise_gate_attack, noise_gate_release, drive_db, chorus_rate_hz, 
-                                                chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold)
+        ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain, limiter_threshold, 
+                                                 compressor_ratio, compressor_threshold, delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio, noise_gate_attack, 
+                                                 noise_gate_release, drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold)
 
-        if pitch_change_all != 0:
-            backup_vocals_path_ap = pitch_shift(backup_vocals_path, pitch_change_all)
-            instrumentals_path_ap = pitch_shift(instrumentals_path, pitch_change_all)
+        display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
+        combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
 
-            if pitch_change_ai_vocals:
-                ai_vocals_mixed_path_ap = pitch_shift(ai_vocals_mixed_path, pitch_change_all)
-                vocals_to_combine = ai_vocals_mixed_path_ap
-            else:
-                vocals_to_combine = ai_vocals_mixed_path
-
-            display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
-            combine_audio([vocals_to_combine, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
-
-            intermediate_files = [vocals_path, main_vocals_path, vocals_to_combine, backup_vocals_path_ap, instrumentals_path_ap]
-            if pitch_change_ai_vocals:
-                intermediate_files.append(vocals_to_combine)
-        else:
-            display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
-            combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
-
-            intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
+        intermediate_files = [vocals_path, main_vocals_path, ai_vocals_mixed_path]
 
         if not keep_files:
             display_progress('[~] Удаление промежуточных аудиофайлов...', 0.95, is_webui, progress)
