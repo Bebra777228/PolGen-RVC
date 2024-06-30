@@ -196,7 +196,7 @@ def preprocess_song(song_input, mdx_model_params, song_id, is_webui, input_type,
     return orig_song_path, vocals_path, instrumentals_path, main_vocals_path, backup_vocals_path, main_vocals_dereverb_path
 
 
-def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui):
+def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, f0_autotune, f0_min, f0_max, is_webui):
     rvc_model_path, rvc_index_path = get_rvc_model(voice_model, is_webui)
     device = 'cuda:0'
     config = Config(device, True)
@@ -237,7 +237,7 @@ def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb
     )
 
     with AudioFile(audio_path) as f:
-        with AudioFile(output_path, 'w', f.samplerate, f.num_channels) as o:
+        with AudioFile(output_path, 'w', f.samplerate, 2) as o:
             while f.tell() < f.frames:
                 chunk = f.read(int(f.samplerate))
                 chunk = np.tile(chunk, (2, 1)).T
@@ -272,7 +272,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                         low_shelf_gain=0, high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15,
                         delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2,
                         noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), pitch_change_ai_vocals=False,
-                        drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, chorus_mix=0.5, clipping_threshold=-6.0):
+                        drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, chorus_mix=0.5, clipping_threshold=-6.0, f0_autotune=False, f0_min=50, f0_max=1100):
 
     try:
         if not song_input or not voice_model:
@@ -319,12 +319,12 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
                 orig_song_path, instrumentals_path, main_vocals_dereverb_path, backup_vocals_path = paths
 
         # pitch_change = pitch_change * 12 + pitch_change_all
-        ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_lead_voice.wav')
+        ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_voice.wav')
         ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
 
-       if os.path.exists(ai_vocals_path):
+        if os.path.exists(ai_vocals_path):
             os.remove(ai_vocals_path)
-       if os.path.exists(ai_cover_path):
+        if os.path.exists(ai_cover_path):
             os.remove(ai_cover_path)
 
         if not os.path.exists(ai_vocals_path):
@@ -345,16 +345,16 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files,
 
             if pitch_change_ai_vocals:
                 ai_vocals_mixed_path_ap = pitch_shift(ai_vocals_mixed_path, pitch_change_all)
-                vocal_mix = ai_vocals_mixed_path_ap
+                vocals_to_combine = ai_vocals_mixed_path_ap
             else:
-                vocal_mix = ai_vocals_mixed_path
+                vocals_to_combine = ai_vocals_mixed_path
 
             display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
-            combine_audio([vocal_mix, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
+            combine_audio([vocals_to_combine, backup_vocals_path_ap, instrumentals_path_ap], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
 
-            intermediate_files = [vocals_path, main_vocals_path, vocal_mix, backup_vocals_path_ap, instrumentals_path_ap]
+            intermediate_files = [vocals_path, main_vocals_path, vocals_to_combine, backup_vocals_path_ap, instrumentals_path_ap]
             if pitch_change_ai_vocals:
-                intermediate_files.append(vocal_mix)
+                intermediate_files.append(vocals_to_combine)
         else:
             display_progress('[~] Объединение AI-вокала и инструментальной части...', 0.9, is_webui, progress)
             combine_audio([ai_vocals_mixed_path, backup_vocals_path, instrumentals_path], ai_cover_path, main_gain, backup_gain, inst_gain, output_format)
