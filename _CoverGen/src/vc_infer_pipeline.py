@@ -3,8 +3,8 @@ import numpy as np, parselmouth, torch, pdb, sys, os
 from time import time as ttime
 import torch.nn.functional as F
 import torchcrepe
+from scipy import signal
 from torch import Tensor
-import scipy.signal as signal
 import pyworld, os, faiss, librosa, torchcrepe
 import random
 import gc
