@@ -106,6 +106,12 @@ def show_hop_slider(pitch_detection_algo):
         return gr.update(visible=True)
     else:
         return gr.update(visible=False)
+        
+def show_pitch_slider(pitch_detection_algo):
+    if pitch_detection_algo != 'rmvpe':
+        return gr.update(visible=True)
+    else:
+        return gr.update(visible=False)
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Создать AI-кавер песни в директории song_output/id.', add_help=True)
@@ -166,9 +172,14 @@ if __name__ == '__main__':
                     rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS', info="Управляет тем, насколько точно воспроизводится громкость оригинального голоса (0) или фиксированная громкость (1)")
                     protect = gr.Slider(0, 0.5, value=0.33, label='Скорость защиты', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
                     with gr.Column():
-                        f0_method = gr.Dropdown(['rmvpe', 'mangio-crepe', 'hybrid[rmvpe+mangio-crepe]'], value='rmvpe', label='Метод выделения тона', info='Лучший вариант - rmvpe (чистота голоса), затем mangio-crepe (более плавный голос)')
+                        f0_method = gr.Dropdown(['rmvpe+', 'rmvpe', 'fcpe', 'mangio-crepe', '', 'hybrid[rmvpe+mangio-crepe]'], value='rmvpe', label='Метод выделения тона', info='Лучший вариант - rmvpe (чистота голоса), затем mangio-crepe (более плавный голос)')
                         crepe_hop_length = gr.Slider(32, 320, value=128, step=1, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
+                        f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Укажите минимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, scale=0, value=50, maximum=16000, visible=False, interactible=True)
+                        f0_method.change(show_pitch_slider, inputs=f0_method, outputs=f0_min)
+                        f0_max = gr.Slider(label="Максимальный диапазон тона:", info="Укажите максимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, scale=0, value=1100, maximum=16000, visible=False, interactible=True)
+                        f0_method.change(show_pitch_slider, inputs=f0_method, outputs=f0_max)
+                f0_autotune = gr.Checkbox(label="Включить автонастройку", value=False)
                 keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал', visible=False)
 
             with gr.Accordion('Настройки сведения аудио', open=False):
@@ -255,19 +266,21 @@ if __name__ == '__main__':
                                       low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio,
                                       compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
                                       noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format, pitch_change_ai_vocals,
-                                      drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold],
+                                      drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
+                                      clipping_threshold, f0_autotune, f0_min, f0_max],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
             clear_btn.click(lambda: [0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe', 128,
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
-                                    0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, False, 50, 1100,
                                     None, None, None, None, None, 'mp3'],
                             outputs=[pitch, pitch_all, index_rate, filter_radius, rms_mix_rate, protect, f0_method,
                                     crepe_hop_length, main_gain, backup_gain, inst_gain, reverb_rm_size, reverb_width,
                                     reverb_wet, reverb_dry, reverb_damping, delay_time, delay_feedback, compressor_ratio,
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
-                                    drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold,
+                                    drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
+                                    chorus_mix, clipping_threshold, f0_autotune, f0_min, f0_max,
                                     ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals, output_format])
 
 
