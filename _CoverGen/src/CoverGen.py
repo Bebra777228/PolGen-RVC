@@ -155,15 +155,14 @@ if __name__ == '__main__':
                                 local_file = gr.File(label='Аудио-файл')
                                 show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к файлу')
                                 song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
+                                show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
 
                 with gr.Column(scale=1):
                     with gr.Box():
                         with gr.Row():
                             with gr.Column():
                                 pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона (только вокал)', info='-24 - мужской голос || 24 - женский голос')
-                                pitch_all = gr.Slider(-12, 12, value=0, step=1, label='Общее изменение тона', info='Изменяет тон/тональность вокала и инструментов вместе. Незначительное изменение этого параметра ухудшает качество звука.')
-                                pitch_change_ai_vocals = gr.Checkbox(label='Применить преобразованный вокал к общему изменению тона')
-                                show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
+                                f0_autotune = gr.Checkbox(label="Включить автонастройку", value=False)
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 gr.Markdown('<center><h2>Основные настройки</h2></center>')
@@ -248,7 +247,6 @@ if __name__ == '__main__':
                 with gr.Column(scale=5):
                     with gr.Box():
                         with gr.Row():
-                            f0_autotune = gr.Checkbox(label="Включить автонастройку", value=False)
                             back_converted = gr.Checkbox(label="Преобразовать бэки вместе с основным вокалом", value=False)
                         ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
@@ -259,7 +257,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
-                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file, pitch_change_ai_vocals], min_width=100, min_height=100)
+                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file], min_width=100, min_height=100)
 
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
@@ -267,19 +265,19 @@ if __name__ == '__main__':
             generate_btn.click(song_cover_pipeline,
                               inputs=[song_input, rvc_model, pitch, keep_files, is_webui, main_gain, backup_gain,
                                       inst_gain, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length,
-                                      protect, pitch_all, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
+                                      protect, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                                       low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio,
                                       compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
-                                      noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format, pitch_change_ai_vocals,
+                                      noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format,
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
                                       clipping_threshold, f0_autotune, f0_min, f0_max],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
-            clear_btn.click(lambda: [0, 0, 0.5, 3, 0.25, 0.33, 'rmvpe+', 128,
+            clear_btn.click(lambda: [0, 0.5, 3, 0.25, 0.33, 'rmvpe+', 128,
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
                                     0, 0, 0, 0, 0, False, 50, 1100,
                                     None, None, None, None, None, 'mp3'],
-                            outputs=[pitch, pitch_all, index_rate, filter_radius, rms_mix_rate, protect, f0_method,
+                            outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect, f0_method,
                                     crepe_hop_length, main_gain, backup_gain, inst_gain, reverb_rm_size, reverb_width,
                                     reverb_wet, reverb_dry, reverb_damping, delay_time, delay_feedback, compressor_ratio,
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
