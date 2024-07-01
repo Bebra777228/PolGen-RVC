@@ -102,22 +102,22 @@ def process_file_upload(file):
     return file.name, gr.update(value=file.name)
 
 def show_hop_slider(pitch_detection_algo):
-    if pitch_detection_algo == 'mangio-crepe':
+    if pitch_detection_algo in ['mangio-crepe', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]']:
         return gr.update(visible=True)
     else:
         return gr.update(visible=False)
         
 def show_pitch_slider(pitch_detection_algo):
-    if pitch_detection_algo == 'rmvpe+':
+    if pitch_detection_algo in ['rmvpe+']:
         return gr.update(visible=True)
     else:
         return gr.update(visible=False)
 
 def update_f0_method(use_hybrid_methods):
     if use_hybrid_methods:
-        return gr.Dropdown.update(choices=['hybrid[rmvpe++fcpe]', 'hybrid[rmvpe+fcpe]', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]'])
+        return gr.Dropdown.update(choices=['hybrid[rmvpe+fcpe]', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]'], value='hybrid[rmvpe+fcpe]')
     else:
-        return gr.Dropdown.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'])
+        return gr.Dropdown.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+')
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Создать AI-кавер песни в директории song_output/id.', add_help=True)
@@ -150,7 +150,7 @@ if __name__ == '__main__':
                     with gr.Box():
                         with gr.Row():
                             with gr.Column():
-                                rvc_model = gr.Dropdown(voice_models, label='Модели голоса', info='Директория `"CoverGen/_CoverGen/rvc_models"`. После добавления новых моделей в эту директорию, нажмите кнопку "Обновить список моделей"')
+                                rvc_model = gr.Dropdown(voice_models, label='Модели голоса', info='Директория "CoverGen/rvc_models". После добавления новых моделей в эту директорию, нажмите кнопку "Обновить список моделей"')
                                 ref_btn = gr.Button('Обновить список моделей 🔁', variant='primary')
 
                             with gr.Column() as yt_link_col:
@@ -164,11 +164,9 @@ if __name__ == '__main__':
                                 show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
 
                 with gr.Column(scale=1):
-                    with gr.Box():
-                        with gr.Row():
-                            with gr.Column():
-                                pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона (только вокал)', info='-24 - мужской голос || 24 - женский голос')
-                                f0_autotune = gr.Checkbox(label="Включить автонастройку", value=False)
+                    pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
+                    with gr.Column():
+                        f0_autotune = gr.Checkbox(label="Автонастройка", info='Автоматически настраивает тон вокала. Может исказить звук.', value=False)
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 gr.Markdown('<center><h2>Основные настройки</h2></center>')
@@ -179,14 +177,15 @@ if __name__ == '__main__':
                     protect = gr.Slider(0, 0.5, value=0.33, label='Скорость защиты', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
                 gr.Markdown('<center><h2>Настройки выделения тона</h2></center>')
                 with gr.Row():
-                    use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
-                    f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона', info='Лучший вариант - rmvpe (чистота голоса), затем mangio-crepe (более плавный голос)')
-                    use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
+                    with gr.Column():
+                        use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
+                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона')
+                        use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
                     crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                     f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
-                    f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Укажите минимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=16000, visible=True)
+                    f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Укажите минимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале. (ГОЛОС БУДЕТ БОЛЕЕ МЯГКИМ)", step=1, minimum=1, value=50, maximum=16000, visible=True)
                     f0_method.change(show_pitch_slider, inputs=f0_method, outputs=f0_min)
-                    f0_max = gr.Slider(label="Максимальный диапазон тона:", info="Укажите максимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=1100, maximum=16000, visible=True)
+                    f0_max = gr.Slider(label="Максимальный диапазон тона:", info="Укажите максимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале. (ГОЛОС БУДЕТ БОЛЕЕ ГРУБЫМ)", step=1, minimum=1, value=1100, maximum=16000, visible=True)
                     f0_method.change(show_pitch_slider, inputs=f0_method, outputs=f0_max)
                 keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал', visible=False)
 
@@ -254,7 +253,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=5):
                     with gr.Box():
-                        with gr.Row():
+                        #with gr.Row():
                             #back_converted = gr.Checkbox(label="Преобразовать бэки вместе с основным вокалом", value=False)
                         ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
@@ -265,7 +264,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
-                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[song_input, rvc_model, keep_files, local_file], min_width=100, min_height=100)
+                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[keep_files, use_hybrid_methods], min_width=100, min_height=100)
 
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
@@ -280,19 +279,19 @@ if __name__ == '__main__':
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
                                       clipping_threshold, f0_autotune, f0_min, f0_max],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
-            clear_btn.click(lambda: [0, 0.5, 3, 0.25, 0.33, 'rmvpe+', 128,
+            clear_btn.click(lambda: [0, 0.5, 3, 0.25, 0.33, 128,
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
                                     0, 0, 0, 0, 0, False, 50, 1100,
-                                    None, None, None, None, None, 'mp3'],
-                            outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect, f0_method,
+                                    None, None, None, None, None],
+                            outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect,
                                     crepe_hop_length, main_gain, backup_gain, inst_gain, reverb_rm_size, reverb_width,
                                     reverb_wet, reverb_dry, reverb_damping, delay_time, delay_feedback, compressor_ratio,
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                                     drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
                                     chorus_mix, clipping_threshold, f0_autotune, f0_min, f0_max,
-                                    ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals, output_format])
+                                    ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
 
 
 #        with gr.Tab("Video-CoverGen"):
