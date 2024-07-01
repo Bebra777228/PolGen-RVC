@@ -113,6 +113,12 @@ def show_pitch_slider(pitch_detection_algo):
     else:
         return gr.update(visible=False)
 
+def update_f0_method(use_hybrid_methods):
+    if use_hybrid_methods:
+        return gr.Dropdown.update(choices=['hybrid[rmvpe++fcpe]', 'hybrid[rmvpe+fcpe]', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]'])
+    else:
+        return gr.Dropdown.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'])
+
 if __name__ == '__main__':
     parser = ArgumentParser(description='Создать AI-кавер песни в директории song_output/id.', add_help=True)
     parser.add_argument("--share", action="store_true", dest="share_enabled", default=False, help="Разрешить совместное использование")
@@ -173,7 +179,9 @@ if __name__ == '__main__':
                     protect = gr.Slider(0, 0.5, value=0.33, label='Скорость защиты', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
                 gr.Markdown('<center><h2>Настройки выделения тона</h2></center>')
                 with gr.Row():
+                    use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
                     f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона', info='Лучший вариант - rmvpe (чистота голоса), затем mangio-crepe (более плавный голос)')
+                    use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
                     crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                     f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
                     f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Укажите минимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=16000, visible=True)
