@@ -129,11 +129,11 @@ if __name__ == '__main__':
 
     voice_models = get_current_models(rvc_models_dir)
 
-    with gr.Blocks(title='CoverGen - Politrees (v0.4)') as app:
+    with gr.Blocks(title='CoverGen - Politrees (v0.5)') as app:
 
         with gr.Tab("Велком/Контакты"):
             gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
-            gr.Markdown("<center><h1>Добро пожаловать в CoverGen - Politrees (v0.4)</h1></center>")
+            gr.Markdown("<center><h1>Добро пожаловать в CoverGen - Politrees (v0.5)</h1></center>")
             with gr.Row():
                 with gr.Column():
                     gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
