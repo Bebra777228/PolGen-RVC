@@ -14,3 +14,5 @@ yt_dlp==2023.7.6
 sox==1.4.1
 gradio==3.48.0
 tensorboardX
+einops
+local-attention
