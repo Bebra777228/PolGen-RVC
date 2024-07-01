@@ -283,5 +283,7 @@ def run_mdx(model_params, output_dir, model_path, filename, exclude_main=False, 
         os.remove(filename)
 
     del mdx_sess, wave_processed, wave
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     gc.collect()
     return main_filepath, invert_filepath
