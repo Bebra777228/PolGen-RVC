@@ -247,7 +247,7 @@ if __name__ == '__main__':
                 with gr.Column(scale=5):
                     with gr.Box():
                         with gr.Row():
-                            back_converted = gr.Checkbox(label="Преобразовать бэки вместе с основным вокалом", value=False)
+                            #back_converted = gr.Checkbox(label="Преобразовать бэки вместе с основным вокалом", value=False)
                         ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
                             ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
