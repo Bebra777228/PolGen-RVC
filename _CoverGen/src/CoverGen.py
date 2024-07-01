@@ -146,27 +146,25 @@ if __name__ == '__main__':
 
         with gr.Tab("CoverGen"):
             with gr.Row():
-                with gr.Column(scale=2):
-                    with gr.Box():
-                        with gr.Row():
-                            with gr.Column():
-                                rvc_model = gr.Dropdown(voice_models, label='Модели голоса', info='Директория "CoverGen/rvc_models". После добавления новых моделей в эту директорию, нажмите кнопку "Обновить список моделей"')
-                                ref_btn = gr.Button('Обновить список моделей 🔁', variant='primary')
+                with gr.Column():
+                    with gr.Row():
+                        with gr.Column():
+                            rvc_model = gr.Dropdown(voice_models, label='Модели голоса', info='Директория "CoverGen/rvc_models". После добавления новых моделей в эту директорию, нажмите кнопку "Обновить список моделей"')
+                            ref_btn = gr.Button('Обновить список моделей 🔁', variant='primary')
 
-                            with gr.Column() as yt_link_col:
-                                song_input = gr.Text(label='Входная песня', info='Ссылка на песню на YouTube или полный путь к локальному файлу')
-                                song_input_file = gr.UploadButton('Загрузить файл с устройства', file_types=['audio'], variant='primary')
+                        with gr.Column() as yt_link_col:
+                            song_input = gr.Text(label='Входная песня', info='Ссылка на песню на YouTube или полный путь к локальному файлу')
+                            song_input_file = gr.UploadButton('Загрузить файл с устройства', file_types=['audio'], variant='primary')
 
-                            with gr.Column(visible=False) as file_upload_col:
-                                local_file = gr.File(label='Аудио-файл')
-                                show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к файлу')
-                                song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
-                                show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
+                        with gr.Column(visible=False) as file_upload_col:
+                            local_file = gr.File(label='Аудио-файл')
+                            show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к файлу')
+                            song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
+                            show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
 
-                with gr.Column(scale=1):
-                    pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
-                    with gr.Column():
-                        f0_autotune = gr.Checkbox(label="Автонастройка", info='Автоматически настраивает тон вокала. Может исказить звук.', value=False)
+                        with gr.Column():
+                            pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
+                            f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 gr.Markdown('<center><h2>Основные настройки</h2></center>')
@@ -277,7 +275,7 @@ if __name__ == '__main__':
                                       compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
                                       noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format,
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                                      clipping_threshold, f0_autotune, f0_min, f0_max],
+                                      clipping_threshold, f0autotune, f0_min, f0_max],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
             clear_btn.click(lambda: [0, 0.5, 3, 0.25, 0.33, 128,
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
@@ -290,7 +288,7 @@ if __name__ == '__main__':
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                                     drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
-                                    chorus_mix, clipping_threshold, f0_autotune, f0_min, f0_max,
+                                    chorus_mix, clipping_threshold, f0autotune, f0_min, f0_max,
                                     ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
 
 
