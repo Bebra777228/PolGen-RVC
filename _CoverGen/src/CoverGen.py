@@ -169,10 +169,10 @@ if __name__ == '__main__':
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 gr.Markdown('<center><h2>Основные настройки</h2></center>')
                 with gr.Row():
-                    index_rate = gr.Slider(0, 1, value=0.5, label='Скорость индексации', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
+                    index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
                     filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Если >=3: применяет медианную фильтрацию к результатам выделения тона. Может уменьшить шум дыхания')
                     rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS', info="Управляет тем, насколько точно воспроизводится громкость оригинального голоса (0) или фиксированная громкость (1)")
-                    protect = gr.Slider(0, 0.5, value=0.33, label='Скорость защиты', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
+                    protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
                 gr.Markdown('<center><h2>Настройки выделения тона</h2></center>')
                 with gr.Row():
                     with gr.Column():
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
                                       clipping_threshold, f0autotune, f0_min, f0_max],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
-            clear_btn.click(lambda: [0, 0.5, 3, 0.25, 0.33, 128,
+            clear_btn.click(lambda: [0, 0, 3, 0.25, 0.33, 128,
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
                                     0, 0, 0, 0, 0, False, 50, 1100,
