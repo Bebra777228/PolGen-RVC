@@ -55,7 +55,7 @@ def get_youtube_video_id(url, ignore_playlist=True):
 
     return None
 
-def yt_download(link, shorten_to):
+def yt_download(link):
     ydl_opts = {
         'format': 'bestaudio/worst',
         'outtmpl': '%(title)s',
@@ -66,11 +66,6 @@ def yt_download(link, shorten_to):
         'extractaudio': True,
         'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
     }
-    if shorten_to is not None:
-        ydl_opts = {
-            **ydl_opts,
-            'download_ranges': download_range_func(None, [(0, _parse_duration(shorten_to))]),
-        }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         result = ydl.extract_info(link, download=True)
@@ -242,9 +237,6 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_we
                 error_msg = f'{song_input} не существует.'
                 song_id = None
                 raise_exception(error_msg, is_webui)
-
-        if shorten_to is not None:
-            song_id = song_id + "_" + shorten_to
 
         song_dir = os.path.join(output_dir, song_id)
 
