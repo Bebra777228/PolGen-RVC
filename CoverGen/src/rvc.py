@@ -186,7 +186,6 @@ def rvc_infer(
         version,
         protect,
         crepe_hop_length,
-        f0autotune,
         f0_file=None,
         f0_autotune=f0_autotune,
         f0_min=f0_min,
