@@ -11,7 +11,6 @@ pyworld==0.3.4
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torchcrepe==0.0.20
 yt_dlp==2023.7.6
-sox==1.4.1
 gradio==3.48.0
 tensorboardX
 einops
