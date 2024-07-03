@@ -11,7 +11,6 @@ import gradio as gr
 import librosa
 import numpy as np
 import soundfile as sf
-import sox
 import yt_dlp
 
 from pedalboard import (
