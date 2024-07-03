@@ -129,11 +129,11 @@ if __name__ == '__main__':
 
     voice_models = get_current_models(rvc_models_dir)
 
-    with gr.Blocks(title='CoverGen - Politrees (v0.4)') as app:
+    with gr.Blocks(title='CoverGen - Politrees (v0.5)') as app:
 
         with gr.Tab("Велком/Контакты"):
             gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
-            gr.Markdown("<center><h1>Добро пожаловать в CoverGen - Politrees (v0.4)</h1></center>")
+            gr.Markdown("<center><h1>Добро пожаловать в CoverGen - Politrees (v0.5)</h1></center>")
             with gr.Row():
                 with gr.Column():
                     gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
@@ -169,10 +169,10 @@ if __name__ == '__main__':
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 gr.Markdown('<center><h2>Основные настройки</h2></center>')
                 with gr.Row():
-                    index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
+                    index_rate = gr.Slider(0, 1, value=0.5, label='Скорость индексации', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
                     filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Если >=3: применяет медианную фильтрацию к результатам выделения тона. Может уменьшить шум дыхания')
                     rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS', info="Управляет тем, насколько точно воспроизводится громкость оригинального голоса (0) или фиксированная громкость (1)")
-                    protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
+                    protect = gr.Slider(0, 0.5, value=0.33, label='Скорость защиты', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
                 gr.Markdown('<center><h2>Настройки выделения тона</h2></center>')
                 with gr.Row():
                     with gr.Column():
@@ -191,6 +191,7 @@ if __name__ == '__main__':
                 gr.Markdown('<center><h2>Изменение громкости (децибел)</h2></center>')
                 with gr.Row():
                     main_gain = gr.Slider(-20, 20, value=0, step=1, label='Основной вокал')
+                    backup_gain = gr.Slider(-20, 20, value=0, step=1, label='Дополнительный вокал (бэки)')
                     inst_gain = gr.Slider(-20, 20, value=0, step=1, label='Музыка')
 
                 with gr.Accordion('Эффекты', open=False):
@@ -256,6 +257,7 @@ if __name__ == '__main__':
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
                             ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
                             main_vocals_dereverb = gr.Audio(label='Вокал', show_share_button=False)
+                            backup_vocals = gr.Audio(label='Бэк вокал', show_share_button=False)
                             instrumentals = gr.Audio(label='Инструментал', show_share_button=False)
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
@@ -266,7 +268,7 @@ if __name__ == '__main__':
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             is_webui = gr.Number(value=1, visible=False)
             generate_btn.click(song_cover_pipeline,
-                              inputs=[song_input, rvc_model, pitch, keep_files, is_webui, main_gain,
+                              inputs=[song_input, rvc_model, pitch, keep_files, is_webui, main_gain, backup_gain,
                                       inst_gain, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length,
                                       protect, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                                       low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio,
@@ -274,20 +276,20 @@ if __name__ == '__main__':
                                       noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format,
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
                                       clipping_threshold, f0autotune, f0_min, f0_max],
-                              outputs=[ai_cover, ai_vocals, main_vocals_dereverb, instrumentals])
-            clear_btn.click(lambda: [0, 0, 3, 0.25, 0.33, 128,
+                              outputs=[ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
+            clear_btn.click(lambda: [0, 0.5, 3, 0.25, 0.33, 128,
                                     0, 0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
                                     0, 0, 0, 0, 0, False, 50, 1100,
-                                    None, None, None, None],
+                                    None, None, None, None, None],
                             outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect,
-                                    crepe_hop_length, main_gain, inst_gain, reverb_rm_size, reverb_width,
+                                    crepe_hop_length, main_gain, backup_gain, inst_gain, reverb_rm_size, reverb_width,
                                     reverb_wet, reverb_dry, reverb_damping, delay_time, delay_feedback, compressor_ratio,
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                                     drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
                                     chorus_mix, clipping_threshold, f0autotune, f0_min, f0_max,
-                                    ai_cover, ai_vocals, main_vocals_dereverb, instrumentals])
+                                    ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
 
 
 #        with gr.Tab("Video-CoverGen"):
