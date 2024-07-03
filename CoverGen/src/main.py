@@ -39,7 +39,7 @@ def get_youtube_video_id(url, ignore_playlist=True):
             return query.query[2:]
         return query.path[1:]
 
-    if query.hostname in {'www.youtube.com', 'youtube.com', 'music.youtube.com'}:
+    if query.hostname in {'www.youtube.com', 'youtube.com', 'music.youtube.com', 'm.youtube.com', 'youtu.be'}:
         if not ignore_playlist:
             with suppress(KeyError):
                 return parse_qs(query.query)['list'][0]
@@ -51,12 +51,14 @@ def get_youtube_video_id(url, ignore_playlist=True):
             return query.path.split('/')[2]
         if query.path[:3] == '/v/':
             return query.path.split('/')[2]
+        if query.path[:8] == '/shorts/':
+            return query.path.split('/')[2]
 
     return None
 
-def yt_download(link):
+def yt_download(link, shorten_to):
     ydl_opts = {
-        'format': 'bestaudio',
+        'format': 'bestaudio/worst',
         'outtmpl': '%(title)s',
         'nocheckcertificate': True,
         'ignoreerrors': True,
@@ -65,11 +67,18 @@ def yt_download(link):
         'extractaudio': True,
         'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
     }
+    if shorten_to is not None:
+        ydl_opts = {
+            **ydl_opts,
+            'download_ranges': download_range_func(None, [(0, _parse_duration(shorten_to))]),
+        }
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         result = ydl.extract_info(link, download=True)
         download_path = ydl.prepare_filename(result, outtmpl='%(title)s.mp3')
 
     return download_path
+
 
 def raise_exception(error_msg, is_webui):
     if is_webui:
@@ -117,17 +126,6 @@ def convert_to_stereo(audio_path):
         return stereo_path
     else:
         return audio_path
-
-def pitch_shift(audio_path, pitch_change):
-    output_path = f'{os.path.splitext(audio_path)[0]}_overall_pitch.wav'
-    if not os.path.exists(output_path):
-        y, sr = sf.read(audio_path)
-        tfm = sox.Transformer()
-        tfm.pitch(pitch_change)
-        y_shifted = tfm.build_array(input_array=y, sample_rate_in=sr)
-        sf.write(output_path, y_shifted, sr)
-
-    return output_path
 
 def get_hash(filepath):
     with open(filepath, 'rb') as f:
@@ -230,7 +228,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_we
         with open(os.path.join(mdxnet_models_dir, 'model_data.json')) as infile:
             mdx_model_params = json.load(infile)
 
-        if urlparse(song_input).scheme == 'https':
+        if urlparse(song_input).scheme in ('http', 'https'):
             input_type = 'yt'
             song_id = get_youtube_video_id(song_input)
             if song_id is None:
@@ -245,6 +243,9 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_we
                 error_msg = f'{song_input} не существует.'
                 song_id = None
                 raise_exception(error_msg, is_webui)
+
+        if shorten_to is not None:
+            song_id = song_id + "_" + shorten_to
 
         song_dir = os.path.join(output_dir, song_id)
 
