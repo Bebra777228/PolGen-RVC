@@ -260,6 +260,10 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_we
             else:
                 orig_song_path, instrumentals_path, main_vocals_dereverb_path = paths
 
+        if f0_method == 'rmvpe':
+            f0_min = 50
+            f0_max = 1100
+        
         ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_voice.wav')
         ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
 
