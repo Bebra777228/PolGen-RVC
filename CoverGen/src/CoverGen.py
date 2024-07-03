@@ -281,7 +281,7 @@ if __name__ == '__main__':
                                     0, 0, 0, 0, 0, False, 50, 1100,
                                     None, None, None, None],
                             outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect,
-                                    crepe_hop_length, main_gain, backup_gain, inst_gain, reverb_rm_size, reverb_width,
+                                    crepe_hop_length, main_gain, inst_gain, reverb_rm_size, reverb_width,
                                     reverb_wet, reverb_dry, reverb_damping, delay_time, delay_feedback, compressor_ratio,
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
