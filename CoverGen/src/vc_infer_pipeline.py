@@ -78,7 +78,7 @@ class VC(object):
         self.t_max = self.sr * self.x_max
         self.device = config.device
         
-        self.note_dict = [
+        self.ref_freqs = [
             65.41,
             82.41,
             110.00,
@@ -91,6 +91,26 @@ class VC(object):
             783.99,
             1046.50,
         ]
+        self.note_dict = self.generate_interpolated_frequencies()
+
+    def generate_interpolated_frequencies(self):
+        note_dict = []
+        for i in range(len(self.ref_freqs) - 1):
+            freq_low = self.ref_freqs[i]
+            freq_high = self.ref_freqs[i + 1]
+            interpolated_freqs = np.linspace(
+                freq_low, freq_high, num=10, endpoint=False
+            )
+            note_dict.extend(interpolated_freqs)
+        note_dict.append(self.ref_freqs[-1])
+        return note_dict
+
+    def autotune_f0(self, f0):
+        autotuned_f0 = np.zeros_like(f0)
+        for i, freq in enumerate(f0):
+            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
+            autotuned_f0[i] = closest_note
+        return autotuned_f0
 
     def get_optimal_torch_device(self, index: int = 0) -> torch.device:
         if torch.cuda.is_available():
@@ -180,7 +200,7 @@ class VC(object):
         if methods_str:
             methods = [method.strip() for method in methods_str.group(1).split("+")]
         f0_computation_stack = []
-        print(f"Вычисление оценок высоты тона f0 для методов {str(methods)}")
+        print(f"Calculating f0 pitch estimations for methods {str(methods)}")
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
         for method in methods:
@@ -212,7 +232,7 @@ class VC(object):
                 gc.collect()
             f0_computation_stack.append(f0)
 
-        print(f"Вычисление гибридной медианы f0 из стека {str(methods)}")
+        print(f"Calculating hybrid median f0 from the stack of {str(methods)}")
         f0_computation_stack = [fc for fc in f0_computation_stack if fc is not None]
         f0_median_hybrid = None
         if len(f0_computation_stack) == 1:
@@ -230,8 +250,8 @@ class VC(object):
         f0_method,
         filter_radius,
         crepe_hop_length,
+        f0autotune,
         inp_f0=None,
-        f0_autotune=False,
         f0_min=50,
         f0_max=1100,
     ):
@@ -319,9 +339,9 @@ class VC(object):
                 time_step,
             )
 
-        print("f0_autotune =", f0_autotune)
-        if f0_autotune == True:
-            f0 = self.autotune_f0(f0)    
+        print("f0_autotune =", f0autotune)
+        if f0autotune == "True":
+            f0 = self.autotune_f0(f0)
 
         f0 *= pow(2, f0_up_key / 12)
         tf0 = self.sr // self.window
@@ -360,12 +380,6 @@ class VC(object):
             
         return f0
 
-    def autotune_f0(self, f0):
-        autotuned_f0 = []
-        for freq in f0:
-            closest_notes = [x for x in self.note_dict if abs(x - freq) == min(abs(n - freq) for n in self.note_dict)]
-            autotuned_f0.append(random.choice(closest_notes))
-        return np.array(autotuned_f0, np.float64)
     
     def vc(
         self,
@@ -486,8 +500,8 @@ class VC(object):
         version,
         protect,
         crepe_hop_length,
+        f0autotune,
         f0_file=None,
-        f0_autotune=False,
         f0_min=50,
         f0_max=1100,
     ):
@@ -544,8 +558,8 @@ class VC(object):
                 f0_method,
                 filter_radius,
                 crepe_hop_length,
+                f0autotune,
                 inp_f0,
-                f0_autotune,
                 f0_min,
                 f0_max,
             )
