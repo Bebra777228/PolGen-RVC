@@ -160,9 +160,8 @@ def rvc_infer(
     crepe_hop_length,
     vc,
     hubert_model,
-    f0autotune=False,
-    f0_min=50,
-    f0_max=1100
+    f0_min,
+    f0_max
 ):
     audio = load_audio(input_path, 16000)
     times = [0, 0, 0]
@@ -186,9 +185,8 @@ def rvc_infer(
         version,
         protect,
         crepe_hop_length,
-        f0_file=None,
-        f0autotune=f0autotune,
-        f0_min=f0_min,
-        f0_max=f0_max
+        f0_min,
+        f0_max,
+        f0_file=None
     )
     wavfile.write(output_path, tgt_sr, audio_opt)
