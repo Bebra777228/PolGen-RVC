@@ -152,7 +152,7 @@ def preprocess_song(song_input, mdx_model_params, song_id, is_webui, input_type,
 
     return orig_song_path, vocals_path, instrumentals_path, main_vocals_dereverb_path
 
-def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, f0autotune, f0_min, f0_max, is_webui):
+def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, f0_min, f0_max, is_webui):
     rvc_model_path, rvc_index_path = get_rvc_model(voice_model, is_webui)
     device = 'cuda:0'
     config = Config(device, True)
@@ -160,7 +160,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
     rvc_infer(rvc_index_path, index_rate, vocals_path, output_path, pitch_change, f0_method, cpt, version, net_g, 
-              filter_radius, tgt_sr, rms_mix_rate, protect, crepe_hop_length, vc, hubert_model, f0autotune, f0_min, f0_max)
+              filter_radius, tgt_sr, rms_mix_rate, protect, crepe_hop_length, vc, f0_min, f0_max, hubert_model)
     del hubert_model, cpt
     gc.collect()
 
@@ -205,7 +205,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_we
                         crepe_hop_length=128, protect=0.33, reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0, low_shelf_gain=0, high_shelf_gain=0, 
                         limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15, delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2, noise_gate_attack=10, 
                         noise_gate_release=100, output_format='mp3', progress=gr.Progress(), drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, 
-                        chorus_mix=0.5, clipping_threshold=-6.0, f0autotune=False, f0_min=50, f0_max=1100):
+                        chorus_mix=0.5, clipping_threshold=-6.0, f0_min=50, f0_max=1100):
 
     try:
         if not song_input or not voice_model:
@@ -257,7 +257,7 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_we
         if not os.path.exists(ai_vocals_path):
             display_progress('[~] Преобразование вокала...', 0.5, is_webui, progress)
             voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate, 
-                         filter_radius, rms_mix_rate, protect, crepe_hop_length, f0autotune, f0_min, f0_max, is_webui)
+                         filter_radius, rms_mix_rate, protect, crepe_hop_length, f0_min, f0_max, is_webui)
 
         display_progress('[~] Применение аудиоэффектов к вокалу...', 0.8, is_webui, progress)
         ai_vocals_mixed_path = add_audio_effects(ai_vocals_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain, limiter_threshold, 
