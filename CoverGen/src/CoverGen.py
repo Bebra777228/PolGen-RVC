@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
                         with gr.Column():
                             pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
-                            f0autotune = gr.Checkbox(label="Автонастройка", Вместо этого вставьте ссылку на YouTube / Путь к локальному файлуinfo='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
+                            f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
                         show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                         show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
             
