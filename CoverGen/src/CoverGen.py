@@ -53,17 +53,16 @@ if __name__ == '__main__':
 
                         with gr.Column():
                             pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
-                            f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
                         show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                         show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
             
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 gr.Markdown('<center><h2>Основные настройки</h2></center>')
                 with gr.Row():
-                    index_rate = gr.Slider(0, 1, value=0.5, label='Скорость индексации', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
+                    index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
                     filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Если >=3: применяет медианную фильтрацию к результатам выделения тона. Может уменьшить шум дыхания')
                     rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS', info="Управляет тем, насколько точно воспроизводится громкость оригинального голоса (0) или фиксированная громкость (1)")
-                    protect = gr.Slider(0, 0.5, value=0.33, label='Скорость защиты', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
+                    protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
                 gr.Markdown('<center><h2>Настройки выделения тона</h2></center>')
                 with gr.Row():
                     with gr.Column():
@@ -81,7 +80,7 @@ if __name__ == '__main__':
             with gr.Accordion('Настройки сведения аудио', open=False):
                 gr.Markdown('<center><h2>Изменение громкости (децибел)</h2></center>')
                 with gr.Row():
-                    main_gain = gr.Slider(-20, 20, value=0, step=1, label='Основной вокал')
+                    main_gain = gr.Slider(-20, 20, value=0, step=1, label='Вокал')
                     inst_gain = gr.Slider(-20, 20, value=0, step=1, label='Музыка')
 
                 with gr.Accordion('Эффекты', open=False):
@@ -95,8 +94,8 @@ if __name__ == '__main__':
 
                     with gr.Accordion('Эхо', open=False):
                         with gr.Row():
-                            delay_time = gr.Slider(0, 2, value=0, label='Эхо - Время задержки', info='Этот параметр контролирует время, за которое звук повторяется, создавая эффект эхо. Большее значение означает более длительную задержку между исходным звуком и эхо.')
-                            delay_feedback = gr.Slider(0, 1, value=0, label='Эхо - Уровень обратной связи', info='Этот параметр контролирует количество эхо-звука, которое возвращается в эффект эхо. Большее значение означает больше обратной связи, что приводит к большему количеству повторений эхо.')
+                            delay_time = gr.Slider(0, 2, value=0, label='Время задержки', info='Этот параметр контролирует время, за которое звук повторяется, создавая эффект эхо. Большее значение означает более длительную задержку между исходным звуком и эхо.')
+                            delay_feedback = gr.Slider(0, 1, value=0, label='Уровень обратной связи', info='Этот параметр контролирует количество эхо-звука, которое возвращается в эффект эхо. Большее значение означает больше обратной связи, что приводит к большему количеству повторений эхо.')
 
                     with gr.Accordion('Хорус', open=False):
                         with gr.Row():
@@ -109,12 +108,12 @@ if __name__ == '__main__':
                 with gr.Accordion('Обработка', open=False):
                     with gr.Accordion('Компрессор', open=False):
                         with gr.Row():
-                            compressor_ratio = gr.Slider(1, 20, value=4, label='Компрессор - Соотношение', info='Этот параметр контролирует количество применяемого сжатия аудио. Большее значение означает большее сжатие, которое уменьшает динамический диапазон аудио, делая громкие части более тихими и тихие части более громкими.')
-                            compressor_threshold = gr.Slider(-60, 0, value=-16, label='Компрессор - Порог', info='Этот параметр устанавливает порог, при превышении которого начинает действовать компрессор. Компрессор сжимает громкие звуки, чтобы сделать звук более ровным. Чем ниже порог, тем большее количество звуков будет подвергнуто компрессии.')
+                            compressor_ratio = gr.Slider(1, 20, value=4, label='Соотношение', info='Этот параметр контролирует количество применяемого сжатия аудио. Большее значение означает большее сжатие, которое уменьшает динамический диапазон аудио, делая громкие части более тихими и тихие части более громкими.')
+                            compressor_threshold = gr.Slider(-60, 0, value=-16, label='Порог', info='Этот параметр устанавливает порог, при превышении которого начинает действовать компрессор. Компрессор сжимает громкие звуки, чтобы сделать звук более ровным. Чем ниже порог, тем большее количество звуков будет подвергнуто компрессии.')
 
                     with gr.Accordion('Лимитер', open=False):
                         with gr.Row():
-                            limiter_threshold = gr.Slider(-12, 0, value=0, label='Лимитер - Порог', info='Этот параметр устанавливает порог, при достижении которого начинает действовать лимитер. Лимитер ограничивает громкость звука, чтобы предотвратить перегрузку и искажение. Если порог будет установлен слишком низко, то звук может стать перегруженным и искаженным')
+                            limiter_threshold = gr.Slider(-12, 0, value=0, label='Порог', info='Этот параметр устанавливает порог, при достижении которого начинает действовать лимитер. Лимитер ограничивает громкость звука, чтобы предотвратить перегрузку и искажение. Если порог будет установлен слишком низко, то звук может стать перегруженным и искаженным')
 
                     with gr.Accordion('Фильтры', open=False):
                         with gr.Row():
@@ -133,7 +132,7 @@ if __name__ == '__main__':
                         drive_db = gr.Slider(-20, 20, value=0, label='Искажение', info='Этот параметр отвечает за уровень искажения сигнала в децибелах. Чем выше значение, тем сильнее будет искажение звука.')
 
                     with gr.Accordion('Клиппинг', open=False):
-                        clipping_threshold = gr.Slider(-20, 0, value=0, label='Порог клиппинга', info='Этот параметр устанавливает пороговое значение в децибелах, при котором начинает действовать клиппинг. Клиппинг используется для предотвращения перегрузки и искажения аудиосигнала. Если значение порога слишком низкое, то звук может стать перегруженным и искаженным.')
+                        clipping_threshold = gr.Slider(-20, 0, value=0, label='Порог', info='Этот параметр устанавливает пороговое значение в децибелах, при котором начинает действовать клиппинг. Клиппинг используется для предотвращения перегрузки и искажения аудиосигнала. Если значение порога слишком низкое, то звук может стать перегруженным и искаженным.')
 
             with gr.Row():
                 with gr.Column(scale=2, min_width=100, min_height=100):
@@ -148,7 +147,7 @@ if __name__ == '__main__':
                             instrumentals = gr.Audio(label='Инструментал', show_share_button=False)
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
-                    output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
+                    output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.5)
                     clear_btn = gr.ClearButton(value='Сброс всех параметров', components=use_hybrid_methods, min_width=100, min_height=100)
 
 
@@ -162,12 +161,12 @@ if __name__ == '__main__':
                                       compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
                                       noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format,
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                                      clipping_threshold, f0autotune, f0_min, f0_max],
+                                      clipping_threshold, f0_min, f0_max],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, instrumentals])
-            clear_btn.click(lambda: [0, 0.5, 3, 0.25, 0.33, 128,
+            clear_btn.click(lambda: [0, 0, 3, 0.25, 0.33, 128,
                                     0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
-                                    0, 0, 0, 0, 0, False, 50, 1100,
+                                    0, 0, 0, 0, 0, 50, 1100,
                                     None, None, None, None],
                             outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect,
                                     crepe_hop_length, main_gain, inst_gain, reverb_rm_size, reverb_width,
@@ -175,7 +174,7 @@ if __name__ == '__main__':
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                                     drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
-                                    chorus_mix, clipping_threshold, f0autotune, f0_min, f0_max,
+                                    chorus_mix, clipping_threshold, f0_min, f0_max,
                                     ai_cover, ai_vocals, main_vocals_dereverb, instrumentals])
 
         with gr.Tab('Загрузка модели'):
