@@ -5,7 +5,7 @@ import torch
 from fairseq import checkpoint_utils
 from scipy.io import wavfile
 
-from infer_pack.models import (
+from lib.infer_pack.models import (
     SynthesizerTrnMs256NSFsid,
     SynthesizerTrnMs256NSFsid_nono,
     SynthesizerTrnMs768NSFsid,
