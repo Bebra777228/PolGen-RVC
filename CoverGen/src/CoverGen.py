@@ -1,6 +1,4 @@
-import json
 import os
-import sys
 import shutil
 import urllib.request
 import zipfile
@@ -19,7 +17,7 @@ output_dir = os.path.join(BASE_DIR, 'song_output')
 image_path = "/content/CoverGen/content/CoverGen.png"
 
 def get_current_models(models_dir):
-    models_list = os.listdir(models_dir)
+    models_list = .listdir(models_dir)
     items_to_remove = ['hubert_base.pt', 'MODELS.txt', 'rmvpe.pt', 'fcpe.pt']
     return [item for item in models_list if item not in items_to_remove]
 
