@@ -3,7 +3,6 @@ import shutil
 import urllib.request
 import zipfile
 import gdown
-from argparse import ArgumentParser
 import gradio as gr
 
 from main import song_cover_pipeline
@@ -18,13 +17,6 @@ output_dir = os.path.join(BASE_DIR, 'song_output')
 image_path = "/content/CoverGen/content/CoverGen.png"
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Создать AI-кавер песни в директории song_output/id.', add_help=True)
-    parser.add_argument("--share", action="store_true", dest="share_enabled", default=False, help="Разрешить совместное использование")
-    parser.add_argument("--listen", action="store_true", default=False, help="Сделать WebUI доступным из вашей локальной сети.")
-    parser.add_argument('--listen-host', type=str, help='Имя хоста, которое будет использовать сервер.')
-    parser.add_argument('--listen-port', type=int, help='Порт прослушивания, который будет использовать сервер.')
-    args = parser.parse_args()
-
     voice_models = ignore_files(rvc_models_dir)
 
     with gr.Blocks(title='CoverGen - Politrees (v0.5)') as app:
@@ -55,10 +47,9 @@ if __name__ == '__main__':
                             show_file_upload_button = gr.Button('Загрузить файл с устройства')
 
                         with gr.Column(visible=False) as file_upload_col:
-                            local_file = gr.File(label='Аудио-файл')
-                            song_input_file = gr.UploadButton('Загрузить', file_types=['audio'], variant='primary')
+                            local_file = gr.File(label='Аудио-файл', file_types='audio', source='upload')
                             show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к локальному файлу')
-                            song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
+                            local_file.upload(process_file_upload, inputs=[local_file], outputs=[local_file, song_input])
 
                         with gr.Column():
                             pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
@@ -150,8 +141,6 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=5):
                     with gr.Box():
-                        #with gr.Row():
-                            #back_converted = gr.Checkbox(label="Преобразовать бэки вместе с основным вокалом", value=False)
                         ai_cover = gr.Audio(label='AI-кавер', type='filepath', show_share_button=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
                             ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
@@ -160,7 +149,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
-                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[keep_files, use_hybrid_methods], min_width=100, min_height=100)
+                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=use_hybrid_methods, min_width=100, min_height=100)
 
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
@@ -225,9 +214,4 @@ if __name__ == '__main__':
         
                     upload_button.click(upload_files_model, [pth_file_upload, index_file_upload, model_name], upload_status)
 
-    app.launch(
-        share=True,
-        enable_queue=True,
-        server_name=None if not args.listen else (args.listen_host or '0.0.0.0'),
-        server_port=args.listen_port,
-    )
+    app.launch(share=True, enable_queue=True)
