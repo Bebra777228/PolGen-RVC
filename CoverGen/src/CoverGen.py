@@ -72,9 +72,7 @@ if __name__ == '__main__':
                     crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                     f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
                     f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Укажите минимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале. (ГОЛОС БУДЕТ БОЛЕЕ МЯГКИМ)", step=1, minimum=1, value=50, maximum=16000, visible=True)
-                    f0_method.change(show_pitch_slider, inputs=f0_method, outputs=f0_min)
                     f0_max = gr.Slider(label="Максимальный диапазон тона:", info="Укажите максимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале. (ГОЛОС БУДЕТ БОЛЕЕ ГРУБЫМ)", step=1, minimum=1, value=1100, maximum=16000, visible=True)
-                    f0_method.change(show_pitch_slider, inputs=f0_method, outputs=f0_max)
                 keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал', visible=False)
 
             with gr.Accordion('Настройки сведения аудио', open=False):
