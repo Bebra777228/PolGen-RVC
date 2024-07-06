@@ -1,3 +1,15 @@
+import os
+import shutil
+import urllib.request
+import zipfile
+import gdown
+import gradio as gr
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
+
+
 def ignore_files(models_dir):
     models_list = os.listdir(models_dir)
     items_to_remove = ['hubert_base.pt', 'MODELS.txt', 'rmvpe.pt', 'fcpe.pt']
