@@ -51,29 +51,22 @@ if __name__ == '__main__':
                             song_input_file = gr.UploadButton('Загрузить', file_types=['audio'], variant='primary')
                             show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к локальному файлу')
                             song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
-
-                        with gr.Column():
-                            pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
+                            
                         show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                         show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
             
             with gr.Accordion('Настройки преобразования голоса', open=False):
-                gr.Markdown('<center><h2>Основные настройки</h2></center>')
                 with gr.Row():
                     index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
                     filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Если >=3: применяет медианную фильтрацию к результатам выделения тона. Может уменьшить шум дыхания')
                     rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS', info="Управляет тем, насколько точно воспроизводится громкость оригинального голоса (0) или фиксированная громкость (1)")
                     protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
-                gr.Markdown('<center><h2>Настройки выделения тона</h2></center>')
-                with gr.Row():
                     with gr.Column():
                         use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
-                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона')
+                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe', 'harvest', 'dio', 'pm'], value='rmvpe+', label='Метод выделения тона')
                         use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
-                    crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
-                    f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
-                    f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Укажите минимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале. (ГОЛОС БУДЕТ БОЛЕЕ МЯГКИМ)", step=1, minimum=1, value=50, maximum=16000, visible=True)
-                    f0_max = gr.Slider(label="Максимальный диапазон тона:", info="Укажите максимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале. (ГОЛОС БУДЕТ БОЛЕЕ ГРУБЫМ)", step=1, minimum=1, value=1100, maximum=16000, visible=True)
+                        crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
+                        f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
                 keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал', visible=False)
 
             with gr.Accordion('Настройки сведения аудио', open=False):
@@ -139,6 +132,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=5):
                     with gr.Box():
+                        pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
                         ai_cover = gr.Audio(label='AI-кавер', type='filepath', show_share_button=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
                             ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
@@ -160,12 +154,12 @@ if __name__ == '__main__':
                                       compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
                                       noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format,
                                       drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                                      clipping_threshold, f0_min, f0_max],
+                                      clipping_threshold],
                               outputs=[ai_cover, ai_vocals, main_vocals_dereverb, instrumentals])
             clear_btn.click(lambda: [0, 0, 3, 0.25, 0.33, 128,
                                     0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
-                                    0, 0, 0, 0, 0, 50, 1100,
+                                    0, 0, 0, 0, 0,
                                     None, None, None, None],
                             outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect,
                                     crepe_hop_length, main_gain, inst_gain, reverb_rm_size, reverb_width,
@@ -173,7 +167,7 @@ if __name__ == '__main__':
                                     compressor_threshold, low_shelf_gain, high_shelf_gain, limiter_threshold,
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                                     drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
-                                    chorus_mix, clipping_threshold, f0_min, f0_max,
+                                    chorus_mix, clipping_threshold,
                                     ai_cover, ai_vocals, main_vocals_dereverb, instrumentals])
 
         with gr.Tab('Загрузка модели'):
