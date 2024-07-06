@@ -67,7 +67,7 @@ if __name__ == '__main__':
                         use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
                         crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
-                keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал', visible=False)
+                keep_files = gr.Checkbox(label='Сохранить промежуточные файлы', info='Сохранять все аудиофайлы, созданные в директории song_output/id, например, Извлеченный Вокал/Инструментал', visible=False, value=False)
 
             with gr.Accordion('Настройки сведения аудио', open=False):
                 gr.Markdown('<center><h2>Изменение громкости (децибел)</h2></center>')
