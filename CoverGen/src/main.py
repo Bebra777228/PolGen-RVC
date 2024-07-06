@@ -150,7 +150,7 @@ def preprocess_song(song_input, mdx_model_params, song_id, is_webui, input_type,
     display_progress('[~] Применение DeReverb к вокалу...', 0.3, is_webui, progress)
     _, main_vocals_dereverb_path = run_mdx(mdx_model_params, song_output_dir, os.path.join(mdxnet_models_dir, 'Reverb_HQ_By_FoxJoy.onnx'), vocals_path, invert_suffix='DeReverb', exclude_main=True, denoise=True)
 
-    return orig_song_path, vocals_path, instrumentals_path, main_vocals_dereverb_path
+    return orig_song_path, instrumentals_path, main_vocals_dereverb_path
 
 def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui):
     rvc_model_path, rvc_index_path = get_rvc_model(voice_model, is_webui)
@@ -198,10 +198,10 @@ def add_audio_effects(audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb
 
 def combine_audio(audio_paths, output_path, main_gain, inst_gain, output_format):
     main_vocal_audio = AudioSegment.from_wav(audio_paths[0]) - 4 + main_gain
-    instrumental_audio = AudioSegment.from_wav(audio_paths[2]) - 7 + inst_gain
-    main_vocal_audio.overlay(backup_vocal_audio).overlay(instrumental_audio).export(output_path, format=output_format)
+    instrumental_audio = AudioSegment.from_wav(audio_paths[1]) - 7 + inst_gain
+    main_vocal_audio.overlay(instrumental_audio).export(output_path, format=output_format)
 
-def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_webui=0, main_gain=0, backup_gain=0, inst_gain=0, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe', 
+def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_webui=0, main_gain=0, inst_gain=0, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe', 
                         crepe_hop_length=128, protect=0.33, reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0, low_shelf_gain=0, high_shelf_gain=0, 
                         limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15, delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2, noise_gate_attack=10, 
                         noise_gate_release=100, output_format='mp3', progress=gr.Progress(), drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, 
