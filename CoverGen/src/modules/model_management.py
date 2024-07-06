@@ -75,17 +75,3 @@ def upload_zip_model(zip_path, dir_name, progress=gr.Progress()):
 
     except Exception as e:
         raise gr.Error(str(e))
-
-
-def upload_files_model(pth_file, index_file, model_name):
-    try:
-        extraction_folder = os.path.join(rvc_models_dir, dir_name)
-        if os.path.exists(extraction_folder):
-            raise gr.Error(f'Директория голосовой модели {dir_name} уже существует! Выберите другое имя для вашей голосовой модели.')
-        pth_file = pth_file.name
-        index_file = index_file.name
-        MODELS.append({"model": pth_file, "index": index_file, "model_name": model_name})
-        return f'[+] Модель {model_name} успешно загружена!'
-    
-    except Exception as e:
-        raise gr.Error(str(e))
