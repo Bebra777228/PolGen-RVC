@@ -10,7 +10,7 @@ pyworld==0.3.4
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torchcrepe==0.0.20
 yt_dlp==2023.7.6
-gradio==4.37.2
+gradio==3.48.0
 tensorboardX
 einops
 local-attention
