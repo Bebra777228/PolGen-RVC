@@ -6,9 +6,9 @@ import gdown
 import gradio as gr
 
 from main import song_cover_pipeline
-from modules.model_management import *
-from modules.ui_updates import *
-from modules.file_processing import *
+from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
+from modules.ui_updates import swap_visibility, show_hop_slider, update_f0_method
+from modules.file_processing import process_file_upload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
