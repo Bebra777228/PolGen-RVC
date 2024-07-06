@@ -47,9 +47,10 @@ if __name__ == '__main__':
                             show_file_upload_button = gr.Button('Загрузить файл с устройства')
 
                         with gr.Column(visible=False) as file_upload_col:
-                            local_file = gr.File(label='Аудио-файл', file_types='audio', source='upload')
+                            local_file = gr.File(label='Аудио-файл')
+                            song_input_file = gr.UploadButton('Загрузить', file_types=['audio'], variant='primary')
                             show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к локальному файлу')
-                            local_file.upload(process_file_upload, inputs=[local_file], outputs=[local_file, song_input])
+                            song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
 
                         with gr.Column():
                             pitch = gr.Slider(-24, 24, value=0, step=1, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
