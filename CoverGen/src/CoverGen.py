@@ -47,11 +47,11 @@ if __name__ == '__main__':
                             show_file_upload_button = gr.Button('Загрузить файл с устройства')
 
                         with gr.Column(visible=False) as file_upload_col:
-                            local_file = gr.File(label='Аудио-файл')
+                            local_file = gr.Audio(label='Аудио-файл')
                             song_input_file = gr.UploadButton('Загрузить', file_types=['audio'], variant='primary')
                             show_yt_link_button = gr.Button('Вставить ссылку на YouTube / Путь к локальному файлу')
                             song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file, song_input])
-                            
+
                         show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                         show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
             
