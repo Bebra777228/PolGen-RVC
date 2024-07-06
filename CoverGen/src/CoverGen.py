@@ -188,27 +188,16 @@ if __name__ == '__main__':
                 download_btn.click(download_from_url, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
             with gr.Tab('Загрузить локально'):
-                with gr.Accordion('Загрузить ZIP архив', open=False):
-                    with gr.Row():
-                        with gr.Column(scale=2):
-                            zip_file = gr.File(label='Zip-файл')
+                with gr.Row():
+                    with gr.Column(scale=2):
+                        zip_file = gr.File(label='Zip-файл')
     
-                        with gr.Column(scale=1.5):
-                            local_model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
-                            model_upload_button = gr.Button('Загрузить модель', variant='primary')
+                    with gr.Column(scale=1.5):
+                        local_model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
+                        model_upload_button = gr.Button('Загрузить модель', variant='primary')
     
-                    with gr.Row():
-                        local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
-                        model_upload_button.click(upload_zip_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
-                
-                with gr.Accordion('Загрузить файлы отдельно', open=False):
-                    pth_file_upload = gr.File(label="Файл модели (.pth)")
-                    index_file_upload = gr.File(label="Индексный файл (.index)")
-        
-                    model_name = gr.Textbox(label="Имя модели", info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
-                    upload_button = gr.Button("Загрузить модель")
-                    upload_status = gr.Textbox(lines=1, label="Status", interactive=False)
-        
-                    upload_button.click(upload_files_model, [pth_file_upload, index_file_upload, model_name], upload_status)
+                with gr.Row():
+                    local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
+                    model_upload_button.click(upload_zip_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
 
     app.launch(share=True, enable_queue=True)
