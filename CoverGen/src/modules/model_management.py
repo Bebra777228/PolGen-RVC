@@ -3,7 +3,6 @@ import shutil
 import urllib.request
 import zipfile
 import gdown
-from mega import Mega
 import gradio as gr
 
 
