@@ -3,7 +3,6 @@ import shutil
 import urllib.request
 import zipfile
 import gdown
-from mega import Mega
 import gradio as gr
 
 
@@ -66,10 +65,6 @@ def download_from_url(url, dir_name, progress=gr.Progress()):
             file_id = url.split('/')[-2]
             output = os.path.join('.', f'{dir_name}.zip')
             gdown.download(id=file_id, output=output, quiet=False)
-        elif "mega.nz" in url:
-            zip_name = dir_name + '.zip'
-            m = Mega()
-            m.download_url(url, zip_name)
 
         progress(0.5, desc='[~] Распаковка zip-файла...')
         extract_zip(extraction_folder, zip_name)
