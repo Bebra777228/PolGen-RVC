@@ -14,4 +14,3 @@ gradio==3.48.0
 tensorboardX
 einops
 local-attention
-mega.py
