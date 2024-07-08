@@ -19,7 +19,7 @@ def dl_model(link, model_name, dir_name):
 
 
 if __name__ == '__main__':
-    mdx_model_names = ['Kim_Vocal_2.onnx', 'Reverb_HQ_By_FoxJoy.onnx']
+    mdx_model_names = ['Kim_Vocal_2.onnx', 'Reverb_HQ_By_FoxJoy.onnx', 'UVR_MDXNET_KARA_2.onnx']
     for model in mdx_model_names:
         print(f'Загрузка {model}...')
         dl_model(MDX_DOWNLOAD_LINK, model, mdxnet_models_dir)
