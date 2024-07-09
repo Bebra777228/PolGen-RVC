@@ -55,6 +55,8 @@ if __name__ == '__main__':
                         show_file_upload_button.click(swap_visibility, outputs=[file_upload_col, yt_link_col, song_input, local_file])
                         show_yt_link_button.click(swap_visibility, outputs=[yt_link_col, file_upload_col, song_input, local_file])
 
+            pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
+
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 with gr.Row():
                     index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info="Управляет тем, сколько акцента AI-голоса сохранять в вокале. Выбор меньших значений может помочь снизить артефакты, присутствующие в аудио")
@@ -133,40 +135,46 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=5):
                     with gr.Box():
-                        pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
-                        ai_cover = gr.Audio(label='AI-кавер (основной вокал)', type='filepath', show_share_button=False)
-                        ai_cover_backing = gr.Audio(label='AI-кавер (основмной вокал и бэк-вокал)', type='filepath', show_share_button=False)
-                        ai_cover_all = gr.Audio(label='AI-кавер (весь вокал)', type='filepath', show_share_button=False)
+                        with gr.Row():
+                            convert_orig = gr.Checkbox(label='Без музыки')
+                            convert_leed = gr.Checkbox(label='Основной вокал', value=True)
+                            convert_backup = gr.Checkbox(label='Бэк-вокал')
+                            convert_all = gr.Checkbox(label='Весь вокал')
+                        ai_orig = gr.Audio(label='AI-кавер', visible=False)
+                        ai_cover = gr.Audio(label='AI-кавер (основной вокал)', visible=False)
+                        ai_cover_backing = gr.Audio(label='AI-кавер (основмной вокал и бэк-вокал)', visible=False)
+                        ai_cover_all = gr.Audio(label='AI-кавер (весь вокал)', visible=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
-                            ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
-                            ai_backing = gr.Audio(label='Преобразованный Бэк-Вокал', show_share_button=False)
-                            main_vocals_dereverb = gr.Audio(label='Вокал', show_share_button=False)
-                            backup_vocals = gr.Audio(label='Бэк-Вокал', show_share_button=False)
-                            all_vocals = gr.Audio(label='Весь вокал', show_share_button=False)
-                            instrumentals = gr.Audio(label='Инструментал', show_share_button=False)
+                            ai_vocals = gr.Audio(label='Преобразованный Вокал', visible=False)
+                            ai_backing = gr.Audio(label='Преобразованный Бэк-Вокал', visible=False)
+                            main_vocals_dereverb = gr.Audio(label='Вокал', visible=False)
+                            backup_vocals = gr.Audio(label='Бэк-Вокал', visible=False)
+                            all_vocals = gr.Audio(label='Весь вокал', visible=False)
+                            instrumentals = gr.Audio(label='Инструментал', visible=False)
 
                 with gr.Column(scale=1, min_width=100, min_height=100):
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.5)
-                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=use_hybrid_methods, min_width=100, min_height=100)
+                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[use_hybrid_methods, convert_orig, convert_leed, convert_backup, convert_all], min_width=100, min_height=100)
 
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             is_webui = gr.Number(value=1, visible=False)
             generate_btn.click(song_cover_pipeline,
-                              inputs=[song_input, rvc_model, pitch, keep_files, is_webui, main_gain, backup_gain,
-                                      inst_gain, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length,
-                                      protect, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
-                                      low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio,
-                                      compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
-                                      noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format,
-                                      drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                                      clipping_threshold],
-                              outputs=[ai_cover, ai_cover_backing, ai_cover_all, ai_vocals, ai_backing, main_vocals_dereverb, backup_vocals, all_vocals, instrumentals])
+                              inputs=[song_input, rvc_model, pitch, keep_files, convert_orig, convert_leed, convert_backup, convert_all, is_webui,
+                                      main_gain, backup_gain, inst_gain, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length,
+                                      protect, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width, low_shelf_gain, high_shelf_gain,
+                                      limiter_threshold, compressor_ratio, compressor_threshold, delay_time, delay_feedback, noise_gate_threshold,
+                                      noise_gate_ratio, noise_gate_attack, noise_gate_release, output_format, drive_db, chorus_rate_hz, chorus_depth,
+                                      chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold],
+                              outputs=[ai_orig, ai_cover, ai_cover_backing, ai_cover_all,
+                                       ai_vocals, ai_backing, main_vocals_dereverb,
+                                       backup_vocals, all_vocals, instrumentals])
             clear_btn.click(lambda: [0, 0, 3, 0.25, 0.33, 128, 0,
                                     0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0,
                                     4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0,
                                     0, 0, 0, 0, 0,
-                                    None, None, None, None, None, None, None, None, None],
+                                    None, None, None, None, None,
+                                    None, None, None, None, None],
                             outputs=[pitch, index_rate, filter_radius, rms_mix_rate, protect,
                                     crepe_hop_length, main_gain, backup_gain, inst_gain, reverb_rm_size, reverb_width,
                                     reverb_wet, reverb_dry, reverb_damping, delay_time, delay_feedback, compressor_ratio,
@@ -174,7 +182,9 @@ if __name__ == '__main__':
                                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                                     drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
                                     chorus_mix, clipping_threshold,
-                                    ai_cover, ai_cover_backing, ai_cover_all, ai_vocals, ai_backing, main_vocals_dereverb, backup_vocals, all_vocals, instrumentals])
+                                    ai_orig, ai_cover, ai_cover_backing, ai_cover_all,
+                                    ai_vocals, ai_backing, main_vocals_dereverb,
+                                    backup_vocals, all_vocals, instrumentals])
 
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
