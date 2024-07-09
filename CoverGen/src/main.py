@@ -255,13 +255,13 @@ def combine_audio(audio_paths, output_path, main_gain, backup_gain, inst_gain, o
     main_vocal_audio.overlay(backup_vocal_audio).overlay(instrumental_audio).export(output_path, format=output_format)
 
 
-def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_webui=0, main_gain=0, backup_gain=0, inst_gain=0,
-                        index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe', crepe_hop_length=128, protect=0.33,
-                        reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8, reverb_damping=0.7, reverb_width=1.0, low_shelf_gain=0,
-                        high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4, compressor_threshold=-15, delay_time=0.5,
-                        delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2, noise_gate_attack=10, noise_gate_release=100,
-                        output_format='mp3', progress=gr.Progress(), drive_db=0, chorus_rate_hz=1.1, chorus_depth=0.25,
-                        chorus_centre_delay_ms=25, chorus_feedback=0.25, chorus_mix=0.5, clipping_threshold=-6.0):
+def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, convert_orig, convert_leed, convert_backup, convert_all,
+                        is_webui=0, main_gain=0, backup_gain=0, inst_gain=0, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25,
+                        f0_method='rmvpe', crepe_hop_length=128, protect=0.33, reverb_rm_size=0.15, reverb_wet=0.2, reverb_dry=0.8,
+                        reverb_damping=0.7, reverb_width=1.0, low_shelf_gain=0, high_shelf_gain=0, limiter_threshold=-6, compressor_ratio=4,
+                        compressor_threshold=-15, delay_time=0.5, delay_feedback=0.5, noise_gate_threshold=-30, noise_gate_ratio=2,
+                        noise_gate_attack=10, noise_gate_release=100, output_format='mp3', progress=gr.Progress(), drive_db=0, chorus_rate_hz=1.1,
+                        chorus_depth=0.25, chorus_centre_delay_ms=25, chorus_feedback=0.25, chorus_mix=0.5, clipping_threshold=-6.0):
 
     try:
         if not song_input or not voice_model:
