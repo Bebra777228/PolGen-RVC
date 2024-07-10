@@ -73,23 +73,23 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     del hubert_model, cpt
     gc.collect()
 
-def song_cover_pipeline(song_input, voice_model, pitch_change, is_webui=0, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
+def song_cover_pipeline(local_file, voice_model, pitch_change, is_webui=0, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
                         crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress()):
 
-    if not song_input or not voice_model:
+    if not local_file or not voice_model:
         raise_exception('Убедитесь, что поле ввода песни и поле модели голоса заполнены.', is_webui)
 
     display_progress('[~] Запуск конвейера генерации AI-кавера...', 0, is_webui, progress)
 
-    if not os.path.exists(song_input):
-        error_msg = f'{song_input} не существует.'
+    if not os.path.exists(local_file):
+        error_msg = f'{local_file} не существует.'
         raise_exception(error_msg, is_webui)
 
-    song_id = get_hash(song_input)
+    song_id = get_hash(local_file)
     song_dir = os.path.join(output_dir, song_id)
     os.makedirs(song_dir, exist_ok=True)
 
-    orig_song_path = convert_to_stereo(song_input)
+    orig_song_path = convert_to_stereo(local_file)
     ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
 
     if os.path.exists(ai_cover_path):
