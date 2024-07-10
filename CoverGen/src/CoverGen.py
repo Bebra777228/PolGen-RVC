@@ -65,7 +65,7 @@ if __name__ == '__main__':
                     protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных', info='Защищает глухие согласные и звуки дыхания. Увеличение параметра до максимального значения 0,5 обеспечивает полную защиту')
                     with gr.Column():
                         use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
-                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe', 'harvest', 'dio', 'pm'], value='rmvpe+', label='Метод выделения тона')
+                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона')
                         use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
                         crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
