@@ -3,9 +3,7 @@ faiss-cpu==1.7.3
 ffmpeg-python>=0.2.0
 lib==4.0.0
 praat-parselmouth>=0.4.2
-pydub==0.25.1
 pyworld==0.3.4
---find-links https://download.pytorch.org/whl/torch_stable.html
 torchcrepe==0.0.20
 gradio==4.29.0
 tensorboardX
