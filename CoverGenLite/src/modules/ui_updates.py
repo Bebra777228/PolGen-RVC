@@ -1,7 +1,4 @@
 import gradio as gr
-
-def swap_visibility():
-    return gr.update(visible=True), gr.update(visible=False), gr.update(value=''), gr.update(value=None)
     
 
 def show_hop_slider(pitch_detection_algo):
