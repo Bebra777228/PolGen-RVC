@@ -7,7 +7,7 @@ pydub==0.25.1
 pyworld==0.3.4
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torchcrepe==0.0.20
-gradio==3.48.0
+gradio==4.29.0
 tensorboardX
 einops
 local-attention
