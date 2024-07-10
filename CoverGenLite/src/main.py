@@ -2,6 +2,7 @@ import gc
 import hashlib
 import json
 import os
+import shlex
 import subprocess
 from contextlib import suppress
 from urllib.parse import urlparse, parse_qs
@@ -10,6 +11,7 @@ import gradio as gr
 import librosa
 import numpy as np
 import soundfile as sf
+from pydub import AudioSegment
 
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
