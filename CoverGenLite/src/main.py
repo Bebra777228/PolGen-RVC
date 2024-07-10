@@ -43,13 +43,13 @@ def get_rvc_model(voice_model, is_webui):
 
 def get_audio_paths(song_dir):
     orig_song_path = None
-    main_vocals_dereverb_path = None
 
     for file in os.listdir(song_dir):
-        if file.endswith('_Vocals_Main_DeReverb.wav'):
-            main_vocals_dereverb_path = os.path.join(song_dir, file)
+        if file.endswith('.wav'):
+            orig_song_path = os.path.join(song_dir, file)
+            break
 
-    return orig_song_path, main_vocals_dereverb_path
+    return orig_song_path
 
 def convert_to_stereo(audio_path):
     wave, sr = librosa.load(audio_path, mono=False, sr=44100)
@@ -108,24 +108,19 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, is_webui=0, index
 
         if not os.path.exists(song_dir):
             os.makedirs(song_dir)
-            orig_song_path, main_vocals_dereverb_path = get_audio_paths(song_dir)
+            orig_song_path = get_audio_paths(song_dir)
         else:
-            paths = get_audio_paths(song_dir)
-
-            if any(path is None for path in paths):
-                orig_song_path, main_vocals_dereverb_path = get_audio_paths(song_dir)
-            else:
-                orig_song_path, main_vocals_dereverb_path = paths
+            orig_song_path = get_audio_paths(song_dir)
 
         ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_voice.wav')
         ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
 
         if not os.path.exists(ai_vocals_path):
             display_progress('[~] Преобразование вокала...', 0.5, is_webui, progress)
-            voice_change(voice_model, main_vocals_dereverb_path, ai_vocals_path, pitch_change, f0_method, index_rate,
+            voice_change(voice_model, orig_song_path, ai_vocals_path, pitch_change, f0_method, index_rate,
                          filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
 
-        return [ai_cover_path, ai_vocals_path, main_vocals_dereverb_path]
+        return [ai_cover_path, ai_vocals_path]
 
     except Exception as e:
         raise_exception(str(e), is_webui)
