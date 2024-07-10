@@ -1,4 +1,3 @@
-import argparse
 import gc
 import hashlib
 import json
@@ -89,12 +88,13 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, is_webui=0, index
     os.makedirs(song_dir, exist_ok=True)
 
     orig_song_path = convert_to_stereo(song_input)
-    ai_vocals_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]}_{voice_model}_converted_voice.wav')
     ai_cover_path = os.path.join(song_dir, f'{os.path.splitext(os.path.basename(orig_song_path))[0]} ({voice_model} Ver).{output_format}')
 
-    if not os.path.exists(ai_vocals_path):
-        display_progress('[~] Преобразование вокала...', 0.5, is_webui, progress)
-        voice_change(voice_model, orig_song_path, ai_vocals_path, pitch_change, f0_method, index_rate,
-                     filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
+    if os.path.exists(ai_cover_path):
+        os.remove(ai_cover_path)
 
-    return [ai_cover_path, ai_vocals_path]
+    display_progress('[~] Преобразование вокала...', 0.5, is_webui, progress)
+    voice_change(voice_model, orig_song_path, ai_cover_path, pitch_change, f0_method, index_rate,
+                 filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
+
+    return ai_cover_path
