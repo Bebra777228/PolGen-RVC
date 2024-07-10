@@ -110,7 +110,14 @@ def song_cover_pipeline(song_input, voice_model, pitch_change, keep_files, is_we
 
         display_progress('[~] Запуск конвейера генерации AI-кавера...', 0, is_webui, progress)
 
-        song_id = get_hash(song_input)
+        if os.path.exists(song_input):
+            song_id = get_hash(song_input)
+            orig_song_path = song_input
+        else:
+            error_msg = f'{song_input} не существует.'
+            song_id = None
+            raise_exception(error_msg, is_webui)
+
         song_dir = os.path.join(output_dir, song_id)
 
         if not os.path.exists(song_dir):
