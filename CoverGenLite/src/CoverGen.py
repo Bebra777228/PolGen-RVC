@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
         with gr.Tab("Велком/Контакты"):
             gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
-            gr.Markdown("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.1)</h1></center>")
+            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.1)</h1></center>")
             with gr.Row():
                 with gr.Column():
                     gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
@@ -39,18 +39,16 @@ if __name__ == '__main__':
                 with gr.Column(scale=1):
                     rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
                     ref_btn = gr.Button('Обновить список моделей 🔁', variant='primary')
+                    pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса')
 
                 with gr.Column(scale=2):
                     local_file = gr.Audio(label='Аудио-файл', interactive=False)
-                    song_input_file = gr.UploadButton('Загрузить', file_types=['audio'], variant='primary')
-                    song_input_file.upload(process_file_upload, inputs=[song_input_file], outputs=[local_file])
-
-            with gr.Column():
-                pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса')
+                    uploaded_file = gr.UploadButton('Загрузить аудио-файл', file_types=['audio'], variant='primary')
+                    uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
 
             with gr.Row():
                 generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
-                ai_cover = gr.Audio(label='AI-кавер', visible=True, scale=3)
+                ai_cover = gr.Audio(label='AI-кавер', scale=3)
                 output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1)
 
             with gr.Column():
@@ -68,7 +66,7 @@ if __name__ == '__main__':
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             is_webui = gr.Number(value=1, visible=False)
             generate_btn.click(song_cover_pipeline,
-                              inputs=[local_file, rvc_model, pitch, is_webui, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
+                              inputs=[uploaded_file, rvc_model, pitch, is_webui, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
                               outputs=[ai_cover])
 
         with gr.Tab('Загрузка модели'):
@@ -84,7 +82,7 @@ if __name__ == '__main__':
 
             with gr.Tab('Загрузить локально'):
                 with gr.Row():
-                    zip_file = gr.File(label='Zip-файл')
+                    zip_file = gr.File(label='Zip-файл', file_types=['.zip'])
                     with gr.Column():
                         local_model_name = gr.Text(label='Имя модели')
                         model_upload_button = gr.Button('Загрузить модель', variant='primary')
@@ -92,4 +90,4 @@ if __name__ == '__main__':
                 local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 model_upload_button.click(upload_zip_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
 
-    app.launch(share=True, enable_queue=True)
+    app.launch(share=True)
