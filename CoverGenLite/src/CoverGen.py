@@ -38,9 +38,9 @@ if __name__ == '__main__':
                 with gr.Column(scale=1, variant='panel'):
                     with gr.Group():
                         rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
-                        ref_btn = gr.Button('Обновить список моделей 🔁', variant='primary')
+                        ref_btn = gr.Button('Обновить список моделей', variant='primary')
                     with gr.Group():
-                        pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса')
+                        pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
 
                 with gr.Column(scale=2, variant='panel'):
                     with gr.Group():
@@ -51,7 +51,7 @@ if __name__ == '__main__':
             with gr.Group():
                 with gr.Row(variant='panel'):
                     generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
-                    ai_cover = gr.Audio(label='AI-кавер', scale=5)
+                    ai_cover = gr.Audio(label='Преобразованный голос', scale=5)
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
@@ -63,10 +63,10 @@ if __name__ == '__main__':
                         crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
                     with gr.Column(variant='panel'):
-                        index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса')
-                        filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра')
-                        rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS')
-                        protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных')
+                        index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info='Контролирует степень влияния индексного файла на результат анализа. Более высокое значение увеличивает влияние индексного файла, но может усилить артефакты в аудио. Выбор более низкого значения может помочь снизить артефакты.')
+                        filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
+                        rms_mix_rate = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
+                        protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             is_webui = gr.Number(value=1, visible=False)
@@ -76,22 +76,28 @@ if __name__ == '__main__':
 
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
-                with gr.Row(equal_height=False):
-                    model_zip_link = gr.Text(label='Ссылка на загрузку модели')
+                with gr.Row():
+                    with gr.Column(variant='panel'):
+                        gr.HTML("<center><h3>Вставьте в поле ниже ссылку от <a href='https://huggingface.co/' target='_blank'>HuggingFace</a>, <a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a> или <a href='https://drive.google.com/' target='_blank'>Google Drive</a></h3></center>")
+                        model_zip_link = gr.Text(label='Ссылка на загрузку модели')
                     with gr.Column(variant='panel'):
                         with gr.Group():
-                            model_name = gr.Text(label='Имя модели')
+                            model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
                             download_btn = gr.Button('Загрузить модель', variant='primary')
 
                 dl_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 download_btn.click(download_from_url, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
             with gr.Tab('Загрузить локально'):
-                with gr.Row(equal_height=False):
-                    zip_file = gr.File(label='Zip-файл', file_types=['.zip'], file_count='single')
+                with gr.Row():
                     with gr.Column(variant='panel'):
+                        zip_file = gr.File(label='Zip-файл', file_types=['.zip'], file_count='single')
+                    with gr.Column(variant='panel'):
+                        gr.HTML("<h3>1. Найдите и скачайте файлы: .pth и необязательный файл .index</h3>")
+                        gr.HTML("<h3>2. Закиньте эти 2 файла в ZIP-архив и загрузите его в нужную область</h3>")
+                        gr.HTML('<h3>3. Дождитесь полной загрузки ZIP-архива в интерфейс</h3>')
                         with gr.Group():
-                            local_model_name = gr.Text(label='Имя модели')
+                            local_model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
                             model_upload_button = gr.Button('Загрузить модель', variant='primary')
 
                 local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
