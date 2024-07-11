@@ -7,21 +7,19 @@ import gradio as gr
 
 from main import song_cover_pipeline
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
-from modules.ui_updates import show_hop_slider, update_f0_method
+from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text
 from modules.file_processing import process_file_upload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
 output_dir = os.path.join(BASE_DIR, 'song_output')
 
-image_path = "/content/CoverGen/content/CoverGen.png"
 
 if __name__ == '__main__':
     voice_models = ignore_files(rvc_models_dir)
 
     with gr.Blocks(title='CoverGen Lite - Politrees (v0.1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral")) as app:
         with gr.Tab("Велком/Контакты"):
-            gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
             gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.1)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
@@ -45,8 +43,9 @@ if __name__ == '__main__':
                 with gr.Column(scale=2, variant='panel'):
                     with gr.Group():
                         local_file = gr.Audio(label='Аудио-файл', interactive=False, show_download_button=False)
-                        uploaded_file = gr.UploadButton('Загрузить аудио-файл', file_types=['audio'], variant='primary')
+                        uploaded_file = gr.UploadButton(label='Загрузить аудио-файл', file_types=['audio'], variant='primary')
                         uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
+                        uploaded_file.upload(update_button_text, outputs=[uploaded_file])
 
             with gr.Group():
                 with gr.Row(variant='panel'):
