@@ -25,43 +25,49 @@ if __name__ == '__main__':
             gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
             gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.1)</h1></center>")
             with gr.Row():
-                with gr.Column():
+                with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
                     gr.HTML("<center><h2><a href='https://vk.com/artem__bebroy'>ВКонтакте (страница)</a></h2></center>")
-                with gr.Column():
+                with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://t.me/pol1trees'>Telegram Канал</a></h2></center>")
                     gr.HTML("<center><h2><a href='https://t.me/+GMTP7hZqY0E4OGRi'>Telegram Чат</a></h2></center>")
-
-            gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub проекта</a></h2></center>")
+            with gr.Column(variant='panel'):
+                gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub проекта</a></h2></center>")
 
         with gr.Tab("CoverGen"):
-            with gr.Row():
-                with gr.Column(scale=1):
-                    rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
-                    ref_btn = gr.Button('Обновить список моделей 🔁', variant='primary')
-                    pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса')
+            with gr.Row(equal_height=False):
+                with gr.Column(scale=1, variant='panel'):
+                    with gr.Group():
+                        rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
+                        ref_btn = gr.Button('Обновить список моделей 🔁', variant='primary')
+                    with gr.Group():
+                        pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса')
 
-                with gr.Column(scale=2):
-                    local_file = gr.Audio(label='Аудио-файл', interactive=False)
-                    uploaded_file = gr.UploadButton('Загрузить аудио-файл', file_types=['audio'], variant='primary')
-                    uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
+                with gr.Column(scale=2, variant='panel'):
+                    with gr.Group():
+                        local_file = gr.Audio(label='Аудио-файл', interactive=False)
+                        uploaded_file = gr.UploadButton('Загрузить аудио-файл', file_types=['audio'], variant='primary')
+                        uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
 
-            with gr.Row():
-                generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
-                ai_cover = gr.Audio(label='AI-кавер', scale=3)
-                output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1)
+            with gr.Group():
+                with gr.Row(variant='panel'):
+                    generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
+                    ai_cover = gr.Audio(label='AI-кавер', scale=5)
+                    output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1)
 
-            with gr.Column():
-                with gr.Accordion('Настройки преобразования голоса', open=False):
-                    index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса')
-                    filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра')
-                    rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS')
-                    protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных')
-                    use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
-                    f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона')
-                    use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
-                    crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
-                    f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
+            with gr.Accordion('Настройки преобразования голоса', open=False):
+                with gr.Group():
+                    with gr.Column(variant='panel'):
+                        use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
+                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона')
+                        use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
+                        crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
+                        f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
+                    with gr.Column(variant='panel'):
+                        index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса')
+                        filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра')
+                        rms_mix_rate = gr.Slider(0, 1, value=0.25, label='Скорость смешивания RMS')
+                        protect = gr.Slider(0, 0.5, value=0.33, label='Защита согласных')
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             is_webui = gr.Number(value=1, visible=False)
@@ -71,9 +77,9 @@ if __name__ == '__main__':
 
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
-                with gr.Row():
+                with gr.Row(equal_height=False):
                     model_zip_link = gr.Text(label='Ссылка на загрузку модели')
-                    with gr.Column():
+                    with gr.Column(variant='panel'):
                         model_name = gr.Text(label='Имя модели')
                         download_btn = gr.Button('Загрузить модель', variant='primary')
 
@@ -81,9 +87,9 @@ if __name__ == '__main__':
                 download_btn.click(download_from_url, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
             with gr.Tab('Загрузить локально'):
-                with gr.Row():
+                with gr.Row(equal_height=False):
                     zip_file = gr.File(label='Zip-файл', file_types=['.zip'])
-                    with gr.Column():
+                    with gr.Column(variant='panel'):
                         local_model_name = gr.Text(label='Имя модели')
                         model_upload_button = gr.Button('Загрузить модель', variant='primary')
 
