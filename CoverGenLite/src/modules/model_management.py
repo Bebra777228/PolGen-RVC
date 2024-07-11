@@ -18,7 +18,7 @@ def ignore_files(models_dir):
 
 def update_models_list():
     models_l = ignore_files(rvc_models_dir)
-    return gr.Dropdown.update(choices=models_l)
+    return gr.update(choices=models_l)
 
 
 def extract_zip(extraction_folder, zip_name):
