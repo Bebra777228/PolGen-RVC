@@ -19,8 +19,7 @@ image_path = "/content/CoverGen/content/CoverGen.png"
 if __name__ == '__main__':
     voice_models = ignore_files(rvc_models_dir)
 
-    with gr.Blocks(title='CoverGen Lite - Politrees (v0.1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green")) as app:
-
+    with gr.Blocks(title='CoverGen Lite - Politrees (v0.1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral")) as app:
         with gr.Tab("Велком/Контакты"):
             gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
             gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.1)</h1></center>")
@@ -45,7 +44,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=2, variant='panel'):
                     with gr.Group():
-                        local_file = gr.Audio(label='Аудио-файл', interactive=False)
+                        local_file = gr.Audio(label='Аудио-файл', interactive=False, show_download_button=False)
                         uploaded_file = gr.UploadButton('Загрузить аудио-файл', file_types=['audio'], variant='primary')
                         uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
 
@@ -53,13 +52,13 @@ if __name__ == '__main__':
                 with gr.Row(variant='panel'):
                     generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
                     ai_cover = gr.Audio(label='AI-кавер', scale=5)
-                    output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1)
+                    output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 with gr.Group():
                     with gr.Column(variant='panel'):
                         use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
-                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона')
+                        f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
                         use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
                         crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
@@ -80,18 +79,20 @@ if __name__ == '__main__':
                 with gr.Row(equal_height=False):
                     model_zip_link = gr.Text(label='Ссылка на загрузку модели')
                     with gr.Column(variant='panel'):
-                        model_name = gr.Text(label='Имя модели')
-                        download_btn = gr.Button('Загрузить модель', variant='primary')
+                        with gr.Group():
+                            model_name = gr.Text(label='Имя модели')
+                            download_btn = gr.Button('Загрузить модель', variant='primary')
 
                 dl_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 download_btn.click(download_from_url, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
             with gr.Tab('Загрузить локально'):
                 with gr.Row(equal_height=False):
-                    zip_file = gr.File(label='Zip-файл', file_types=['.zip'])
+                    zip_file = gr.File(label='Zip-файл', file_types=['.zip'], file_count='single')
                     with gr.Column(variant='panel'):
-                        local_model_name = gr.Text(label='Имя модели')
-                        model_upload_button = gr.Button('Загрузить модель', variant='primary')
+                        with gr.Group():
+                            local_model_name = gr.Text(label='Имя модели')
+                            model_upload_button = gr.Button('Загрузить модель', variant='primary')
 
                 local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 model_upload_button.click(upload_zip_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
