@@ -10,6 +10,6 @@ def show_hop_slider(pitch_detection_algo):
 
 def update_f0_method(use_hybrid_methods):
     if use_hybrid_methods:
-        return gr.Dropdown.update(choices=['hybrid[rmvpe+fcpe]', 'hybrid[rmvpe+crepe]', 'hybrid[crepe+rmvpe]', 'hybrid[crepe+fcpe]', 'hybrid[crepe+rmvpe+fcpe]'], value='hybrid[rmvpe+fcpe]')
+        return gr.update(choices=['hybrid[rmvpe+fcpe]', 'hybrid[rmvpe+crepe]', 'hybrid[crepe+rmvpe]', 'hybrid[crepe+fcpe]', 'hybrid[crepe+rmvpe+fcpe]'], value='hybrid[rmvpe+fcpe]')
     else:
-        return gr.Dropdown.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+')
+        return gr.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+')
