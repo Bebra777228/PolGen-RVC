@@ -6,7 +6,7 @@ import gdown
 import gradio as gr
 
 from main import song_cover_pipeline
-from audio_effects import add_audio_effects
+#from audio_effects import add_audio_effects
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
 from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst
 from modules.file_processing import process_file_upload
@@ -74,6 +74,7 @@ if __name__ == '__main__':
                               inputs=[uploaded_file, rvc_model, pitch, is_webui, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
                               outputs=[converted_voice])
 
+'''
         with gr.Tab('Объединение/Обработка'):
             with gr.Row(equal_height=False):
                 with gr.Column(variant='panel'):
@@ -162,7 +163,8 @@ if __name__ == '__main__':
                                      noise_gate_release, drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms,
                                      chorus_feedback, chorus_mix, clipping_threshold, output_format, vocal_gain, instrumental_gain],
                              outputs=[ai_cover])
-        
+'''
+
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
                 with gr.Row():
