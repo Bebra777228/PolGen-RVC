@@ -31,7 +31,7 @@ if __name__ == '__main__':
             with gr.Column(variant='panel'):
                 gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub проекта</a></h2></center>")
 
-        with gr.Tab("CoverGen"):
+        with gr.Tab("Преобразование голоса"):
             with gr.Row(equal_height=False):
                 with gr.Column(scale=1, variant='panel'):
                     with gr.Group():
@@ -73,6 +73,8 @@ if __name__ == '__main__':
                               inputs=[uploaded_file, rvc_model, pitch, is_webui, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
                               outputs=[ai_cover])
 
+        #with gr.Tab('Объединение/Обработка'):
+        
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
                 with gr.Row():
