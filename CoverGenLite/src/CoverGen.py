@@ -6,6 +6,7 @@ import gdown
 import gradio as gr
 
 from main import song_cover_pipeline
+from audio_effects import add_audio_effects
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
 from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst
 from modules.file_processing import process_file_upload
@@ -50,7 +51,7 @@ if __name__ == '__main__':
             with gr.Group():
                 with gr.Row(variant='panel'):
                     generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
-                    ai_cover = gr.Audio(label='Преобразованный голос', scale=5)
+                    converted_voice = gr.Audio(label='Преобразованный голос', scale=5)
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
@@ -71,7 +72,7 @@ if __name__ == '__main__':
             is_webui = gr.Number(value=1, visible=False)
             generate_btn.click(song_cover_pipeline,
                               inputs=[uploaded_file, rvc_model, pitch, is_webui, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
-                              outputs=[ai_cover])
+                              outputs=[converted_voice])
 
         with gr.Tab('Объединение/Обработка'):
             with gr.Row():
