@@ -6,7 +6,7 @@ import gdown
 import gradio as gr
 
 from main import song_cover_pipeline
-#from audio_effects import add_audio_effects
+from audio_effects import add_audio_effects
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
 from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst
 from modules.file_processing import process_file_upload
@@ -74,7 +74,6 @@ if __name__ == '__main__':
                               inputs=[uploaded_file, rvc_model, pitch, is_webui, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
                               outputs=[converted_voice])
 
-'''
         with gr.Tab('Объединение/Обработка'):
             with gr.Row(equal_height=False):
                 with gr.Column(variant='panel'):
@@ -100,8 +99,9 @@ if __name__ == '__main__':
             with gr.Accordion('Настройки сведения аудио', open=False):
                 gr.HTML('<center><h2>Изменение громкости</h2></center>')
                 with gr.Row(variant='panel'):
-                    vocal_gain = gr.Slider(-10, 10, value=0, step=1, label='Вокал')
-                    instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал')
+                    vocal_gain = gr.Slider(-10, 10, value=0, step=1, label='Вокал', scale=1)
+                    instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал', scale=1)
+                    clear_btn = gr.Button("Сбросить все эффекты", scale=0.1)
 
                 with gr.Accordion('Эффекты', open=False):
                     with gr.Accordion('Реверберация', open=False):
@@ -157,13 +157,19 @@ if __name__ == '__main__':
                             clipping_threshold = gr.Slider(-20, 0, value=0, label='Порог', info='Этот параметр устанавливает пороговое значение в децибелах, при котором начинает действовать клиппинг. Клиппинг используется для предотвращения перегрузки и искажения аудиосигнала. Если значение порога слишком низкое, то звук может стать перегруженным и искаженным.')
 
             process_btn.click(add_audio_effects,
-                             inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
-                                     low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio, compressor_threshold,
-                                     delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio, noise_gate_attack,
-                                     noise_gate_release, drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms,
-                                     chorus_feedback, chorus_mix, clipping_threshold, output_format, vocal_gain, instrumental_gain],
+                             inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
+                             reverb_width, low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio, compressor_threshold,
+                             delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
+                             drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix, clipping_threshold,
+                             output_format, vocal_gain, instrumental_gain],
                              outputs=[ai_cover])
-'''
+
+            default_values = [0, 0, 0.2, 1.0, 0.1, 0.8, 0.7, 0, 0, 0, 0, 0, 0, 0, 4, -16, 0, 0, 0, -30, 6, 10, 100, 0, 0]
+            clear_btn.click(lambda: default_values,
+                            outputs=[vocal_gain, instrumental_gain, reverb_rm_size, reverb_width, reverb_wet, reverb_dry, reverb_damping,
+                            delay_time, delay_feedback, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
+                            compressor_ratio, compressor_threshold, limiter_threshold, low_shelf_gain, high_shelf_gain, noise_gate_threshold,
+                            noise_gate_ratio, noise_gate_attack, noise_gate_release, drive_db, clipping_threshold])
 
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
