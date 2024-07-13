@@ -1,4 +1,3 @@
-'''
 import os
 import librosa
 import numpy as np
@@ -56,7 +55,7 @@ def add_audio_effects(vocal_audio_path, instrumental_audio_path, reverb_rm_size,
          ]
     )
 
-    vocal_output_path = f'{os.path.splitext(vocal_audio_path)[0]}_mixed.wav'
+    vocal_output_path = f'Vocal_Effects.wav'
     with AudioFile(vocal_audio_path) as f:
         with AudioFile(vocal_output_path, 'w', f.samplerate, 2) as o:
             while f.tell() < f.frames:
@@ -69,7 +68,7 @@ def add_audio_effects(vocal_audio_path, instrumental_audio_path, reverb_rm_size,
     output_dir = os.path.join(BASE_DIR, 'processed_output')
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    combined_output_path = os.path.join(output_dir, f'{os.path.splitext(os.path.basename(vocal_audio_path))[0]}_combined.{output_format}')
+    combined_output_path = os.path.join(output_dir, f'AiCover_combined.{output_format}')
 
     if os.path.exists(combined_output_path):
         os.remove(combined_output_path)
