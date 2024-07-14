@@ -8,13 +8,17 @@ import asyncio
 
 from voice_changer import song_cover_pipeline, text_to_speech
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
-from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text
+from modules.ui_updates import show_hop_slider, update_f0_method, update_voices
 from modules.file_processing import process_file_upload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
 output_dir = os.path.join(BASE_DIR, 'song_output')
 
+voices = {
+    "Russian": ["ru-RU-SvetlanaNeural", "ru-RU-DmitryNeural"],
+    "English": ["en-US-JennyNeural", "en-US-GuyNeural"],
+}
 
 if __name__ == '__main__':
     voice_models = ignore_files(rvc_models_dir)
@@ -44,7 +48,10 @@ if __name__ == '__main__':
                 with gr.Column(scale=2, variant='panel'):
                     with gr.Group():
                         text_input = gr.Textbox(label='Введите текст для синтеза речи')
-                        local_file = gr.Audio(label='Аудио-файл', interactive=False, show_download_button=False)
+                        language = gr.Dropdown(list(voices.keys()), label='Выберите язык')
+                        voice = gr.Dropdown([], label='Выберите голос')
+
+                        language.change(update_voices, inputs=language, outputs=voice)
 
             with gr.Group():
                 with gr.Row(variant='panel'):
@@ -68,14 +75,14 @@ if __name__ == '__main__':
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             
-            async def generate_cover(text, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format):
+            async def generate_cover(text, language, voice, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format):
                 tts_output_path = "temp_audio.wav"
-                await text_to_speech(text, tts_output_path)
+                await text_to_speech(text, tts_output_path, voice)
                 result = song_cover_pipeline(tts_output_path, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format)
                 return result
 
             generate_btn.click(generate_cover, 
-                              inputs=[text_input, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format], 
+                              inputs=[text_input, language, voice, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format], 
                               outputs=[converted_voice])
 
         with gr.Tab('Загрузка модели'):
