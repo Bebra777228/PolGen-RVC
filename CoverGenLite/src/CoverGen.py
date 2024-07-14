@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=2, variant='panel'):
                     with gr.Group():
-                        local_file = gr.Audio(label='Аудио-файл', interactive=False, show_download_button=False)
+                        local_file = gr.Audio(label='Аудио-файл', interactive=False, show_download_button=False, waveform_options=gr.WaveformOptions(show_controls=False))
                         uploaded_file = gr.UploadButton(label='Загрузить аудио-файл', file_types=['audio'], variant='primary')
                         uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
                         uploaded_file.upload(update_button_text, outputs=[uploaded_file])
@@ -51,7 +51,7 @@ if __name__ == '__main__':
             with gr.Group():
                 with gr.Row(variant='panel'):
                     generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
-                    converted_voice = gr.Audio(label='Преобразованный голос', scale=5)
+                    converted_voice = gr.Audio(label='Преобразованный голос', waveform_options=gr.WaveformOptions(show_controls=False), scale=5)
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
             with gr.Accordion('Настройки преобразования голоса', open=False):
@@ -77,14 +77,14 @@ if __name__ == '__main__':
             with gr.Row(equal_height=False):
                 with gr.Column(variant='panel'):
                     with gr.Group():
-                        vocal_audio = gr.Audio(label='Вокал', interactive=False, show_download_button=False)
+                        vocal_audio = gr.Audio(label='Вокал', interactive=False, show_download_button=False, waveform_options=gr.WaveformOptions(show_controls=False))
                         upload_vocal_audio = gr.UploadButton(label='Загрузить вокал', file_types=['audio'], variant='primary')
                         upload_vocal_audio.upload(process_file_upload, inputs=[upload_vocal_audio], outputs=[vocal_audio])
                         upload_vocal_audio.upload(update_button_text_voc, outputs=[upload_vocal_audio])
         
                 with gr.Column(variant='panel'):
                     with gr.Group():
-                        instrumental_audio = gr.Audio(label='Инструментал', interactive=False, show_download_button=False)
+                        instrumental_audio = gr.Audio(label='Инструментал', interactive=False, show_download_button=False, waveform_options=gr.WaveformOptions(show_controls=False))
                         upload_instrumental_audio = gr.UploadButton(label='Загрузить инструментал', file_types=['audio'], variant='primary')
                         upload_instrumental_audio.upload(process_file_upload, inputs=[upload_instrumental_audio], outputs=[instrumental_audio])
                         upload_instrumental_audio.upload(update_button_text_inst, outputs=[upload_instrumental_audio])
@@ -92,7 +92,7 @@ if __name__ == '__main__':
             with gr.Group():
                 with gr.Row(variant='panel'):
                     process_btn = gr.Button("Обработать", variant='primary', scale=1)
-                    ai_cover = gr.Audio(label='Ai-Cover', scale=5)
+                    ai_cover = gr.Audio(label='Ai-Cover', waveform_options=gr.WaveformOptions(show_controls=False), scale=5)
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
             with gr.Accordion('Настройки сведения аудио', open=False):
