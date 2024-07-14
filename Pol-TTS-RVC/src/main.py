@@ -6,7 +6,7 @@ import subprocess
 import librosa
 import numpy as np
 import soundfile as sf
-import gradio as gr
+import edge_tts
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,8 +42,9 @@ def get_hash(filepath):
 
     return file_hash.hexdigest()[:11]
 
-def display_progress(percent, message, progress=gr.Progress()):
-    progress(percent, desc=message)
+def display_progress(percent, message, progress=None):
+    if progress:
+        progress(percent, desc=message)
 
 def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length):
     rvc_model_path, rvc_index_path = get_rvc_model(voice_model)
@@ -57,8 +58,12 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     del hubert_model, cpt
     gc.collect()
 
+async def text_to_speech(text, output_path):
+    communicate = edge_tts.Communicate(text, "ru-RU-SvetlanaNeural")
+    await communicate.save(output_path)
+
 def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
-                        crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress()):
+                        crepe_hop_length=128, protect=0.33, output_format='mp3', progress=None):
 
     if not uploaded_file or not voice_model:
         raise Exception('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
