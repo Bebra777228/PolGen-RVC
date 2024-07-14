@@ -3,31 +3,24 @@ import hashlib
 import os
 import shlex
 import subprocess
-import gradio as gr
 import librosa
 import numpy as np
 import soundfile as sf
-
+import gradio as gr
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
 output_dir = os.path.join(BASE_DIR, 'song_output')
 
-def raise_exception(error_msg, is_webui):
-    if is_webui:
-        raise gr.Error(error_msg)
-    else:
-        raise Exception(error_msg)
-
-def get_rvc_model(voice_model, is_webui):
+def get_rvc_model(voice_model):
     model_dir = os.path.join(rvc_models_dir, voice_model)
     rvc_model_path = next((os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.endswith('.pth')), None)
     rvc_index_path = next((os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.endswith('.index')), None)
 
     if rvc_model_path is None:
         error_msg = f'В каталоге {model_dir} отсутствует файл модели.'
-        raise_exception(error_msg, is_webui)
+        raise Exception(error_msg)
 
     return rvc_model_path, rvc_index_path
 
@@ -49,14 +42,11 @@ def get_hash(filepath):
 
     return file_hash.hexdigest()[:11]
 
-def display_progress(message, percent, is_webui, progress=None):
-    if is_webui:
-        progress(percent, desc=message)
-    else:
-        print(message)
+def display_progress(percent, message, progress=gr.Progress()):
+    progress(percent, desc=message)
 
-def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui):
-    rvc_model_path, rvc_index_path = get_rvc_model(voice_model, is_webui)
+def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length):
+    rvc_model_path, rvc_index_path = get_rvc_model(voice_model)
     device = 'cuda:0'
     config = Config(device, True)
     hubert_model = load_hubert(device, config.is_half, os.path.join(rvc_models_dir, 'hubert_base.pt'))
@@ -67,17 +57,17 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     del hubert_model, cpt
     gc.collect()
 
-def song_cover_pipeline(uploaded_file, voice_model, pitch_change, is_webui=0, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
+def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
                         crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress()):
 
     if not uploaded_file or not voice_model:
-        raise_exception('Убедитесь, что поле ввода песни и поле модели голоса заполнены.', is_webui)
+        raise Exception('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
 
-    display_progress('[~] Запуск конвейера генерации AI-кавера...', 0, is_webui, progress)
+    display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
 
     if not os.path.exists(uploaded_file):
         error_msg = f'{uploaded_file} не существует.'
-        raise_exception(error_msg, is_webui)
+        raise Exception(error_msg)
 
     song_id = get_hash(uploaded_file)
     song_dir = os.path.join(output_dir, song_id)
@@ -89,8 +79,8 @@ def song_cover_pipeline(uploaded_file, voice_model, pitch_change, is_webui=0, in
     if os.path.exists(ai_cover_path):
         os.remove(ai_cover_path)
 
-    display_progress('[~] Преобразование вокала...', 0.5, is_webui, progress)
+    display_progress(0.5, '[~] Преобразование вокала...', progress)
     voice_change(voice_model, orig_song_path, ai_cover_path, pitch_change, f0_method, index_rate,
-                 filter_radius, rms_mix_rate, protect, crepe_hop_length, is_webui)
+                 filter_radius, rms_mix_rate, protect, crepe_hop_length)
 
     return ai_cover_path
