@@ -15,11 +15,5 @@ def update_f0_method(use_hybrid_methods):
         return gr.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+')
 
 
-def update_button_text():
-    return gr.update(label="Загрузить другой аудио-файл")
-
-def update_button_text_voc():
-    return gr.update(label="Загрузить другой вокал")
-
-def update_button_text_inst():
-    return gr.update(label="Загрузить другой инструментал")
+def get_languages():
+    return {'English': 'en-US', 'Spanish': 'es-ES', 'French': 'fr-FR', 'German': 'de-DE', 'Italian': 'it-IT', 'Japanese': 'ja-JP', 'Korean': 'ko-KR', 'Chinese': 'zh-CN', 'Russian': 'ru-RU'}
