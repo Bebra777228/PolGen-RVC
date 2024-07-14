@@ -2,6 +2,7 @@ gradio==4.29.0
 tensorboardX
 einops
 local-attention
+edge-tts
 
 fairseq==0.12.2
 faiss-cpu==1.7.3
