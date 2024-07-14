@@ -5,8 +5,7 @@ import gradio as gr
 import soundfile as sf
 from pedalboard import (
     Pedalboard, Reverb, Compressor, HighpassFilter,
-    LowShelfFilter, HighShelfFilter, Limiter, Delay,
-    NoiseGate, Distortion, Chorus, Clipping
+    LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
 )
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
@@ -30,10 +29,9 @@ def combine_audio(vocal_path, instrumental_path, output_path, vocal_gain, instru
     combined.export(output_path, format=output_format)
 
 def add_audio_effects(vocal_audio_path, instrumental_audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
-                      low_shelf_gain, high_shelf_gain, limiter_threshold, compressor_ratio, compressor_threshold,
-                      delay_time, delay_feedback, noise_gate_threshold, noise_gate_ratio, noise_gate_attack,
-                      noise_gate_release, drive_db, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms,
-                      chorus_feedback, chorus_mix, clipping_threshold, output_format, vocal_gain, instrumental_gain, progress=gr.Progress()):
+                      low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
+                      noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
+                      chorus_mix, output_format, vocal_gain, instrumental_gain, progress=gr.Progress()):
 
     if not vocal_audio_path or not instrumental_audio_path:
         raise ValueError("Оба пути к аудиофайлам должны быть заполнены.")
@@ -47,11 +45,7 @@ def add_audio_effects(vocal_audio_path, instrumental_audio_path, reverb_rm_size,
             Reverb(room_size=reverb_rm_size, dry_level=reverb_dry, wet_level=reverb_wet, damping=reverb_damping, width=reverb_width),
             LowShelfFilter(gain_db=low_shelf_gain),
             HighShelfFilter(gain_db=high_shelf_gain),
-            Limiter(threshold_db=limiter_threshold),
-            Delay(delay_seconds=delay_time, feedback=delay_feedback),
-            Distortion(drive_db=drive_db),
             Chorus(rate_hz=chorus_rate_hz, depth=chorus_depth, centre_delay_ms=chorus_centre_delay_ms, feedback=chorus_feedback, mix=chorus_mix),
-            Clipping(threshold_db=clipping_threshold)
          ]
     )
 
