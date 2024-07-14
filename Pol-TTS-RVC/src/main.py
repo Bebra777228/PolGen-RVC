@@ -58,8 +58,8 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     del hubert_model, cpt
     gc.collect()
 
-async def text_to_speech(text, output_path):
-    communicate = edge_tts.Communicate(text, "ru-RU-SvetlanaNeural")
+async def text_to_speech(text, output_path, voice):
+    communicate = edge_tts.Communicate(text, voice)
     await communicate.save(output_path)
 
 def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
