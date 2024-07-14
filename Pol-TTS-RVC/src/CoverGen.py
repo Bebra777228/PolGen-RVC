@@ -7,7 +7,7 @@ import gradio as gr
 
 from main import song_cover_pipeline
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
-from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, get_languages
+from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text
 from modules.file_processing import process_file_upload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,15 +39,20 @@ if __name__ == '__main__':
                         ref_btn = gr.Button('Обновить список моделей', variant='primary')
                     with gr.Group():
                         pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
+
                 with gr.Column(scale=2, variant='panel'):
-                    with gr.Row():
-                        text = gr.Textbox(label='Текст', lines=5)
-                        lang = gr.Dropdown(list(get_languages().keys()), value='Russian', label='Язык', allow_custom_value=False, filterable=False)
+                    with gr.Group():
+                        local_file = gr.Audio(label='Аудио-файл', interactive=False, show_download_button=False)
+                        uploaded_file = gr.UploadButton(label='Загрузить аудио-файл', file_types=['audio'], variant='primary')
+                        uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
+                        uploaded_file.upload(update_button_text, outputs=[uploaded_file])
+
             with gr.Group():
                 with gr.Row(variant='panel'):
                     generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
                     converted_voice = gr.Audio(label='Преобразованный голос', scale=5)
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
+
             with gr.Accordion('Настройки преобразования голоса', open=False):
                 with gr.Group():
                     with gr.Column(variant='panel'):
@@ -61,11 +66,11 @@ if __name__ == '__main__':
                         filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
                         rms_mix_rate = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
                         protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
+
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             generate_btn.click(song_cover_pipeline,
-                               inputs=[text, uploaded_file, rvc_model, pitch, get_languages()[lang], index_rate,
-                                       filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
-                               outputs=[converted_voice])
+                              inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
+                              outputs=[converted_voice])
 
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
