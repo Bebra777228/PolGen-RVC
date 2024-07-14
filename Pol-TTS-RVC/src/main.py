@@ -58,7 +58,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     del hubert_model, cpt
     gc.collect()
 
-def song_cover_pipeline(text, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
+def song_cover_pipeline(text, voice_model, pitch_change, lang='ru-RU', index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
                         crepe_hop_length=128, protect=0.33, output_format='mp3'):
 
     if not text or not voice_model:
@@ -68,7 +68,7 @@ def song_cover_pipeline(text, voice_model, pitch_change, index_rate=0.5, filter_
     os.makedirs(song_dir, exist_ok=True)
 
     text_path = os.path.join(song_dir, 'text.wav')
-    text_to_speech(text, 'ru-RU', text_path)
+    text_to_speech(text, lang, text_path)
 
     ai_cover_path = os.path.join(song_dir, f'Converted_Voice.{output_format}')
 
