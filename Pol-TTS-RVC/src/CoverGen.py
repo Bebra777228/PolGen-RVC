@@ -6,9 +6,9 @@ import gdown
 import gradio as gr
 import asyncio
 
-from voice_changer import song_cover_pipeline, text_to_speech
+from main import song_cover_pipeline, text_to_speech
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
-from modules.ui_updates import show_hop_slider, update_f0_method, update_voices
+from modules.ui_updates import show_hop_slider, update_f0_method
 from modules.file_processing import process_file_upload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,20 +38,24 @@ if __name__ == '__main__':
 
         with gr.Tab("Преобразование голоса"):
             with gr.Row(equal_height=False):
-                with gr.Column(scale=1, variant='panel'):
+                with gr.Column(variant='panel'):
                     with gr.Group():
                         rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
                         ref_btn = gr.Button('Обновить список моделей', variant='primary')
                     with gr.Group():
                         pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
 
-                with gr.Column(scale=2, variant='panel'):
+                with gr.Column(variant='panel'):
                     with gr.Group():
-                        text_input = gr.Textbox(label='Введите текст для синтеза речи')
                         language = gr.Dropdown(list(voices.keys()), label='Выберите язык')
                         voice = gr.Dropdown([], label='Выберите голос')
 
+                        def update_voices(selected_language):
+                            return gr.update(choices=voices[selected_language])
+
                         language.change(update_voices, inputs=language, outputs=voice)
+
+            text_input = gr.Textbox(label='Введите текст для синтеза речи', lines=5)
 
             with gr.Group():
                 with gr.Row(variant='panel'):
