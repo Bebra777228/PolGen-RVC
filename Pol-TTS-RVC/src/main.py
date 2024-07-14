@@ -1,12 +1,12 @@
-import gc
-import hashlib
+import edge_tts
 import os
-import shlex
-import subprocess
+import shutil
 import librosa
 import numpy as np
 import soundfile as sf
-import gradio as gr
+import gc
+import hashlib
+import subprocess
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,8 +42,9 @@ def get_hash(filepath):
 
     return file_hash.hexdigest()[:11]
 
-def display_progress(percent, message, progress=gr.Progress()):
-    progress(percent, desc=message)
+def text_to_speech(text, lang, filename):
+    communicate = edge_tts.Communicate(text, lang)
+    communicate.save(filename)
 
 def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length):
     rvc_model_path, rvc_index_path = get_rvc_model(voice_model)
@@ -57,30 +58,24 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     del hubert_model, cpt
     gc.collect()
 
-def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
-                        crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress()):
+def song_cover_pipeline(text, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
+                        crepe_hop_length=128, protect=0.33, output_format='mp3'):
 
-    if not uploaded_file or not voice_model:
-        raise Exception('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
+    if not text or not voice_model:
+        raise Exception('Убедитесь, что поля модели голоса и текста заполнены.')
 
-    display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
-
-    if not os.path.exists(uploaded_file):
-        error_msg = f'{uploaded_file} не существует.'
-        raise Exception(error_msg)
-
-    song_id = get_hash(uploaded_file)
-    song_dir = os.path.join(output_dir, song_id)
+    song_dir = output_dir
     os.makedirs(song_dir, exist_ok=True)
 
-    orig_song_path = convert_to_stereo(uploaded_file)
+    text_path = os.path.join(song_dir, 'text.wav')
+    text_to_speech(text, 'ru-RU', text_path)
+
     ai_cover_path = os.path.join(song_dir, f'Converted_Voice.{output_format}')
 
     if os.path.exists(ai_cover_path):
         os.remove(ai_cover_path)
 
-    display_progress(0.5, '[~] Преобразование вокала...', progress)
-    voice_change(voice_model, orig_song_path, ai_cover_path, pitch_change, f0_method, index_rate,
+    voice_change(voice_model, text_path, ai_cover_path, pitch_change, f0_method, index_rate,
                  filter_radius, rms_mix_rate, protect, crepe_hop_length)
 
     return ai_cover_path
