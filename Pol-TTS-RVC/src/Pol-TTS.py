@@ -16,16 +16,16 @@ rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
 output_dir = os.path.join(BASE_DIR, 'song_output')
 
 voices = {
-    "Russian": ["ru-RU-SvetlanaNeural", "ru-RU-DmitryNeural"],
-    "English": ["en-US-JennyNeural", "en-US-GuyNeural"],
+    "Русский": ["ru-RU-SvetlanaNeural", "ru-RU-DmitryNeural"],
+    "Английский": ["en-US-JennyNeural", "en-US-GuyNeural"],
 }
 
 if __name__ == '__main__':
     voice_models = ignore_files(rvc_models_dir)
 
-    with gr.Blocks(title='CoverGen Lite - Politrees (v0.2)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
+    with gr.Blocks(title='Text-to-Speech - Politrees (v0.2)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
         with gr.Tab("Велком/Контакты"):
-            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.2)</h1></center>")
+            gr.HTML("<center><h1>Добро пожаловать в Text-to-Speech - Politrees (v0.1)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
@@ -36,7 +36,7 @@ if __name__ == '__main__':
             with gr.Column(variant='panel'):
                 gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub проекта</a></h2></center>")
 
-        with gr.Tab("Преобразование голоса"):
+        with gr.Tab("Преобразование текста в речь"):
             with gr.Row(equal_height=False):
                 with gr.Column(variant='panel'):
                     with gr.Group():
@@ -47,15 +47,15 @@ if __name__ == '__main__':
 
                 with gr.Column(variant='panel'):
                     with gr.Group():
-                        language = gr.Dropdown(list(voices.keys()), label='Выберите язык')
-                        voice = gr.Dropdown([], label='Выберите голос')
+                        language = gr.Dropdown(list(voices.keys()), label='Язык')
+                        voice = gr.Dropdown([], label='Голос')
 
                         def update_voices(selected_language):
                             return gr.update(choices=voices[selected_language])
 
                         language.change(update_voices, inputs=language, outputs=voice)
 
-            text_input = gr.Textbox(label='Введите текст для синтеза речи', lines=5)
+            text_input = gr.Textbox(label='Введите текст', lines=5)
 
             with gr.Group():
                 with gr.Row(variant='panel'):
