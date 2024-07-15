@@ -15,6 +15,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
 output_dir = os.path.join(BASE_DIR, 'song_output')
 
+image_path = "/content/Pol-TTS/content/TTS.png"
+
 voices = {
     "Русский": ["ru-RU-SvetlanaNeural", "ru-RU-DmitryNeural"],
     "Английский": ["en-US-JennyNeural", "en-US-GuyNeural"],
@@ -23,9 +25,10 @@ voices = {
 if __name__ == '__main__':
     voice_models = ignore_files(rvc_models_dir)
 
-    with gr.Blocks(title='Text-to-Speech - Politrees (v0.1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
+    with gr.Blocks(title='Pol-TTS - Politrees (v0.1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
         with gr.Tab("Велком/Контакты"):
-            gr.HTML("<center><h1>Добро пожаловать в Text-to-Speech - Politrees (v0.1)</h1></center>")
+            gr.Image(value=image_path, interactive=False, show_download_button=False, container=False)
+            gr.HTML("<center><h1>Добро пожаловать в Pol-TTS - Politrees (v0.1)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
