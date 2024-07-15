@@ -74,12 +74,8 @@ def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5
         error_msg = f'{uploaded_file} не существует.'
         raise Exception(error_msg)
 
-    song_id = get_hash(uploaded_file)
-    song_dir = os.path.join(output_dir, song_id)
-    os.makedirs(song_dir, exist_ok=True)
-
     orig_song_path = convert_to_stereo(uploaded_file)
-    ai_cover_path = os.path.join(song_dir, f'Converted_Voice.{output_format}')
+    ai_cover_path = os.path.join(output_dir, f'Converted_Voice.{output_format}')
 
     if os.path.exists(ai_cover_path):
         os.remove(ai_cover_path)
