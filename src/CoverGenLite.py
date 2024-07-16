@@ -81,14 +81,14 @@ if __name__ == '__main__':
                         upload_vocal_audio = gr.UploadButton(label='Загрузить вокал', file_types=['audio'], variant='primary')
                         upload_vocal_audio.upload(process_file_upload, inputs=[upload_vocal_audio], outputs=[vocal_audio])
                         upload_vocal_audio.upload(update_button_text_voc, outputs=[upload_vocal_audio])
-        
+
                 with gr.Column(variant='panel'):
                     with gr.Group():
                         instrumental_audio = gr.Audio(label='Инструментал', interactive=False, show_download_button=False)
                         upload_instrumental_audio = gr.UploadButton(label='Загрузить инструментал', file_types=['audio'], variant='primary')
                         upload_instrumental_audio.upload(process_file_upload, inputs=[upload_instrumental_audio], outputs=[instrumental_audio])
                         upload_instrumental_audio.upload(update_button_text_inst, outputs=[upload_instrumental_audio])
-        
+
             with gr.Group():
                 with gr.Row(variant='panel'):
                     process_btn = gr.Button("Обработать", variant='primary', scale=1)
@@ -114,7 +114,7 @@ if __name__ == '__main__':
                                     reverb_dry = gr.Slider(0, 1, value=0.8, label='Уровень сухости', info='Этот параметр отвечает за уровень исходного звука без реверберации. Чем меньше значение, тем тише звук ai вокала. Если значение будет на 0, то исходный звук полностью исчезнет.')
                                 with gr.Row():
                                     reverb_damping = gr.Slider(0, 1, value=0.7, label='Уровень демпфирования', info='Этот параметр отвечает за поглощение высоких частот в реверберации. Чем выше его значение, тем сильнее будет поглощение частот и тем менее будет «яркий» звук реверберации.')
-    
+
                     with gr.Accordion('Хорус', open=False):
                         with gr.Group():
                             with gr.Column(variant='panel'):
@@ -132,12 +132,12 @@ if __name__ == '__main__':
                         with gr.Row(variant='panel'):
                             compressor_ratio = gr.Slider(1, 20, value=4, label='Соотношение', info='Этот параметр контролирует количество применяемого сжатия аудио. Большее значение означает большее сжатие, которое уменьшает динамический диапазон аудио, делая громкие части более тихими и тихие части более громкими.')
                             compressor_threshold = gr.Slider(-60, 0, value=-16, label='Порог', info='Этот параметр устанавливает порог, при превышении которого начинает действовать компрессор. Компрессор сжимает громкие звуки, чтобы сделать звук более ровным. Чем ниже порог, тем большее количество звуков будет подвергнуто компрессии.')
-    
+
                     with gr.Accordion('Фильтры', open=False):
                         with gr.Row(variant='panel'):
                             low_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр нижних частот', info='Этот параметр контролирует усиление (громкость) низких частот. Положительное значение усиливает низкие частоты, делая звук более басским. Отрицательное значение ослабляет низкие частоты, делая звук более тонким.')
                             high_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр высоких частот', info='Этот параметр контролирует усиление высоких частот. Положительное значение усиливает высокие частоты, делая звук более ярким. Отрицательное значение ослабляет высокие частоты, делая звук более тусклым.')
-    
+
                     with gr.Accordion('Подавление шума', open=False):
                         with gr.Group():
                             with gr.Column(variant='panel'):
@@ -149,12 +149,12 @@ if __name__ == '__main__':
                                     noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
 
             process_btn.click(add_audio_effects,
-                             inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
-                             reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
-                             noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
-                             chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                             output_format, vocal_gain, instrumental_gain],
-                             outputs=[ai_cover])
+                            inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
+                            reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
+                            noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
+                            chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
+                            output_format, vocal_gain, instrumental_gain],
+                            outputs=[ai_cover])
 
             default_values = [0, 0, 0.15, 1.0, 0.1, 0.8, 0.7, 0, 0, 0, 0, 0, 4, -16, 0, 0, -30, 6, 10, 100]
             clear_btn.click(lambda: default_values,
