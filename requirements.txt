@@ -3,7 +3,7 @@ tensorboardX
 einops
 local-attention
 pedalboard==0.7.7
-
+mega.py
 fairseq==0.12.2
 faiss-cpu==1.7.3
 ffmpeg-python>=0.2.0
