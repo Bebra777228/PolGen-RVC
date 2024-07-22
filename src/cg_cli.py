@@ -36,4 +36,4 @@ cover_path = song_cover_pipeline(
     output_format=args.format
 )
 
-print(f'[+] Кавер создан в {cover_path}')
+print(f'\033[1;92m\nГолос успешно заменен!\n\033[0m')
