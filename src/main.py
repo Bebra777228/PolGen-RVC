@@ -68,8 +68,7 @@ def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5
     if not os.path.exists(uploaded_file):
         raise FileNotFoundError(f'{uploaded_file} не существует.')
 
-    song_id = get_hash(uploaded_file)
-    song_dir = os.path.join(OUTPUT_DIR, song_id)
+    song_dir = os.path.join(OUTPUT_DIR)
     os.makedirs(song_dir, exist_ok=True)
 
     orig_song_path = convert_to_stereo(uploaded_file)
