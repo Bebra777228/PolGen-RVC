@@ -7,8 +7,8 @@ import gradio as gr
 
 from main import song_cover_pipeline
 from audio_effects import add_audio_effects
-from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
-from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst
+from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model, upload_separate_files
+from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst, swap_visibility, swap_buttons
 from modules.file_processing import process_file_upload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,29 +24,43 @@ if __name__ == '__main__':
             gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.2)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
-                    gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
+                    gr.HTML("<center><h2><a href='https://t.me/Politrees2'>Telegram ЛС</a></h2></center>")
                     gr.HTML("<center><h2><a href='https://vk.com/artem__bebroy'>ВКонтакте (страница)</a></h2></center>")
                 with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://t.me/pol1trees'>Telegram Канал</a></h2></center>")
                     gr.HTML("<center><h2><a href='https://t.me/+GMTP7hZqY0E4OGRi'>Telegram Чат</a></h2></center>")
             with gr.Column(variant='panel'):
-                gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub проекта</a></h2></center>")
+                gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube</a></h2></center>")
+                gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub</a></h2></center>")
 
         with gr.Tab("Преобразование голоса"):
             with gr.Row(equal_height=False):
                 with gr.Column(scale=1, variant='panel'):
                     with gr.Group():
-                        rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
+                        rvc_model = gr.Dropdown(voice_models, label='Голосовые модели:')
                         ref_btn = gr.Button('Обновить список моделей', variant='primary')
                     with gr.Group():
-                        pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Изменение тона голоса', info='-24 - мужской голос || 24 - женский голос')
+                        pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
 
                 with gr.Column(scale=2, variant='panel'):
-                    with gr.Group():
-                        local_file = gr.Audio(label='Аудио-файл', interactive=False, show_download_button=False)
-                        uploaded_file = gr.UploadButton(label='Загрузить аудио-файл', file_types=['audio'], variant='primary')
-                        uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[local_file])
-                        uploaded_file.upload(update_button_text, outputs=[uploaded_file])
+                    with gr.Column() as upload_file:
+                        with gr.Group():
+                            local_file = gr.Audio(label='Аудио', interactive=False, show_download_button=False, show_share_button=False)
+                            uploaded_file = gr.UploadButton(label='Загрузить аудио-файл', file_types=['audio'], variant='primary')
+
+                    with gr.Column(visible=False) as enter_local_file:
+                        song_input = gr.Text(label='Путь к локальному файлу:', info='Введите полный путь к локальному файлу.')
+
+                    with gr.Column():
+                        show_upload_button = gr.Button('Загрузка файла с устройства', visible=False)
+                        show_enter_button = gr.Button('Ввод пути к локальному файлу')
+                    
+                uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[song_input, local_file])
+                uploaded_file.upload(update_button_text, outputs=[uploaded_file])
+                show_upload_button.click(swap_visibility, outputs=[upload_file, enter_local_file, song_input, local_file])
+                show_enter_button.click(swap_visibility, outputs=[enter_local_file, upload_file, song_input, local_file])
+                show_upload_button.click(swap_buttons, outputs=[show_upload_button, show_enter_button])
+                show_enter_button.click(swap_buttons, outputs=[show_enter_button, show_upload_button])
 
             with gr.Group():
                 with gr.Row(variant='panel'):
@@ -62,6 +76,9 @@ if __name__ == '__main__':
                         use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
                         crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
+                        with gr.Row():
+                            f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
+                            f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
                     with gr.Column(variant='panel'):
                         index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info='Контролирует степень влияния индексного файла на результат анализа. Более высокое значение увеличивает влияние индексного файла, но может усилить артефакты в аудио. Выбор более низкого значения может помочь снизить артефакты.')
                         filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
@@ -70,25 +87,51 @@ if __name__ == '__main__':
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             generate_btn.click(song_cover_pipeline,
-                              inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format],
+                              inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format, f0_min, f0_max],
                               outputs=[converted_voice])
 
         with gr.Tab('Объединение/Обработка'):
             with gr.Row(equal_height=False):
                 with gr.Column(variant='panel'):
-                    with gr.Group():
-                        vocal_audio = gr.Audio(label='Вокал', interactive=False, show_download_button=False)
-                        upload_vocal_audio = gr.UploadButton(label='Загрузить вокал', file_types=['audio'], variant='primary')
-                        upload_vocal_audio.upload(process_file_upload, inputs=[upload_vocal_audio], outputs=[vocal_audio])
-                        upload_vocal_audio.upload(update_button_text_voc, outputs=[upload_vocal_audio])
-        
+                    with gr.Column() as upload_voc_file:
+                        with gr.Group():
+                            vocal_audio = gr.Audio(label='Вокал', interactive=False, show_download_button=False, show_share_button=False)
+                            upload_vocal_audio = gr.UploadButton(label='Загрузить вокал', file_types=['audio'], variant='primary')
+
+                    with gr.Column(visible=False) as enter_local_voc_file:
+                        vocal_input = gr.Text(label='Путь к вокальному файлу', info='Введите полный путь к локальному вокальному файлу.')
+
+                    with gr.Column():
+                        show_upload_voc_button = gr.Button('Загрузка файла с устройства', visible=False)
+                        show_enter_voc_button = gr.Button('Ввод пути к локальному файлу')
+                
+                upload_vocal_audio.upload(process_file_upload, inputs=[upload_vocal_audio], outputs=[vocal_input, vocal_audio])
+                upload_vocal_audio.upload(update_button_text_voc, outputs=[upload_vocal_audio])
+                show_upload_voc_button.click(swap_visibility, outputs=[upload_voc_file, enter_local_voc_file, vocal_input, vocal_audio])
+                show_enter_voc_button.click(swap_visibility, outputs=[enter_local_voc_file, upload_voc_file, vocal_input, vocal_audio])
+                show_upload_voc_button.click(swap_buttons, outputs=[show_upload_voc_button, show_enter_voc_button])
+                show_enter_voc_button.click(swap_buttons, outputs=[show_enter_voc_button, show_upload_voc_button])
+
                 with gr.Column(variant='panel'):
-                    with gr.Group():
-                        instrumental_audio = gr.Audio(label='Инструментал', interactive=False, show_download_button=False)
-                        upload_instrumental_audio = gr.UploadButton(label='Загрузить инструментал', file_types=['audio'], variant='primary')
-                        upload_instrumental_audio.upload(process_file_upload, inputs=[upload_instrumental_audio], outputs=[instrumental_audio])
-                        upload_instrumental_audio.upload(update_button_text_inst, outputs=[upload_instrumental_audio])
-        
+                    with gr.Column() as upload_inst_file:
+                        with gr.Group():
+                            instrumental_audio = gr.Audio(label='Инструментал', interactive=False, show_download_button=False, show_share_button=False)
+                            upload_instrumental_audio = gr.UploadButton(label='Загрузить инструментал', file_types=['audio'], variant='primary')
+
+                    with gr.Column(visible=False) as enter_local_inst_file:
+                        instrumental_input = gr.Text(label='Путь к инструментальному файлу:', info='Введите полный путь к локальному инструментальному файлу.')
+
+                    with gr.Column():
+                        show_upload_inst_button = gr.Button('Загрузка файла с устройства', visible=False)
+                        show_enter_inst_button = gr.Button('Ввод пути к локальному файлу')
+                
+                upload_instrumental_audio.upload(process_file_upload, inputs=[upload_instrumental_audio], outputs=[instrumental_input, instrumental_audio])
+                upload_instrumental_audio.upload(update_button_text_inst, outputs=[upload_instrumental_audio])
+                show_upload_inst_button.click(swap_visibility, outputs=[upload_inst_file, enter_local_inst_file, instrumental_input, instrumental_audio])
+                show_enter_inst_button.click(swap_visibility, outputs=[enter_local_inst_file, upload_inst_file, instrumental_input, instrumental_audio])
+                show_upload_inst_button.click(swap_buttons, outputs=[show_upload_inst_button, show_enter_inst_button])
+                show_enter_inst_button.click(swap_buttons, outputs=[show_enter_inst_button, show_upload_inst_button])
+
             with gr.Group():
                 with gr.Row(variant='panel'):
                     process_btn = gr.Button("Обработать", variant='primary', scale=1)
@@ -114,7 +157,7 @@ if __name__ == '__main__':
                                     reverb_dry = gr.Slider(0, 1, value=0.8, label='Уровень сухости', info='Этот параметр отвечает за уровень исходного звука без реверберации. Чем меньше значение, тем тише звук ai вокала. Если значение будет на 0, то исходный звук полностью исчезнет.')
                                 with gr.Row():
                                     reverb_damping = gr.Slider(0, 1, value=0.7, label='Уровень демпфирования', info='Этот параметр отвечает за поглощение высоких частот в реверберации. Чем выше его значение, тем сильнее будет поглощение частот и тем менее будет «яркий» звук реверберации.')
-    
+
                     with gr.Accordion('Хорус', open=False):
                         with gr.Group():
                             with gr.Column(variant='panel'):
@@ -132,12 +175,12 @@ if __name__ == '__main__':
                         with gr.Row(variant='panel'):
                             compressor_ratio = gr.Slider(1, 20, value=4, label='Соотношение', info='Этот параметр контролирует количество применяемого сжатия аудио. Большее значение означает большее сжатие, которое уменьшает динамический диапазон аудио, делая громкие части более тихими и тихие части более громкими.')
                             compressor_threshold = gr.Slider(-60, 0, value=-16, label='Порог', info='Этот параметр устанавливает порог, при превышении которого начинает действовать компрессор. Компрессор сжимает громкие звуки, чтобы сделать звук более ровным. Чем ниже порог, тем большее количество звуков будет подвергнуто компрессии.')
-    
+
                     with gr.Accordion('Фильтры', open=False):
                         with gr.Row(variant='panel'):
                             low_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр нижних частот', info='Этот параметр контролирует усиление (громкость) низких частот. Положительное значение усиливает низкие частоты, делая звук более басским. Отрицательное значение ослабляет низкие частоты, делая звук более тонким.')
                             high_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр высоких частот', info='Этот параметр контролирует усиление высоких частот. Положительное значение усиливает высокие частоты, делая звук более ярким. Отрицательное значение ослабляет высокие частоты, делая звук более тусклым.')
-    
+
                     with gr.Accordion('Подавление шума', open=False):
                         with gr.Group():
                             with gr.Column(variant='panel'):
@@ -149,12 +192,12 @@ if __name__ == '__main__':
                                     noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
 
             process_btn.click(add_audio_effects,
-                             inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
-                             reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
-                             noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
-                             chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                             output_format, vocal_gain, instrumental_gain],
-                             outputs=[ai_cover])
+                            inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
+                            reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
+                            noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
+                            chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
+                            output_format, vocal_gain, instrumental_gain],
+                            outputs=[ai_cover])
 
             default_values = [0, 0, 0.15, 1.0, 0.1, 0.8, 0.7, 0, 0, 0, 0, 0, 4, -16, 0, 0, -30, 6, 10, 100]
             clear_btn.click(lambda: default_values,
@@ -167,19 +210,21 @@ if __name__ == '__main__':
             with gr.Tab('Загрузить по ссылке'):
                 with gr.Row():
                     with gr.Column(variant='panel'):
-                        gr.HTML("<center><h3>Вставьте в поле ниже ссылку от <a href='https://huggingface.co/' target='_blank'>HuggingFace</a>, <a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a> или <a href='https://drive.google.com/' target='_blank'>Google Drive</a></h3></center>")
+                        gr.HTML("<center><h3>Введите в поле ниже ссылку на ZIP-архив.</h3></center>")
                         model_zip_link = gr.Text(label='Ссылка на загрузку модели')
                     with gr.Column(variant='panel'):
                         with gr.Group():
                             model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
                             download_btn = gr.Button('Загрузить модель', variant='primary')
 
+                gr.HTML("<h3>Поддерживаемые сайты: <a href='https://huggingface.co/' target='_blank'>HuggingFace</a>, <a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a>, <a href='https://drive.google.com/' target='_blank'>Google Drive</a>, <a href='https://mega.nz/' target='_blank'>Mega</a>, <a href='https://disk.yandex.ru/' target='_blank'>Яндекс Диск</a></h3>")
+                
                 dl_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 download_btn.click(download_from_url, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
-            with gr.Tab('Загрузить локально'):
+            with gr.Tab('Загрузить ZIP архивом'):
                 with gr.Row():
-                    with gr.Column(variant='panel'):
+                    with gr.Column():
                         zip_file = gr.File(label='Zip-файл', file_types=['.zip'], file_count='single')
                     with gr.Column(variant='panel'):
                         gr.HTML("<h3>1. Найдите и скачайте файлы: .pth и необязательный файл .index</h3>")
@@ -192,4 +237,18 @@ if __name__ == '__main__':
                 local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 model_upload_button.click(upload_zip_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
 
-    app.launch(share=True, quiet=True)
+            with gr.Tab('Загрузить файлами'):
+                with gr.Group():
+                    gr.HTML('<center><h3>Если у вас нет .index-файла, то вы можете загрузить только .pth-файл (ну или если вам лень долго ждать).</h3></center>')
+                    with gr.Row():
+                        pth_file = gr.File(label='pth-файл', file_types=['.pth'], file_count='single')
+                        index_file = gr.File(label='index-файл', file_types=['.index'], file_count='single')
+                with gr.Column(variant='panel'):
+                    with gr.Group():
+                        separate_model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
+                        separate_upload_button = gr.Button('Загрузить модель', variant='primary')
+
+                separate_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
+                separate_upload_button.click(upload_separate_files, inputs=[pth_file, index_file, separate_model_name], outputs=separate_upload_output_message)
+
+    app.launch(share=True, quiet=True, show_api=False).queue(api_open=False)
