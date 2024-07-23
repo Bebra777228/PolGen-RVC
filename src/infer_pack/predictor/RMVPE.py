@@ -5,7 +5,7 @@ from librosa.filters import mel
 
 
 class BiGRU(nn.Module):
-    def __init__(self, input_features, hidden_features, num_layers, dropout=0.3):
+    def __init__(self, input_features, hidden_features, num_layers):
         super(BiGRU, self).__init__()
         self.gru = nn.GRU(
             input_features,
@@ -13,7 +13,6 @@ class BiGRU(nn.Module):
             num_layers=num_layers,
             batch_first=True,
             bidirectional=True,
-            dropout=dropout,
         )
 
     def forward(self, x):
@@ -44,7 +43,6 @@ class ConvBlockRes(nn.Module):
             ),
             nn.BatchNorm2d(out_channels, momentum=momentum),
             nn.ReLU(),
-            nn.Dropout(0.3),
         )
         if in_channels != out_channels:
             self.shortcut = nn.Conv2d(in_channels, out_channels, (1, 1))
@@ -67,7 +65,7 @@ class Encoder(nn.Module):
         n_encoders,
         kernel_size,
         n_blocks,
-        out_channels=32,
+        out_channels=16,
         momentum=0.01,
     ):
         super(Encoder, self).__init__()
@@ -120,7 +118,7 @@ class ResEncoderBlock(nn.Module):
             return x
 
 
-class Intermediate(nn.Module):  
+class Intermediate(nn.Module):  #
     def __init__(self, in_channels, out_channels, n_inters, n_blocks, momentum=0.01):
         super(Intermediate, self).__init__()
         self.n_inters = n_inters
@@ -193,10 +191,10 @@ class DeepUnet(nn.Module):
         self,
         kernel_size,
         n_blocks,
-        en_de_layers=6,
-        inter_layers=5,
+        en_de_layers=5,
+        inter_layers=4,
         in_channels=1,
-        en_out_channels=32,
+        en_out_channels=16,
     ):
         super(DeepUnet, self).__init__()
         self.encoder = Encoder(
@@ -225,10 +223,10 @@ class E2E(nn.Module):
         n_blocks,
         n_gru,
         kernel_size,
-        en_de_layers=6,
-        inter_layers=5,
+        en_de_layers=5,
+        inter_layers=4,
         in_channels=1,
-        en_out_channels=32,
+        en_out_channels=16,
     ):
         super(E2E, self).__init__()
         self.unet = DeepUnet(
@@ -244,7 +242,7 @@ class E2E(nn.Module):
             self.fc = nn.Sequential(
                 BiGRU(3 * 128, 256, n_gru),
                 nn.Linear(512, 360),
-                nn.Dropout(0.5),
+                nn.Dropout(0.25),
                 nn.Sigmoid(),
             )
 
@@ -299,7 +297,6 @@ class MelSpectrogram(torch.nn.Module):
             self.hann_window[keyshift_key] = torch.hann_window(win_length_new).to(
                 audio.device
             )
-        audio = (audio - audio.mean()) / (audio.std() + 1e-7)  # Normalization
         fft = torch.stft(
             audio,
             n_fft=n_fft_new,
@@ -326,7 +323,7 @@ class MelSpectrogram(torch.nn.Module):
 class RMVPE:
     def __init__(self, model_path, is_half, device=None):
         self.resample_kernel = {}
-        model = E2E(5, 2, (2, 2))
+        model = E2E(4, 1, (2, 2))
         ckpt = torch.load(model_path, map_location="cpu")
         model.load_state_dict(ckpt)
         model.eval()
@@ -339,11 +336,11 @@ class RMVPE:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
         self.mel_extractor = MelSpectrogram(
-            is_half, 128, 16000, 1024, 64, None, 30, 8000
+            is_half, 128, 16000, 1024, 160, None, 30, 8000
         ).to(device)
         self.model = self.model.to(device)
         cents_mapping = 20 * np.arange(360) + 1997.3794084376191
-        self.cents_mapping = np.pad(cents_mapping, (4, 4))
+        self.cents_mapping = np.pad(cents_mapping, (4, 4))  # 368
 
     def mel2hidden(self, mel):
         with torch.no_grad():
