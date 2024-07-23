@@ -28,6 +28,14 @@ def combine_audio(vocal_path, instrumental_path, output_path, vocal_gain, instru
     combined = vocal.overlay(instrumental)
     combined.export(output_path, format=output_format)
 
+def convert_to_stereo(input_path, output_path):
+    y, sr = librosa.load(input_path, sr=None, mono=False)
+    if y.ndim == 1:
+        y = np.vstack([y, y])
+    elif y.ndim > 2:
+        y = y[:2, :]
+    sf.write(output_path, y.T, sr, format='WAV')
+
 def add_audio_effects(vocal_audio_path, instrumental_audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                       low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
                       noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
@@ -35,6 +43,10 @@ def add_audio_effects(vocal_audio_path, instrumental_audio_path, reverb_rm_size,
 
     if not vocal_audio_path or not instrumental_audio_path:
         raise ValueError("Оба пути к аудиофайлам должны быть заполнены.")
+
+    # Convert vocal file to stereo if necessary
+    stereo_vocal_path = 'Vocal_Stereo.wav'
+    convert_to_stereo(vocal_audio_path, stereo_vocal_path)
 
     display_progress(0.2, "Применение аудиоэффектов к вокалу...", progress)
     board = Pedalboard(
@@ -49,19 +61,17 @@ def add_audio_effects(vocal_audio_path, instrumental_audio_path, reverb_rm_size,
          ]
     )
 
-    vocal_output_path = f'Vocal_Effects.wav'
-    with AudioFile(vocal_audio_path) as f:
+    vocal_output_path = os.path.join(BASE_DIR, 'Vocal_Effects.wav')
+    with AudioFile(stereo_vocal_path) as f:
         with AudioFile(vocal_output_path, 'w', f.samplerate, 2) as o:
             while f.tell() < f.frames:
                 chunk = f.read(int(f.samplerate))
-                chunk = np.tile(chunk, (2, 1)).T
                 effected = board(chunk, f.samplerate, reset=False)
                 o.write(effected)
 
     display_progress(0.5, "Объединение вокала и инструментальной части...", progress)
     output_dir = os.path.join(BASE_DIR, 'processed_output')
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
     combined_output_path = os.path.join(output_dir, f'AiCover_combined.{output_format}')
 
     if os.path.exists(combined_output_path):
