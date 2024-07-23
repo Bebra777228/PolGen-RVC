@@ -14,8 +14,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 now_dir = os.path.join(BASE_DIR, 'src')
 sys.path.append(now_dir)
 
-from infer_pack.predictor.FCPE import FCPEF0Predictor
-from infer_pack.predictor.RMVPE import RMVPE
+from predictor.FCPE import FCPEF0Predictor
+from predictor.RMVPE import RMVPE
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
@@ -37,14 +37,25 @@ def cache_harvest_f0(input_audio_path, fs, f0max, f0min, frame_period):
 
 
 def change_rms(data1, sr1, data2, sr2, rate):
+    # print(data1.max(),data2.max())
     rms1 = librosa.feature.rms(y=data1, frame_length=sr1 // 2 * 2, hop_length=sr1 // 2)
     rms2 = librosa.feature.rms(y=data2, frame_length=sr2 // 2 * 2, hop_length=sr2 // 2)
+
     rms1 = torch.from_numpy(rms1)
-    rms1 = F.interpolate(rms1.unsqueeze(0), size=data2.shape[0], mode="linear").squeeze()
+    rms1 = F.interpolate(
+        rms1.unsqueeze(0), size=data2.shape[0], mode="linear"
+    ).squeeze()
+
     rms2 = torch.from_numpy(rms2)
-    rms2 = F.interpolate(rms2.unsqueeze(0), size=data2.shape[0], mode="linear").squeeze()
+    rms2 = F.interpolate(
+        rms2.unsqueeze(0), size=data2.shape[0], mode="linear"
+    ).squeeze()
     rms2 = torch.max(rms2, torch.zeros_like(rms2) + 1e-6)
-    data2 *= (torch.pow(rms1, torch.tensor(1 - rate))* torch.pow(rms2, torch.tensor(rate - 1))).numpy()
+
+    data2 *= (
+        torch.pow(rms1, torch.tensor(1 - rate))
+        * torch.pow(rms2, torch.tensor(rate - 1))
+    ).numpy()
     return data2
 
 
@@ -248,9 +259,6 @@ class VC(object):
             f0 = pyworld.stonemask(x.astype(np.double), f0, t, self.sr)
             f0 = signal.medfilt(f0, 3)
         
-        elif f0_method == "crepe":
-            f0 = self.get_f0_official_crepe_computation(x, f0_min, f0_max)
-
         elif f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe_computation(x, f0_min, f0_max, p_len, crepe_hop_length)
         
@@ -317,7 +325,7 @@ class VC(object):
         ) + 1
         f0_mel[f0_mel <= 1] = 1
         f0_mel[f0_mel > 255] = 255
-        f0_coarse = np.rint(f0_mel).astype(int)
+        f0_coarse = np.rint(f0_mel).astype(np.int_)
 
         return f0_coarse, f0bak
 
