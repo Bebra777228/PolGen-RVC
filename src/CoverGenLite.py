@@ -19,9 +19,9 @@ output_dir = os.path.join(BASE_DIR, 'song_output')
 if __name__ == '__main__':
     voice_models = ignore_files(rvc_models_dir)
 
-    with gr.Blocks(title='CoverGen Lite - Politrees (v0.2)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
+    with gr.Blocks(title='CoverGen Lite - Politrees (v0.3)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
         with gr.Tab("Велком/Контакты"):
-            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.2)</h1></center>")
+            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.3)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://t.me/Politrees2'>Telegram ЛС</a></h2></center>")
@@ -239,7 +239,6 @@ if __name__ == '__main__':
 
             with gr.Tab('Загрузить файлами'):
                 with gr.Group():
-                    gr.HTML('<center><h3>Если у вас нет .index-файла, то вы можете загрузить только .pth-файл (ну или если вам лень долго ждать).</h3></center>')
                     with gr.Row():
                         pth_file = gr.File(label='pth-файл', file_types=['.pth'], file_count='single')
                         index_file = gr.File(label='index-файл', file_types=['.index'], file_count='single')
@@ -251,4 +250,4 @@ if __name__ == '__main__':
                 separate_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 separate_upload_button.click(upload_separate_files, inputs=[pth_file, index_file, separate_model_name], outputs=separate_upload_output_message)
 
-    app.launch(share=True, quiet=True, show_api=False).queue(api_open=False)
+    app.launch(share=True, show_api=False).queue(api_open=False)
