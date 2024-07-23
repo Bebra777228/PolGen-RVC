@@ -37,14 +37,25 @@ def cache_harvest_f0(input_audio_path, fs, f0max, f0min, frame_period):
 
 
 def change_rms(data1, sr1, data2, sr2, rate):
+    # print(data1.max(),data2.max())
     rms1 = librosa.feature.rms(y=data1, frame_length=sr1 // 2 * 2, hop_length=sr1 // 2)
     rms2 = librosa.feature.rms(y=data2, frame_length=sr2 // 2 * 2, hop_length=sr2 // 2)
+
     rms1 = torch.from_numpy(rms1)
-    rms1 = F.interpolate(rms1.unsqueeze(0), size=data2.shape[0], mode="linear").squeeze()
+    rms1 = F.interpolate(
+        rms1.unsqueeze(0), size=data2.shape[0], mode="linear"
+    ).squeeze()
+
     rms2 = torch.from_numpy(rms2)
-    rms2 = F.interpolate(rms2.unsqueeze(0), size=data2.shape[0], mode="linear").squeeze()
+    rms2 = F.interpolate(
+        rms2.unsqueeze(0), size=data2.shape[0], mode="linear"
+    ).squeeze()
     rms2 = torch.max(rms2, torch.zeros_like(rms2) + 1e-6)
-    data2 *= (torch.pow(rms1, torch.tensor(1 - rate))* torch.pow(rms2, torch.tensor(rate - 1))).numpy()
+
+    data2 *= (
+        torch.pow(rms1, torch.tensor(1 - rate))
+        * torch.pow(rms2, torch.tensor(rate - 1))
+    ).numpy()
     return data2
 
 
@@ -161,7 +172,11 @@ class VC(object):
         x /= np.quantile(np.abs(x), 0.999)
         for method in methods:
             f0 = None
-            if method == "mangio-crepe":
+            if method == "crepe":
+                f0 = self.get_f0_crepe_computation(
+                    x, f0_min, f0_max, p_len
+                )
+            elif method == "mangio-crepe":
                 f0 = self.get_f0_crepe_computation(
                     x, f0_min, f0_max, p_len, crepe_hop_length
                 )
@@ -207,11 +222,13 @@ class VC(object):
         filter_radius,
         crepe_hop_length,
         inp_f0=None,
+        f0_min=50,
+        f0_max=1100,
     ):
         global input_audio_path2wav
         time_step = self.window / self.sr * 1000
-        f0_min = 50
-        f0_max = 1100
+        #f0_min = 50
+        #f0_max = 1100
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
         if f0_method == "pm":
@@ -245,10 +262,10 @@ class VC(object):
             )
             f0 = pyworld.stonemask(x.astype(np.double), f0, t, self.sr)
             f0 = signal.medfilt(f0, 3)
-        
-        elif f0_method == "crepe":
-            f0 = self.get_f0_official_crepe_computation(x, f0_min, f0_max)
 
+        elif f0_method == "crepe":
+            f0 = self.get_f0_crepe_computation(x, f0_min, f0_max, p_len)
+        
         elif f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe_computation(x, f0_min, f0_max, p_len, crepe_hop_length)
         
@@ -453,6 +470,8 @@ class VC(object):
         protect,
         crepe_hop_length,
         f0_file=None,
+        f0_min=50,
+        f0_max=1100,
     ):
         if file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
@@ -508,6 +527,8 @@ class VC(object):
                 filter_radius,
                 crepe_hop_length,
                 inp_f0,
+                f0_min,
+                f0_max,
             )
             pitch = pitch[:p_len]
             pitchf = pitchf[:p_len]
