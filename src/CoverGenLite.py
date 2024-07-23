@@ -7,7 +7,7 @@ import gradio as gr
 
 from main import song_cover_pipeline
 from audio_effects import add_audio_effects
-from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
+from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model, upload_separate_files
 from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst, swap_visibility, swap_buttons
 from modules.file_processing import process_file_upload
 
@@ -24,13 +24,14 @@ if __name__ == '__main__':
             gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.2)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
-                    gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube: Politrees</a></h2></center>")
+                    gr.HTML("<center><h2><a href='https://t.me/Politrees2'>Telegram ЛС</a></h2></center>")
                     gr.HTML("<center><h2><a href='https://vk.com/artem__bebroy'>ВКонтакте (страница)</a></h2></center>")
                 with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://t.me/pol1trees'>Telegram Канал</a></h2></center>")
                     gr.HTML("<center><h2><a href='https://t.me/+GMTP7hZqY0E4OGRi'>Telegram Чат</a></h2></center>")
             with gr.Column(variant='panel'):
-                gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub проекта</a></h2></center>")
+                gr.HTML("<center><h2><a href='https://www.youtube.com/channel/UCHb3fZEVxUisnqLqCrEM8ZA'>YouTube</a></h2></center>")
+                gr.HTML("<center><h2><a href='https://github.com/Bebra777228/Pol-Litres-RVC'>GitHub</a></h2></center>")
 
         with gr.Tab("Преобразование голоса"):
             with gr.Row(equal_height=False):
@@ -76,8 +77,8 @@ if __name__ == '__main__':
                         crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
                         f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
                         with gr.Row():
-                            f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=16000)
-                            f0_max = gr.Slider(label="Максимальный диапазон тона:", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=1100, maximum=16000)
+                            f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
+                            f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
                     with gr.Column(variant='panel'):
                         index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info='Контролирует степень влияния индексного файла на результат анализа. Более высокое значение увеличивает влияние индексного файла, но может усилить артефакты в аудио. Выбор более низкого значения может помочь снизить артефакты.')
                         filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
@@ -209,19 +210,21 @@ if __name__ == '__main__':
             with gr.Tab('Загрузить по ссылке'):
                 with gr.Row():
                     with gr.Column(variant='panel'):
-                        gr.HTML("<center><h3>Вставьте в поле ниже ссылку от <a href='https://huggingface.co/' target='_blank'>HuggingFace</a>, <a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a> или <a href='https://drive.google.com/' target='_blank'>Google Drive</a></h3></center>")
+                        gr.HTML("<center><h3>Введите в поле ниже ссылку на ZIP-архив.</h3></center>")
                         model_zip_link = gr.Text(label='Ссылка на загрузку модели')
                     with gr.Column(variant='panel'):
                         with gr.Group():
                             model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
                             download_btn = gr.Button('Загрузить модель', variant='primary')
 
+                gr.HTML("<h3>Поддерживаемые сайты: <a href='https://huggingface.co/' target='_blank'>HuggingFace</a>, <a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a>, <a href='https://drive.google.com/' target='_blank'>Google Drive</a>, <a href='https://mega.nz/' target='_blank'>Mega</a>, <a href='https://disk.yandex.ru/' target='_blank'>Яндекс Диск</a></h3>")
+                
                 dl_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 download_btn.click(download_from_url, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
-            with gr.Tab('Загрузить локально'):
+            with gr.Tab('Загрузить ZIP архивом'):
                 with gr.Row():
-                    with gr.Column(variant='panel'):
+                    with gr.Column():
                         zip_file = gr.File(label='Zip-файл', file_types=['.zip'], file_count='single')
                     with gr.Column(variant='panel'):
                         gr.HTML("<h3>1. Найдите и скачайте файлы: .pth и необязательный файл .index</h3>")
@@ -234,4 +237,18 @@ if __name__ == '__main__':
                 local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 model_upload_button.click(upload_zip_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
 
-    app.launch(share=True, quiet=True)
+            with gr.Tab('Загрузить файлами'):
+                with gr.Group():
+                    gr.HTML('<center><h3>Если у вас нет .index-файла, то вы можете загрузить только .pth-файл (ну или если вам лень долго ждать).</h3></center>')
+                    with gr.Row():
+                        pth_file = gr.File(label='pth-файл', file_types=['.pth'], file_count='single')
+                        index_file = gr.File(label='index-файл', file_types=['.index'], file_count='single')
+                with gr.Column(variant='panel'):
+                    with gr.Group():
+                        separate_model_name = gr.Text(label='Имя модели', info='Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.')
+                        separate_upload_button = gr.Button('Загрузить модель', variant='primary')
+
+                separate_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
+                separate_upload_button.click(upload_separate_files, inputs=[pth_file, index_file, separate_model_name], outputs=separate_upload_output_message)
+
+    app.launch(share=True, quiet=True, show_api=False).queue(api_open=False)
