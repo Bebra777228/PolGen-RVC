@@ -14,8 +14,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 now_dir = os.path.join(BASE_DIR, 'src')
 sys.path.append(now_dir)
 
-from predictor.FCPE import FCPEF0Predictor
-from predictor.RMVPE import RMVPE
+from infer_pack.predictor.FCPE import FCPEF0Predictor
+from infer_pack.predictor.RMVPE import RMVPE
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
@@ -172,7 +172,11 @@ class VC(object):
         x /= np.quantile(np.abs(x), 0.999)
         for method in methods:
             f0 = None
-            if method == "mangio-crepe":
+            if method == "crepe":
+                f0 = self.get_f0_crepe_computation(
+                    x, f0_min, f0_max, p_len
+                )
+            elif method == "mangio-crepe":
                 f0 = self.get_f0_crepe_computation(
                     x, f0_min, f0_max, p_len, crepe_hop_length
                 )
@@ -258,6 +262,9 @@ class VC(object):
             )
             f0 = pyworld.stonemask(x.astype(np.double), f0, t, self.sr)
             f0 = signal.medfilt(f0, 3)
+
+        elif f0_method == "crepe":
+            f0 = self.get_f0_crepe_computation(x, f0_min, f0_max, p_len)
         
         elif f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe_computation(x, f0_min, f0_max, p_len, crepe_hop_length)
@@ -325,7 +332,7 @@ class VC(object):
         ) + 1
         f0_mel[f0_mel <= 1] = 1
         f0_mel[f0_mel > 255] = 255
-        f0_coarse = np.rint(f0_mel).astype(np.int_)
+        f0_coarse = np.rint(f0_mel).astype(int)
 
         return f0_coarse, f0bak
 
