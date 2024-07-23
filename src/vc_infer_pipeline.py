@@ -207,11 +207,13 @@ class VC(object):
         filter_radius,
         crepe_hop_length,
         inp_f0=None,
+        f0_min=50,
+        f0_max=1100,
     ):
         global input_audio_path2wav
         time_step = self.window / self.sr * 1000
-        f0_min = 50
-        f0_max = 1100
+        #f0_min = 50
+        #f0_max = 1100
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
         if f0_method == "pm":
@@ -453,6 +455,8 @@ class VC(object):
         protect,
         crepe_hop_length,
         f0_file=None,
+        f0_min=50,
+        f0_max=1100,
     ):
         if file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
@@ -508,6 +512,8 @@ class VC(object):
                 filter_radius,
                 crepe_hop_length,
                 inp_f0,
+                f0_min,
+                f0_max,
             )
             pitch = pitch[:p_len]
             pitchf = pitchf[:p_len]
