@@ -239,7 +239,6 @@ if __name__ == '__main__':
 
             with gr.Tab('Загрузить файлами'):
                 with gr.Group():
-                    gr.HTML('<center><h3>Если у вас нет .index-файла, то вы можете загрузить только .pth-файл (ну или если вам лень долго ждать).</h3></center>')
                     with gr.Row():
                         pth_file = gr.File(label='pth-файл', file_types=['.pth'], file_count='single')
                         index_file = gr.File(label='index-файл', file_types=['.index'], file_count='single')
