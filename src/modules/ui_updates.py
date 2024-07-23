@@ -23,3 +23,10 @@ def update_button_text_voc():
 
 def update_button_text_inst():
     return gr.update(label="Загрузить другой инструментал")
+
+
+def swap_visibility():
+    return gr.update(visible=True), gr.update(visible=False), gr.update(value=''), gr.update(value=None)
+
+def swap_buttons():
+    return gr.update(visible=False), gr.update(visible=True)
