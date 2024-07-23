@@ -8,7 +8,7 @@ import gradio as gr
 from main import song_cover_pipeline
 from audio_effects import add_audio_effects
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model
-from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst
+from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst, swap_visibility, swap_buttons
 from modules.file_processing import process_file_upload
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
