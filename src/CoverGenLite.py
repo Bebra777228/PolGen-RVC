@@ -5,15 +5,26 @@ import zipfile
 import gdown
 import gradio as gr
 
-from main import song_cover_pipeline
+from main import song_cover_pipeline, download_hubert_model
 from audio_effects import add_audio_effects
 from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model, upload_separate_files
 from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst, swap_visibility, swap_buttons
-from modules.file_processing import process_file_upload
+from modules.file_processing import process_file_upload, download_and_save_hubert_model
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
 output_dir = os.path.join(BASE_DIR, 'song_output')
+
+
+hubert_model_mapping = {
+    "Дефолт": "hubert_base",
+    "Контентвек": "contentvec_base",
+    "Китайский": "chinese_hubert_base",
+    "Китайский большой": "chinese_hubert_large",
+    "Корейский": "korean_hubert_base",
+    "Японский": "japanese_hubert_base",
+    "Японский большой": "japanese_hubert_large"
+}
 
 
 if __name__ == '__main__':
@@ -85,10 +96,21 @@ if __name__ == '__main__':
                         rms_mix_rate = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
                         protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
+            with gr.Group():
+                with gr.Row():
+                    hubert_model_name = gr.Dropdown(list(hubert_model_mapping.keys()), label="Выберите модель HuBERT", value="Дефолт")
+                    download_button = gr.Button("Скачать HuBERT модель")
+                download_status = gr.Textbox(label="Статус загрузки модели", interactive=False)
+
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             generate_btn.click(song_cover_pipeline,
                               inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format, f0_min, f0_max],
                               outputs=[converted_voice])
+            download_button.click(
+                fn=download_and_save_hubert_model,
+                inputs=[hubert_model_name],
+                outputs=download_status
+            )
 
         with gr.Tab('Объединение/Обработка'):
             with gr.Row(equal_height=False):
