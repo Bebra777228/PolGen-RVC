@@ -8,27 +8,12 @@ import torch
 import numpy as np
 import soundfile as sf
 import gradio as gr
-import requests
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RVC_MODELS_DIR = os.path.join(BASE_DIR, 'rvc_models')
 OUTPUT_DIR = os.path.join(BASE_DIR, 'song_output')
 
-def download_hubert_model(model_name):
-    url = f"https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/{model_name}.pt"
-    hubert_model_path = os.path.join(RVC_MODELS_DIR, 'hubert_base.pt')
-
-    if os.path.exists(hubert_model_path):
-        os.remove(hubert_model_path)
-
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    with open(hubert_model_path, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            if chunk:
-                f.write(chunk)
-    return hubert_model_path
 
 def get_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
