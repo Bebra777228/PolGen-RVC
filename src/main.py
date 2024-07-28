@@ -45,7 +45,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     gc.collect()
     torch.cuda.empty_cache()
 
-def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
+def conversion_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
                         crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0_min=50, f0_max=1100):
     if not uploaded_file or not voice_model:
         raise ValueError('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
