@@ -10,10 +10,10 @@ import random
 import gc
 import re
 
-from infer_pack.predictor.FCPE import FCPEF0Predictor
-from infer_pack.predictor.RMVPE import RMVPE
-
 now_dir = os.getcwd()
+
+from src.infer_pack.predictor.FCPE import FCPEF0Predictor
+from src.infer_pack.predictor.RMVPE import RMVPE
 
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
