@@ -5,7 +5,7 @@ import zipfile
 import gdown
 import gradio as gr
 
-from main import conversion_pipeline
+from voice_conversion import conversion_pipeline
 from audio_processing import processing
 from modules.model_management import *
 from modules.ui_updates import *
