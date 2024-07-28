@@ -6,15 +6,15 @@ RVC_other_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/all_RVC-pretrained_a
 RVC_hubert_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
 
 now_dir = os.getcwd()
-rvc_models_dir = now_dir / 'rvc_models'
+rvc_models_dir = os.path.join(now_dir, 'rvc_models')
 
 
 def dl_model(link, model_name, dir_name):
-    with requests.get(f'{link}{model_name}') as r:
-        r.raise_for_status()
-        with open(dir_name / model_name, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    r = requests.get(f'{link}{model_name}', stream=True)
+    r.raise_for_status()
+    with open(os.path.join(dir_name, model_name), 'wb') as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
 
 if __name__ == '__main__':
     rvc_other_names = ['rmvpe.pt', 'fcpe.pt']
