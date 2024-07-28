@@ -7,8 +7,8 @@ import requests
 import gradio as gr
 from mega import Mega
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
+now_dir = os.getcwd()
+rvc_models_dir = os.path.join(now_dir, 'rvc_models')
 
 def ignore_files(models_dir):
     models_list = os.listdir(models_dir)
