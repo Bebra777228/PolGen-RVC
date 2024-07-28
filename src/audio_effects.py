@@ -3,9 +3,7 @@ import librosa
 import numpy as np
 import gradio as gr
 import soundfile as sf
-from pedalboard import (
-    Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
-)
+from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
