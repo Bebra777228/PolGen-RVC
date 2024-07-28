@@ -4,9 +4,9 @@ import os
 from voice_conversion import conversion
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
-output_dir = os.path.join(BASE_DIR, 'song_output')
+now_dir = os.getcwd()
+rvc_models_dir = os.path.join(now_dir, 'rvc_models')
+output_dir = os.path.join(now_dir, 'song_output')
 
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
