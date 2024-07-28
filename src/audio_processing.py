@@ -6,7 +6,6 @@ import soundfile as sf
 from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
 from pedalboard.io import AudioFile
 
-# Определяем рабочий каталог
 now_dir = os.getcwd()
 RVC_MODELS_DIR = os.path.join(now_dir, 'rvc_models')
 OUTPUT_DIR = os.path.join(now_dir, 'song_output')
