@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from main import conversion_pipeline
+from voice_conversion import conversion
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +28,7 @@ rvc_dirname = args.rvc_dirname
 if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
     raise Exception(f'Папки {os.path.join(rvc_models_dir, rvc_dirname)} не существует.')
 
-cover_path = conversion_pipeline(
+cover_path = conversion(
     args.song_input, rvc_dirname, args.pitch,
     index_rate=args.index_rate, filter_radius=args.filter_radius,
     rms_mix_rate=args.rms_mix_rate, f0_method=args.method,
