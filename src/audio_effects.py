@@ -16,12 +16,8 @@ def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
 def combine_audio(vocal_path, instrumental_path, output_path, vocal_gain, instrumental_gain, output_format):
-    vocal = AudioSegment.from_file(vocal_path)
-    instrumental = AudioSegment.from_file(instrumental_path)
-
-    vocal += vocal_gain
-    instrumental += instrumental_gain
-
+    vocal = AudioSegment.from_file(vocal_path) + vocal_gain
+    instrumental = AudioSegment.from_file(instrumental_path) + instrumental_gain
     combined = vocal.overlay(instrumental)
     combined.export(output_path, format=output_format)
 
@@ -57,12 +53,11 @@ def processing(vocal_audio_path, instrumental_audio_path, reverb_rm_size, reverb
         ])
 
         vocal_output_path = os.path.join(OUTPUT_DIR, 'Vocal.wav')
-        with AudioFile(stereo_vocal_path) as f:
-            with AudioFile(vocal_output_path, 'w', f.samplerate, 2) as o:
-                while f.tell() < f.frames:
-                    chunk = f.read(int(f.samplerate))
-                    effected = board(chunk, f.samplerate, reset=False)
-                    o.write(effected)
+        with AudioFile(stereo_vocal_path) as f, AudioFile(vocal_output_path, 'w', f.samplerate, 2) as o:
+            while f.tell() < f.frames:
+                chunk = f.read(int(f.samplerate))
+                effected = board(chunk, f.samplerate, reset=False)
+                o.write(effected)
     else:
         vocal_output_path = stereo_vocal_path
 
