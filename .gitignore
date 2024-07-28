@@ -1,5 +1,4 @@
-rvc_models/MODELS.txt
-song_output/OUTPUT.txt
+*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
