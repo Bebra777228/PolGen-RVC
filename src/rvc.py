@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Config:
     def __init__(self, device, is_half):
         self.device = device
-        self.is_half = False
+        self.is_half = is_half
         self.n_cpu = 0
         self.gpu_name = None
         self.gpu_mem = None
