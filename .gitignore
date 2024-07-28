@@ -1,3 +1,6 @@
+rvc_models/MODELS.txt
+song_output/OUTPUT.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
