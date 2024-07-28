@@ -5,7 +5,6 @@ import gradio as gr
 import soundfile as sf
 from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
 from pedalboard.io import AudioFile
-from pydub import AudioSegment
 
 # Определяем рабочий каталог
 now_dir = os.getcwd()
@@ -15,26 +14,16 @@ OUTPUT_DIR = os.path.join(now_dir, 'song_output')
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
+def convert_to_stereo(input_path, output_path):
+    y, sr = librosa.load(input_path, sr=None, mono=False)
+    y_stereo = np.vstack([y, y]) if y.ndim == 1 else y[:2, :]
+    sf.write(output_path, y_stereo.T, sr, format='WAV')
+
 def combine_audio(vocal_path, instrumental_path, output_path, vocal_gain, instrumental_gain, output_format):
     vocal = AudioSegment.from_file(vocal_path) + vocal_gain
     instrumental = AudioSegment.from_file(instrumental_path) + instrumental_gain
     combined = vocal.overlay(instrumental)
     combined.export(output_path, format=output_format)
-
-def convert_to_stereo(input_path, output_path):
-    y, sr = librosa.load(input_path, sr=None, mono=False)
-    if y.ndim == 1:
-        y = np.vstack([y, y])
-    elif y.ndim > 2:
-        y = y[:2, :]
-    sf.write(output_path, y.T, sr, format='WAV')
-
-def apply_effects(input_path, output_path, effects_board):
-    with AudioFile(input_path) as f, AudioFile(output_path, 'w', f.samplerate, 2) as o:
-        while f.tell() < f.frames:
-            chunk = f.read(int(f.samplerate))
-            effected = effects_board(chunk, f.samplerate, reset=False)
-            o.write(effected)
 
 def create_effects_board(reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                          low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
@@ -49,6 +38,13 @@ def create_effects_board(reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
         HighShelfFilter(gain_db=high_shelf_gain),
         Chorus(rate_hz=chorus_rate_hz, depth=chorus_depth, centre_delay_ms=chorus_centre_delay_ms, feedback=chorus_feedback, mix=chorus_mix),
     ])
+
+def apply_effects(input_path, output_path, effects_board):
+    with AudioFile(input_path) as f, AudioFile(output_path, 'w', f.samplerate, 2) as o:
+        while f.tell() < f.frames:
+            chunk = f.read(int(f.samplerate))
+            effected = effects_board(chunk, f.samplerate, reset=False)
+            o.write(effected)
 
 def processing(vocal_audio_path, instrumental_audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
