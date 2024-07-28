@@ -10,8 +10,8 @@ from audio_processing import processing
 from modules.model_management import *
 from modules.ui_updates import *
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
+now_dir = os.getcwd()
+rvc_models_dir = os.path.join(now_dir, 'rvc_models')
 
 
 if __name__ == '__main__':
