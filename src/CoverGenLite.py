@@ -5,15 +5,14 @@ import zipfile
 import gdown
 import gradio as gr
 
-from main import song_cover_pipeline
-from audio_effects import add_audio_effects
+from main import conversion_pipeline
+from audio_effects import processing
 from modules.model_management import *
 from modules.ui_updates import *
 from modules.file_processing import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
-output_dir = os.path.join(BASE_DIR, 'song_output')
 
 
 if __name__ == '__main__':
@@ -86,7 +85,7 @@ if __name__ == '__main__':
                         protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
-            generate_btn.click(song_cover_pipeline,
+            generate_btn.click(conversion_pipeline,
                               inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format, f0_min, f0_max],
                               outputs=[converted_voice])
 
@@ -193,7 +192,7 @@ if __name__ == '__main__':
                                     noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
 
             use_effects.change(show_effects, inputs=use_effects, outputs=[effects_accordion, processing_accordion])
-            process_btn.click(add_audio_effects,
+            process_btn.click(processing,
                             inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                             reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
                             noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
