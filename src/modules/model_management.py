@@ -12,7 +12,7 @@ rvc_models_dir = os.path.join(now_dir, 'rvc_models')
 
 def ignore_files(models_dir):
     models_list = os.listdir(models_dir)
-    items_to_remove = ['hubert_base.pt', 'MODELS.txt', 'rmvpe.pt', 'fcpe.pt']
+    items_to_remove = ['hubert_base.pt', 'MODELS.txt', 'rmvpe.pt', 'fcpe.pt', '.ipynb_checkpoints']
     return [item for item in models_list if item not in items_to_remove]
 
 def update_models_list():
