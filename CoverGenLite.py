@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
                 use_effects = gr.Checkbox(label="Добавить эффекты на голос", value=False)
                 with gr.Column(variant='panel', visible=False) as effects_accordion:
-                    with gr.Accordion('Эффекты', open=True):
+                    with gr.Accordion('Эффекты', open=False):
                         with gr.Accordion('Реверберация', open=False):
                             with gr.Group():
                                 with gr.Column(variant='panel'):
@@ -170,7 +170,7 @@ if __name__ == '__main__':
                                     with gr.Row():
                                         chorus_mix = gr.Slider(0, 1, value=0, label='Смешение', info='Этот параметр отвечает за уровень смешивания оригинального сигнала и эффекта хоруса. Чем выше значение, тем сильнее будет эффект хоруса.')
 
-                    with gr.Accordion('Обработка', open=True):
+                    with gr.Accordion('Обработка', open=False):
                         with gr.Accordion('Компрессор', open=False):
                             with gr.Row(variant='panel'):
                                 compressor_ratio = gr.Slider(1, 20, value=4, label='Соотношение', info='Этот параметр контролирует количество применяемого сжатия аудио. Большее значение означает большее сжатие, которое уменьшает динамический диапазон аудио, делая громкие части более тихими и тихие части более громкими.')
