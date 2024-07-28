@@ -8,9 +8,9 @@ import numpy as np
 import gradio as gr
 from rvc import Config, load_hubert, get_vc, rvc_infer
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RVC_MODELS_DIR = os.path.join(BASE_DIR, 'rvc_models')
-OUTPUT_DIR = os.path.join(BASE_DIR, 'song_output')
+now_dir = os.getcwd()
+RVC_MODELS_DIR = os.path.join(now_dir, 'rvc_models')
+OUTPUT_DIR = os.path.join(now_dir, 'song_output')
 
 def get_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
@@ -22,7 +22,7 @@ def get_rvc_model(voice_model):
 
 def convert_to_stereo(audio_path):
     wave, sr = librosa.load(audio_path, mono=False, sr=44100)
-    if type(wave[0]) != np.ndarray:
+    if wave.ndim == 1:
         stereo_path = os.path.join(OUTPUT_DIR, 'Voice_stereo.wav')
         subprocess.run(shlex.split(f'ffmpeg -y -loglevel error -i "{audio_path}" -ac 2 -f wav "{stereo_path}"'))
         return stereo_path
@@ -65,4 +65,5 @@ def conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_
     voice_change(voice_model, orig_song_path, ai_cover_path, pitch_change, f0_method, index_rate,
                  filter_radius, rms_mix_rate, protect, crepe_hop_length, f0_min, f0_max)
 
+    display_progress(1.0, '[✓] AI-кавер успешно сгенерирован!', progress)
     return ai_cover_path
