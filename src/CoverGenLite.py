@@ -5,7 +5,7 @@ import zipfile
 import gdown
 import gradio as gr
 
-from voice_conversion import conversion_pipeline
+from voice_conversion import conversion
 from audio_processing import processing
 from modules.model_management import *
 from modules.ui_updates import *
@@ -84,7 +84,7 @@ if __name__ == '__main__':
                         protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
-            generate_btn.click(conversion_pipeline,
+            generate_btn.click(conversion,
                               inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format, f0_min, f0_max],
                               outputs=[converted_voice])
 
