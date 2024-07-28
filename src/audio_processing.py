@@ -5,6 +5,7 @@ import gradio as gr
 import soundfile as sf
 from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
 from pedalboard.io import AudioFile
+from pydub import AudioSegment
 
 now_dir = os.getcwd()
 RVC_MODELS_DIR = os.path.join(now_dir, 'rvc_models')
