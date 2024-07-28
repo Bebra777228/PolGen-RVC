@@ -5,8 +5,8 @@ import zipfile
 import gdown
 import gradio as gr
 
-from src.voice_conversion import conversion
-from src.audio_processing import processing
+from src.scripts.voice_conversion import conversion
+from src.scripts.audio_processing import processing
 from src.modules.model_management import *
 from src.modules.ui_updates import *
 
