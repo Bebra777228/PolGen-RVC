@@ -10,12 +10,11 @@ import random
 import gc
 import re
 
-now_dir = os.getcwd()
-BASE_DIR = os.path.join(now_dir, 'src')
-sys.path.append(BASE_DIR)
-
 from infer_pack.predictor.FCPE import FCPEF0Predictor
 from infer_pack.predictor.RMVPE import RMVPE
+
+now_dir = os.getcwd()
+
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
@@ -184,13 +183,13 @@ class VC(object):
                 if hasattr(self, "model_rmvpe") == False:
 
                     self.model_rmvpe = RMVPE(
-                        os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
+                        os.path.join(now_dir, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
                     )
                 f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
                 f0 = f0[1:]
             elif method == "fcpe":
                 self.model_fcpe = FCPEF0Predictor(
-                    os.path.join(BASE_DIR, 'rvc_models', 'fcpe.pt'),
+                    os.path.join(now_dir, 'rvc_models', 'fcpe.pt'),
                     f0_min=int(f0_min),
                     f0_max=int(f0_max),
                     dtype=torch.float32,
@@ -273,7 +272,7 @@ class VC(object):
             if hasattr(self, "model_rmvpe") == False:
 
                 self.model_rmvpe = RMVPE(
-                    os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
+                    os.path.join(now_dir, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
                 )
             f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
         
@@ -286,7 +285,7 @@ class VC(object):
         
         elif f0_method == "fcpe":
             self.model_fcpe = FCPEF0Predictor(
-                os.path.join(BASE_DIR, 'rvc_models', 'fcpe.pt'),
+                os.path.join(now_dir, 'rvc_models', 'fcpe.pt'),
                 f0_min=int(f0_min),
                 f0_max=int(f0_max),
                 dtype=torch.float32,
@@ -340,7 +339,7 @@ class VC(object):
         if not hasattr(self, "model_rmvpe"):
             
             self.model_rmvpe = RMVPE(
-                os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'),
+                os.path.join(now_dir, 'rvc_models', 'rmvpe.pt'),
                 is_half=self.is_half,
                 device=self.device,
             )
