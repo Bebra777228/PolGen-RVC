@@ -6,9 +6,12 @@ import librosa
 import torch
 import numpy as np
 import gradio as gr
-from rvc import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
+
+from src.rvc import Config, load_hubert, get_vc, rvc_infer
+
+
 RVC_MODELS_DIR = os.path.join(now_dir, 'rvc_models')
 OUTPUT_DIR = os.path.join(now_dir, 'song_output')
 
