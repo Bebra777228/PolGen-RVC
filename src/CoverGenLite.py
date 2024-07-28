@@ -7,9 +7,9 @@ import gradio as gr
 
 from main import song_cover_pipeline
 from audio_effects import add_audio_effects
-from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model, upload_separate_files
-from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst, swap_visibility, swap_buttons
-from modules.file_processing import process_file_upload
+from modules.model_management import *
+from modules.ui_updates import *
+from modules.file_processing import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
@@ -145,7 +145,8 @@ if __name__ == '__main__':
                     instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал', scale=1)
                     clear_btn = gr.Button("Сбросить все эффекты", scale=0.1)
 
-                with gr.Accordion('Эффекты', open=False):
+                use_effects = gr.Checkbox(label="Добавить эффекты на голос", value=False)
+                with gr.Accordion('Эффекты', open=False, visible=False) as effects_accordion:
                     with gr.Accordion('Реверберация', open=False):
                         with gr.Group():
                             with gr.Column(variant='panel'):
@@ -191,12 +192,13 @@ if __name__ == '__main__':
                                     noise_gate_attack = gr.Slider(0, 100, value=10, label='Время атаки (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз открывается, когда звук становится достаточно громким. Большее значение означает, что шлюз открывается медленнее.')
                                     noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
 
+            use_effects.change(show_effects, inputs=use_effects, outputs=effects_accordion)
             process_btn.click(add_audio_effects,
                             inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                             reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
                             noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                             chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                            output_format, vocal_gain, instrumental_gain],
+                            output_format, vocal_gain, instrumental_gain, use_effects],
                             outputs=[ai_cover])
 
             default_values = [0, 0, 0.15, 1.0, 0.1, 0.8, 0.7, 0, 0, 0, 0, 0, 4, -16, 0, 0, -30, 6, 10, 100]
