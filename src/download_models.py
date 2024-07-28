@@ -1,11 +1,12 @@
+import os
 from pathlib import Path
 import requests
 
 RVC_other_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/'
 RVC_hubert_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-rvc_models_dir = BASE_DIR / 'rvc_models'
+now_dir = os.getcwd()
+rvc_models_dir = now_dir / 'rvc_models'
 
 
 def dl_model(link, model_name, dir_name):
