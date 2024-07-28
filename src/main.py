@@ -24,7 +24,7 @@ def get_rvc_model(voice_model):
 def convert_to_stereo(audio_path):
     wave, sr = librosa.load(audio_path, mono=False, sr=44100)
     if type(wave[0]) != np.ndarray:
-        stereo_path = 'Voice_stereo.wav'
+        stereo_path = os.path.join(OUTPUT_DIR, 'Voice_stereo.wav')
         subprocess.run(shlex.split(f'ffmpeg -y -loglevel error -i "{audio_path}" -ac 2 -f wav "{stereo_path}"'))
         return stereo_path
     return audio_path
@@ -56,11 +56,8 @@ def song_cover_pipeline(uploaded_file, voice_model, pitch_change, index_rate=0.5
     if not os.path.exists(uploaded_file):
         raise FileNotFoundError(f'{uploaded_file} не существует.')
 
-    song_dir = os.path.join(OUTPUT_DIR)
-    os.makedirs(song_dir, exist_ok=True)
-
     orig_song_path = convert_to_stereo(uploaded_file)
-    ai_cover_path = os.path.join(song_dir, f'Converted_Voice.{output_format}')
+    ai_cover_path = os.path.join(OUTPUT_DIR, f'Converted_Voice.{output_format}')
 
     if os.path.exists(ai_cover_path):
         os.remove(ai_cover_path)
