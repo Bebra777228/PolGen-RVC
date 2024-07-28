@@ -9,7 +9,6 @@ from main import conversion_pipeline
 from audio_effects import processing
 from modules.model_management import *
 from modules.ui_updates import *
-from modules.file_processing import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
