@@ -5,10 +5,10 @@ import zipfile
 import gdown
 import gradio as gr
 
-from voice_conversion import conversion
-from audio_processing import processing
-from modules.model_management import *
-from modules.ui_updates import *
+from src.voice_conversion import conversion
+from src.audio_processing import processing
+from src.modules.model_management import *
+from src.modules.ui_updates import *
 
 now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'rvc_models')
