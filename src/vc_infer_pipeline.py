@@ -10,9 +10,9 @@ import random
 import gc
 import re
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-now_dir = os.path.join(BASE_DIR, 'src')
-sys.path.append(now_dir)
+now_dir = os.getcwd()
+BASE_DIR = os.path.join(now_dir, 'src')
+sys.path.append(BASE_DIR)
 
 from infer_pack.predictor.FCPE import FCPEF0Predictor
 from infer_pack.predictor.RMVPE import RMVPE
