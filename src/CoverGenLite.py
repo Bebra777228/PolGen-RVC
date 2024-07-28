@@ -17,9 +17,9 @@ rvc_models_dir = os.path.join(now_dir, 'rvc_models')
 if __name__ == '__main__':
     voice_models = ignore_files(rvc_models_dir)
 
-    with gr.Blocks(title='CoverGen Lite - Politrees (v0.3)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
+    with gr.Blocks(title='CoverGen Lite - Politrees (v0.4)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
         with gr.Tab("Велком/Контакты"):
-            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.3)</h1></center>")
+            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.4)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://t.me/Politrees2'>Telegram ЛС</a></h2></center>")
