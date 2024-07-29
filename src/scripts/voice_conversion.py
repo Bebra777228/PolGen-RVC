@@ -12,7 +12,8 @@ now_dir = os.getcwd()
 from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
 
-RVC_MODELS_DIR = os.path.join(now_dir, 'rvc_models')
+RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
+ASSETS_DIR = os.path.join(now_dir, 'models', 'assets')
 OUTPUT_DIR = os.path.join(now_dir, 'song_output')
 
 def get_rvc_model(voice_model):
@@ -38,7 +39,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     rvc_model_path, rvc_index_path = get_rvc_model(voice_model)
     device = 'cuda:0'
     config = Config(device, True)
-    hubert_model = load_hubert(device, config.is_half, os.path.join(RVC_MODELS_DIR, 'hubert_base.pt'))
+    hubert_model = load_hubert(device, config.is_half, os.path.join(ASSETS_DIR, 'hubert_base.pt'))
     cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
     rvc_infer(rvc_index_path, index_rate, vocals_path, output_path, pitch_change, f0_method, cpt, version, net_g,
