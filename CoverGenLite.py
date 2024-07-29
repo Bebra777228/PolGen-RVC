@@ -78,11 +78,13 @@ if __name__ == '__main__':
                         rms_mix_rate = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
                         protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
-            with gr.Row(variant='panel'):
-                model_dropdown = gr.Dropdown(models, label='Выберите модель для скачивания:')
-                download_btn = gr.Button("Скачать", variant='primary')
-                download_btn.click(download_and_replace_model, inputs=model_dropdown, outputs=[])
-
+            with gr.Accordion('Установка HuBERT модели', open=False):
+                with gr.Row(variant='panel'):
+                    hubert_model_dropdown = gr.Dropdown(models, label='Выберите модель для скачивания:')
+                    hubert_download_btn = gr.Button("Скачать", variant='primary')
+                hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
+                    
+            hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             generate_btn.click(conversion,
                               inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format, f0_min, f0_max],
