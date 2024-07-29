@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
             with gr.Accordion('Установка HuBERT модели', open=False):
                 with gr.Row(variant='panel'):
-                    hubert_model_dropdown = gr.Dropdown(models, label='Выберите модель для скачивания:')
+                    hubert_model_dropdown = gr.Dropdown(list(models.keys()), label='Выберите модель для скачивания:')
                     hubert_download_btn = gr.Button("Скачать", variant='primary')
                 hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                     
