@@ -3,15 +3,18 @@ from time import time as ttime
 import torch
 from torch import nn
 from torch.nn import functional as F
-from infer_pack import modules
-from infer_pack import attentions
-from infer_pack import commons
-from infer_pack.commons import init_weights, get_padding
 from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d
 from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
-from infer_pack.commons import init_weights
 import numpy as np
-from infer_pack import commons
+
+now_dir = os.getcwd()
+
+from src.infer_pack import modules
+from src.infer_pack import attentions
+from src.infer_pack import commons
+from src.infer_pack.commons import init_weights, get_padding
+from src.infer_pack.commons import init_weights
+from src.infer_pack import commons
 
 
 class TextEncoder256(nn.Module):

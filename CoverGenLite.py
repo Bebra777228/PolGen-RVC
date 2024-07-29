@@ -1,27 +1,20 @@
 import os
-import shutil
-import urllib.request
-import zipfile
-import gdown
 import gradio as gr
+from src.scripts.voice_conversion import conversion
+from src.scripts.audio_processing import processing
+from src.modules.model_management import *
+from src.modules.ui_updates import *
+from src.modules.download_hubert import *
 
-from main import song_cover_pipeline
-from audio_effects import add_audio_effects
-from modules.model_management import ignore_files, update_models_list, extract_zip, download_from_url, upload_zip_model, upload_separate_files
-from modules.ui_updates import show_hop_slider, update_f0_method, update_button_text, update_button_text_voc, update_button_text_inst, swap_visibility, swap_buttons
-from modules.file_processing import process_file_upload
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
-output_dir = os.path.join(BASE_DIR, 'song_output')
-
+now_dir = os.getcwd()
+rvc_models_dir = os.path.join(now_dir, 'rvc_models')
 
 if __name__ == '__main__':
-    voice_models = ignore_files(rvc_models_dir)
+    voice_models = get_folders(rvc_models_dir)
 
-    with gr.Blocks(title='CoverGen Lite - Politrees (v0.3)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
+    with gr.Blocks(title='CoverGen Lite - Politrees (v1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
         with gr.Tab("Велком/Контакты"):
-            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v0.3)</h1></center>")
+            gr.HTML("<center><h1>Добро пожаловать в CoverGen Lite - Politrees (v1)</h1></center>")
             with gr.Row():
                 with gr.Column(variant='panel'):
                     gr.HTML("<center><h2><a href='https://t.me/Politrees2'>Telegram ЛС</a></h2></center>")
@@ -41,6 +34,7 @@ if __name__ == '__main__':
                         ref_btn = gr.Button('Обновить список моделей', variant='primary')
                     with gr.Group():
                         pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
+                        f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
 
                 with gr.Column(scale=2, variant='panel'):
                     with gr.Column() as upload_file:
@@ -54,7 +48,7 @@ if __name__ == '__main__':
                     with gr.Column():
                         show_upload_button = gr.Button('Загрузка файла с устройства', visible=False)
                         show_enter_button = gr.Button('Ввод пути к локальному файлу')
-                    
+
                 uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[song_input, local_file])
                 uploaded_file.upload(update_button_text, outputs=[uploaded_file])
                 show_upload_button.click(swap_visibility, outputs=[upload_file, enter_local_file, song_input, local_file])
@@ -85,9 +79,18 @@ if __name__ == '__main__':
                         rms_mix_rate = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
                         protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
+            with gr.Accordion('Установка HuBERT модели', open=False):
+                gr.HTML("<center><h2>Если вы не меняли HuBERT при тренировке модели, то не трогайте этот блок.</h2></center>")
+                with gr.Row(variant='panel'):
+                    hubert_model_dropdown = gr.Dropdown(list(models.keys()), label='HuBERT модели:')
+                    hubert_download_btn = gr.Button("Скачать", variant='primary')
+                hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
+                    
+            hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
             ref_btn.click(update_models_list, None, outputs=rvc_model)
-            generate_btn.click(song_cover_pipeline,
-                              inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format, f0_min, f0_max],
+            generate_btn.click(conversion,
+                              inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate,
+                                      f0_method, crepe_hop_length, protect, output_format, f0autotune, f0_min, f0_max],
                               outputs=[converted_voice])
 
         with gr.Tab('Объединение/Обработка'):
@@ -145,61 +148,64 @@ if __name__ == '__main__':
                     instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал', scale=1)
                     clear_btn = gr.Button("Сбросить все эффекты", scale=0.1)
 
-                with gr.Accordion('Эффекты', open=False):
-                    with gr.Accordion('Реверберация', open=False):
-                        with gr.Group():
-                            with gr.Column(variant='panel'):
-                                with gr.Row():
-                                    reverb_rm_size = gr.Slider(0, 1, value=0.15, label='Размер комнаты', info='Этот параметр отвечает за размер виртуального помещения, в котором будет звучать реверберация. Большее значение означает больший размер комнаты и более длительное звучание реверберации.')
-                                    reverb_width = gr.Slider(0, 1, value=1.0, label='Ширина реверберации', info='Этот параметр отвечает за ширину звучания реверберации. Чем выше значение, тем шире будет звучание реверберации.')
-                                with gr.Row():
-                                    reverb_wet = gr.Slider(0, 1, value=0.1, label='Уровень влажности', info='Этот параметр отвечает за уровень реверберации. Чем выше значение, тем сильнее будет слышен эффект реверберации и тем дольше будет звучать «хвост».')
-                                    reverb_dry = gr.Slider(0, 1, value=0.8, label='Уровень сухости', info='Этот параметр отвечает за уровень исходного звука без реверберации. Чем меньше значение, тем тише звук ai вокала. Если значение будет на 0, то исходный звук полностью исчезнет.')
-                                with gr.Row():
-                                    reverb_damping = gr.Slider(0, 1, value=0.7, label='Уровень демпфирования', info='Этот параметр отвечает за поглощение высоких частот в реверберации. Чем выше его значение, тем сильнее будет поглощение частот и тем менее будет «яркий» звук реверберации.')
+                use_effects = gr.Checkbox(label="Добавить эффекты на голос", value=False)
+                with gr.Column(variant='panel', visible=False) as effects_accordion:
+                    with gr.Accordion('Эффекты', open=False):
+                        with gr.Accordion('Реверберация', open=False):
+                            with gr.Group():
+                                with gr.Column(variant='panel'):
+                                    with gr.Row():
+                                        reverb_rm_size = gr.Slider(0, 1, value=0.1, label='Размер комнаты', info='Этот параметр отвечает за размер виртуального помещения, в котором будет звучать реверберация. Большее значение означает больший размер комнаты и более длительное звучание реверберации.')
+                                        reverb_width = gr.Slider(0, 1, value=1.0, label='Ширина реверберации', info='Этот параметр отвечает за ширину звучания реверберации. Чем выше значение, тем шире будет звучание реверберации.')
+                                    with gr.Row():
+                                        reverb_wet = gr.Slider(0, 1, value=0.1, label='Уровень влажности', info='Этот параметр отвечает за уровень реверберации. Чем выше значение, тем сильнее будет слышен эффект реверберации и тем дольше будет звучать «хвост».')
+                                        reverb_dry = gr.Slider(0, 1, value=0.7, label='Уровень сухости', info='Этот параметр отвечает за уровень исходного звука без реверберации. Чем меньше значение, тем тише звук ai вокала. Если значение будет на 0, то исходный звук полностью исчезнет.')
+                                    with gr.Row():
+                                        reverb_damping = gr.Slider(0, 1, value=0.9, label='Уровень демпфирования', info='Этот параметр отвечает за поглощение высоких частот в реверберации. Чем выше его значение, тем сильнее будет поглощение частот и тем менее будет «яркий» звук реверберации.')
 
-                    with gr.Accordion('Хорус', open=False):
-                        with gr.Group():
-                            with gr.Column(variant='panel'):
-                                with gr.Row():
-                                    chorus_rate_hz = gr.Slider(0.1, 10, value=0, label='Скорость хоруса', info='Этот параметр отвечает за скорость колебаний эффекта хоруса в герцах. Чем выше значение, тем быстрее будут колебаться звуки.')
-                                    chorus_depth = gr.Slider(0, 1, value=0, label='Глубина хоруса', info='Этот параметр отвечает за глубину эффекта хоруса. Чем выше значение, тем сильнее будет эффект хоруса.')
-                                with gr.Row():
-                                    chorus_centre_delay_ms = gr.Slider(0, 50, value=0, label='Задержка центра (мс)', info='Этот параметр отвечает за задержку центрального сигнала эффекта хоруса в миллисекундах. Чем выше значение, тем дольше будет задержка.')
-                                    chorus_feedback = gr.Slider(0, 1, value=0, label='Обратная связь', info='Этот параметр отвечает за уровень обратной связи эффекта хоруса. Чем выше значение, тем сильнее будет эффект обратной связи.')
-                                with gr.Row():
-                                    chorus_mix = gr.Slider(0, 1, value=0, label='Смешение', info='Этот параметр отвечает за уровень смешивания оригинального сигнала и эффекта хоруса. Чем выше значение, тем сильнее будет эффект хоруса.')
+                        with gr.Accordion('Хорус', open=False):
+                            with gr.Group():
+                                with gr.Column(variant='panel'):
+                                    with gr.Row():
+                                        chorus_rate_hz = gr.Slider(0.1, 10, value=0, label='Скорость хоруса', info='Этот параметр отвечает за скорость колебаний эффекта хоруса в герцах. Чем выше значение, тем быстрее будут колебаться звуки.')
+                                        chorus_depth = gr.Slider(0, 1, value=0, label='Глубина хоруса', info='Этот параметр отвечает за глубину эффекта хоруса. Чем выше значение, тем сильнее будет эффект хоруса.')
+                                    with gr.Row():
+                                        chorus_centre_delay_ms = gr.Slider(0, 50, value=0, label='Задержка центра (мс)', info='Этот параметр отвечает за задержку центрального сигнала эффекта хоруса в миллисекундах. Чем выше значение, тем дольше будет задержка.')
+                                        chorus_feedback = gr.Slider(0, 1, value=0, label='Обратная связь', info='Этот параметр отвечает за уровень обратной связи эффекта хоруса. Чем выше значение, тем сильнее будет эффект обратной связи.')
+                                    with gr.Row():
+                                        chorus_mix = gr.Slider(0, 1, value=0, label='Смешение', info='Этот параметр отвечает за уровень смешивания оригинального сигнала и эффекта хоруса. Чем выше значение, тем сильнее будет эффект хоруса.')
 
-                with gr.Accordion('Обработка', open=False):
-                    with gr.Accordion('Компрессор', open=False):
-                        with gr.Row(variant='panel'):
-                            compressor_ratio = gr.Slider(1, 20, value=4, label='Соотношение', info='Этот параметр контролирует количество применяемого сжатия аудио. Большее значение означает большее сжатие, которое уменьшает динамический диапазон аудио, делая громкие части более тихими и тихие части более громкими.')
-                            compressor_threshold = gr.Slider(-60, 0, value=-16, label='Порог', info='Этот параметр устанавливает порог, при превышении которого начинает действовать компрессор. Компрессор сжимает громкие звуки, чтобы сделать звук более ровным. Чем ниже порог, тем большее количество звуков будет подвергнуто компрессии.')
+                    with gr.Accordion('Обработка', open=False):
+                        with gr.Accordion('Компрессор', open=False):
+                            with gr.Row(variant='panel'):
+                                compressor_ratio = gr.Slider(1, 20, value=4, label='Соотношение', info='Этот параметр контролирует количество применяемого сжатия аудио. Большее значение означает большее сжатие, которое уменьшает динамический диапазон аудио, делая громкие части более тихими и тихие части более громкими.')
+                                compressor_threshold = gr.Slider(-60, 0, value=-12, label='Порог', info='Этот параметр устанавливает порог, при превышении которого начинает действовать компрессор. Компрессор сжимает громкие звуки, чтобы сделать звук более ровным. Чем ниже порог, тем большее количество звуков будет подвергнуто компрессии.')
 
-                    with gr.Accordion('Фильтры', open=False):
-                        with gr.Row(variant='panel'):
-                            low_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр нижних частот', info='Этот параметр контролирует усиление (громкость) низких частот. Положительное значение усиливает низкие частоты, делая звук более басским. Отрицательное значение ослабляет низкие частоты, делая звук более тонким.')
-                            high_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр высоких частот', info='Этот параметр контролирует усиление высоких частот. Положительное значение усиливает высокие частоты, делая звук более ярким. Отрицательное значение ослабляет высокие частоты, делая звук более тусклым.')
+                        with gr.Accordion('Фильтры', open=False):
+                            with gr.Row(variant='panel'):
+                                low_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр нижних частот', info='Этот параметр контролирует усиление (громкость) низких частот. Положительное значение усиливает низкие частоты, делая звук более басским. Отрицательное значение ослабляет низкие частоты, делая звук более тонким.')
+                                high_shelf_gain = gr.Slider(-20, 20, value=0, label='Фильтр высоких частот', info='Этот параметр контролирует усиление высоких частот. Положительное значение усиливает высокие частоты, делая звук более ярким. Отрицательное значение ослабляет высокие частоты, делая звук более тусклым.')
 
-                    with gr.Accordion('Подавление шума', open=False):
-                        with gr.Group():
-                            with gr.Column(variant='panel'):
-                                with gr.Row():
-                                    noise_gate_threshold = gr.Slider(-60, 0, value=-30, label='Порог', info='Этот параметр устанавливает пороговое значение в децибелах, ниже которого сигнал считается шумом. Когда сигнал опускается ниже этого порога, шумовой шлюз активируется и уменьшает громкость сигнала.')
-                                    noise_gate_ratio = gr.Slider(1, 20, value=6, label='Соотношение', info='Этот параметр устанавливает уровень подавления шума. Большее значение означает более сильное подавление шума.')
-                                with gr.Row():
-                                    noise_gate_attack = gr.Slider(0, 100, value=10, label='Время атаки (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз открывается, когда звук становится достаточно громким. Большее значение означает, что шлюз открывается медленнее.')
-                                    noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
+                        with gr.Accordion('Подавление шума', open=False):
+                            with gr.Group():
+                                with gr.Column(variant='panel'):
+                                    with gr.Row():
+                                        noise_gate_threshold = gr.Slider(-60, 0, value=-40, label='Порог', info='Этот параметр устанавливает пороговое значение в децибелах, ниже которого сигнал считается шумом. Когда сигнал опускается ниже этого порога, шумовой шлюз активируется и уменьшает громкость сигнала.')
+                                        noise_gate_ratio = gr.Slider(1, 20, value=8, label='Соотношение', info='Этот параметр устанавливает уровень подавления шума. Большее значение означает более сильное подавление шума.')
+                                    with gr.Row():
+                                        noise_gate_attack = gr.Slider(0, 100, value=10, label='Время атаки (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз открывается, когда звук становится достаточно громким. Большее значение означает, что шлюз открывается медленнее.')
+                                        noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
 
-            process_btn.click(add_audio_effects,
+            use_effects.change(show_effects, inputs=use_effects, outputs=effects_accordion)
+            process_btn.click(processing,
                             inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                             reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
                             noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                             chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                            output_format, vocal_gain, instrumental_gain],
+                            output_format, vocal_gain, instrumental_gain, use_effects],
                             outputs=[ai_cover])
 
-            default_values = [0, 0, 0.15, 1.0, 0.1, 0.8, 0.7, 0, 0, 0, 0, 0, 4, -16, 0, 0, -30, 6, 10, 100]
+            default_values = [0, 0, 0.1, 1.0, 0.1, 0.7, 0.9, 0, 0, 0, 0, 0, 4, -12, 0, 0, -40, 8, 10, 100]
             clear_btn.click(lambda: default_values,
                             outputs=[vocal_gain, instrumental_gain, reverb_rm_size, reverb_width, reverb_wet, reverb_dry, reverb_damping,
                             chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
@@ -250,4 +256,4 @@ if __name__ == '__main__':
                 separate_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
                 separate_upload_button.click(upload_separate_files, inputs=[pth_file, index_file, separate_model_name], outputs=separate_upload_output_message)
 
-    app.launch(share=True, show_api=False).queue(api_open=False)
+    app.launch(share=True, show_error=True, quiet=True, show_api=False)

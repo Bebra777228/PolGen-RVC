@@ -7,17 +7,15 @@ import requests
 import gradio as gr
 from mega import Mega
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
+now_dir = os.getcwd()
+rvc_models_dir = os.path.join(now_dir, 'rvc_models')
 
-def ignore_files(models_dir):
-    models_list = os.listdir(models_dir)
-    items_to_remove = ['hubert_base.pt', 'MODELS.txt', 'rmvpe.pt', 'fcpe.pt']
-    return [item for item in models_list if item not in items_to_remove]
+def get_folders(models_dir):
+    return [item for item in os.listdir(models_dir) if os.path.isdir(os.path.join(models_dir, item))]
 
 def update_models_list():
-    models_l = ignore_files(rvc_models_dir)
-    return gr.update(choices=models_l)
+    models_folders = get_folders(rvc_models_dir)
+    return gr.update(choices=models_folders)
 
 def extract_zip(extraction_folder, zip_name):
     os.makedirs(extraction_folder, exist_ok=True)
@@ -53,7 +51,7 @@ def download_from_url(url, dir_name, progress=gr.Progress()):
             raise gr.Error(f'Директория голосовой модели {dir_name} уже существует! Выберите другое имя для вашей голосовой модели.')
 
         if 'drive.google.com' in url:
-            progress(0.5, desc='[~] Загрузка модели с Google Grive...')
+            progress(0.5, desc='[~] Загрузка модели с Google Drive...')
             file_id = url.split("file/d/")[1].split("/")[0] if "file/d/" in url else url.split("id=")[1].split("&")[0]
             output = zip_name
             gdown.download(id=file_id, output=output, quiet=False)

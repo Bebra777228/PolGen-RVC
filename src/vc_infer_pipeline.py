@@ -10,12 +10,11 @@ import random
 import gc
 import re
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-now_dir = os.path.join(BASE_DIR, 'src')
-sys.path.append(now_dir)
+now_dir = os.getcwd()
 
-from infer_pack.predictor.FCPE import FCPEF0Predictor
-from infer_pack.predictor.RMVPE import RMVPE
+from src.infer_pack.predictor.FCPE import FCPEF0Predictor
+from src.infer_pack.predictor.RMVPE import RMVPE
+
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
@@ -78,6 +77,39 @@ class VC(object):
         self.t_max = self.sr * self.x_max
         self.device = config.device
         
+        self.ref_freqs = [
+            65.41,
+            82.41,
+            110.00,
+            146.83,
+            196.00,
+            246.94,
+            329.63,
+            440.00,
+            587.33,
+            783.99,
+            1046.50,
+        ]
+        self.note_dict = self.generate_interpolated_frequencies()
+
+    def generate_interpolated_frequencies(self):
+        note_dict = []
+        for i in range(len(self.ref_freqs) - 1):
+            freq_low = self.ref_freqs[i]
+            freq_high = self.ref_freqs[i + 1]
+            interpolated_freqs = np.linspace(
+                freq_low, freq_high, num=10, endpoint=False
+            )
+            note_dict.extend(interpolated_freqs)
+        note_dict.append(self.ref_freqs[-1])
+        return note_dict
+
+    def autotune_f0(self, f0):
+        autotuned_f0 = np.zeros_like(f0)
+        for i, freq in enumerate(f0):
+            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
+            autotuned_f0[i] = closest_note
+        return autotuned_f0
 
     def get_optimal_torch_device(self, index: int = 0) -> torch.device:
         if torch.cuda.is_available():
@@ -184,13 +216,13 @@ class VC(object):
                 if hasattr(self, "model_rmvpe") == False:
 
                     self.model_rmvpe = RMVPE(
-                        os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
+                        os.path.join(now_dir, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
                     )
                 f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
                 f0 = f0[1:]
             elif method == "fcpe":
                 self.model_fcpe = FCPEF0Predictor(
-                    os.path.join(BASE_DIR, 'rvc_models', 'fcpe.pt'),
+                    os.path.join(now_dir, 'rvc_models', 'fcpe.pt'),
                     f0_min=int(f0_min),
                     f0_max=int(f0_max),
                     dtype=torch.float32,
@@ -221,6 +253,7 @@ class VC(object):
         f0_method,
         filter_radius,
         crepe_hop_length,
+        f0autotune,
         inp_f0=None,
         f0_min=50,
         f0_max=1100,
@@ -273,7 +306,7 @@ class VC(object):
             if hasattr(self, "model_rmvpe") == False:
 
                 self.model_rmvpe = RMVPE(
-                    os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
+                    os.path.join(now_dir, 'rvc_models', 'rmvpe.pt'), is_half=self.is_half, device=self.device
                 )
             f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
         
@@ -286,7 +319,7 @@ class VC(object):
         
         elif f0_method == "fcpe":
             self.model_fcpe = FCPEF0Predictor(
-                os.path.join(BASE_DIR, 'rvc_models', 'fcpe.pt'),
+                os.path.join(now_dir, 'rvc_models', 'fcpe.pt'),
                 f0_min=int(f0_min),
                 f0_max=int(f0_max),
                 dtype=torch.float32,
@@ -311,6 +344,10 @@ class VC(object):
                 crepe_hop_length,
                 time_step,
             )
+
+        print("f0_autotune =", f0autotune)
+        if f0autotune == "True":
+            f0 = self.autotune_f0(f0)
 
         f0 *= pow(2, f0_up_key / 12)
         tf0 = self.sr // self.window
@@ -340,7 +377,7 @@ class VC(object):
         if not hasattr(self, "model_rmvpe"):
             
             self.model_rmvpe = RMVPE(
-                os.path.join(BASE_DIR, 'rvc_models', 'rmvpe.pt'),
+                os.path.join(now_dir, 'rvc_models', 'rmvpe.pt'),
                 is_half=self.is_half,
                 device=self.device,
             )
@@ -469,6 +506,7 @@ class VC(object):
         version,
         protect,
         crepe_hop_length,
+        f0autotune,
         f0_file=None,
         f0_min=50,
         f0_max=1100,
@@ -526,6 +564,7 @@ class VC(object):
                 f0_method,
                 filter_radius,
                 crepe_hop_length,
+                f0autotune,
                 inp_f0,
                 f0_min,
                 f0_max,

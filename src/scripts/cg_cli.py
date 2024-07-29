@@ -1,12 +1,13 @@
 import argparse
 import os
 
-from main import song_cover_pipeline
-from rvc import Config, load_hubert, get_vc, rvc_infer
+now_dir = os.getcwd()
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
-output_dir = os.path.join(BASE_DIR, 'song_output')
+from src.scripts.voice_conversion import conversion
+from src.rvc import Config, load_hubert, get_vc, rvc_infer
+
+rvc_models_dir = os.path.join(now_dir, 'rvc_models')
+output_dir = os.path.join(now_dir, 'song_output')
 
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
@@ -28,7 +29,7 @@ rvc_dirname = args.rvc_dirname
 if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
     raise Exception(f'Папки {os.path.join(rvc_models_dir, rvc_dirname)} не существует.')
 
-cover_path = song_cover_pipeline(
+cover_path = conversion(
     args.song_input, rvc_dirname, args.pitch,
     index_rate=args.index_rate, filter_radius=args.filter_radius,
     rms_mix_rate=args.rms_mix_rate, f0_method=args.method,
