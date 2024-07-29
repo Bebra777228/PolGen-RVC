@@ -6,7 +6,7 @@ now_dir = os.getcwd()
 from src.scripts.voice_conversion import conversion
 from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
-rvc_models_dir = os.path.join(now_dir, 'rvc_models')
+rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
 output_dir = os.path.join(now_dir, 'song_output')
 
 if not os.path.exists(output_dir):
