@@ -8,6 +8,9 @@ from src.modules.model_management import *
 from src.modules.ui_updates import *
 from src.modules.download_hubert import *
 
+rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
+voice_models = get_folders(rvc_models_dir)
+
 def conversion_tab():
   with gr.Row(equal_height=False):
       with gr.Column(scale=1, variant='panel'):
