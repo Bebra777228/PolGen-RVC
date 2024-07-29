@@ -8,7 +8,7 @@ from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
 now_dir = os.getcwd()
-RVC_MODELS_DIR = os.path.join(now_dir, 'rvc_models')
+RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 OUTPUT_DIR = os.path.join(now_dir, 'song_output')
 
 def display_progress(percent, message, progress=gr.Progress()):
