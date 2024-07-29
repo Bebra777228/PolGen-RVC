@@ -34,6 +34,7 @@ if __name__ == '__main__':
                         ref_btn = gr.Button('Обновить список моделей', variant='primary')
                     with gr.Group():
                         pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
+                        f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
 
                 with gr.Column(scale=2, variant='panel'):
                     with gr.Column() as upload_file:
@@ -88,7 +89,8 @@ if __name__ == '__main__':
             hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             generate_btn.click(conversion,
-                              inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format, f0_min, f0_max],
+                              inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate,
+                                      f0_method, crepe_hop_length, protect, output_format, f0autotune, f0_min, f0_max],
                               outputs=[converted_voice])
 
         with gr.Tab('Объединение/Обработка'):
