@@ -19,16 +19,18 @@ models = {
 }
 
 def download_and_replace_model(model_desc):
-    model_name = models[model_desc]
-    model_url = base_url + model_name
-    tmp_model_path = os.path.join(rvc_models_dir, 'tmp_model.pt')
-    
-    with urllib.request.urlopen(model_url) as response, open(tmp_model_path, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-    
-    if os.path.exists(hubert_base_path):
-        os.remove(hubert_base_path)
-    
-    os.rename(tmp_model_path, hubert_base_path)
-    
-    return f"Модель {model_desc} успешно установлена."
+    try:
+        model_name = models[model_desc]
+        model_url = base_url + model_name
+        tmp_model_path = os.path.join(rvc_models_dir, 'tmp_model.pt')
+
+        with urllib.request.urlopen(model_url) as response, open(tmp_model_path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+
+        if os.path.exists(hubert_base_path):
+            os.remove(hubert_base_path)
+
+        os.rename(tmp_model_path, hubert_base_path)
+        return f"Модель {model_desc} успешно установлена."
+    except Exception as e:
+        return f"Ошибка при установке модели {model_desc}: {str(e)}"
