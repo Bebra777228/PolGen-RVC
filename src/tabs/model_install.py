@@ -22,7 +22,7 @@ def url_download():
       download_btn.click(download_from_url, inputs=[model_zip_link, model_name], outputs=dl_output_message)
 
 
-def zip_upload()
+def zip_upload():
   with gr.Tab('Загрузить ZIP архивом'):
       with gr.Row():
           with gr.Column():
