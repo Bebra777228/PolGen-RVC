@@ -159,7 +159,7 @@ if __name__ == '__main__':
                                         reverb_width = gr.Slider(0, 1, value=1.0, label='Ширина реверберации', info='Этот параметр отвечает за ширину звучания реверберации. Чем выше значение, тем шире будет звучание реверберации.')
                                     with gr.Row():
                                         reverb_wet = gr.Slider(0, 1, value=0.1, label='Уровень влажности', info='Этот параметр отвечает за уровень реверберации. Чем выше значение, тем сильнее будет слышен эффект реверберации и тем дольше будет звучать «хвост».')
-                                        reverb_dry = gr.Slider(0, 1, value=0.7, label='Уровень сухости', info='Этот параметр отвечает за уровень исходного звука без реверберации. Чем меньше значение, тем тише звук ai вокала. Если значение будет на 0, то исходный звук полностью исчезнет.')
+                                        reverb_dry = gr.Slider(0, 1, value=0.8, label='Уровень сухости', info='Этот параметр отвечает за уровень исходного звука без реверберации. Чем меньше значение, тем тише звук ai вокала. Если значение будет на 0, то исходный звук полностью исчезнет.')
                                     with gr.Row():
                                         reverb_damping = gr.Slider(0, 1, value=0.9, label='Уровень демпфирования', info='Этот параметр отвечает за поглощение высоких частот в реверберации. Чем выше его значение, тем сильнее будет поглощение частот и тем менее будет «яркий» звук реверберации.')
 
@@ -205,7 +205,7 @@ if __name__ == '__main__':
                             output_format, vocal_gain, instrumental_gain, use_effects],
                             outputs=[ai_cover])
 
-            default_values = [0, 0, 0.1, 1.0, 0.1, 0.7, 0.9, 0, 0, 0, 0, 0, 4, -12, 0, 0, -40, 8, 10, 100]
+            default_values = [0, 0, 0.1, 1.0, 0.1, 0.8, 0.9, 0, 0, 0, 0, 0, 4, -12, 0, 0, -40, 8, 10, 100]
             clear_btn.click(lambda: default_values,
                             outputs=[vocal_gain, instrumental_gain, reverb_rm_size, reverb_width, reverb_wet, reverb_dry, reverb_damping,
                             chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
