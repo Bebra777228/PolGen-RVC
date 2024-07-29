@@ -1,18 +1,13 @@
 import os
-import shutil
-import urllib.request
-import zipfile
-import gdown
 import gradio as gr
-
 from src.scripts.voice_conversion import conversion
 from src.scripts.audio_processing import processing
 from src.modules.model_management import *
 from src.modules.ui_updates import *
+from src.modules.download_hubert import *
 
 now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'rvc_models')
-
 
 if __name__ == '__main__':
     voice_models = get_folders(rvc_models_dir)
@@ -52,7 +47,7 @@ if __name__ == '__main__':
                     with gr.Column():
                         show_upload_button = gr.Button('Загрузка файла с устройства', visible=False)
                         show_enter_button = gr.Button('Ввод пути к локальному файлу')
-                    
+
                 uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[song_input, local_file])
                 uploaded_file.upload(update_button_text, outputs=[uploaded_file])
                 show_upload_button.click(swap_visibility, outputs=[upload_file, enter_local_file, song_input, local_file])
@@ -82,6 +77,11 @@ if __name__ == '__main__':
                         filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
                         rms_mix_rate = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
                         protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
+
+            with gr.Row(variant='panel'):
+                model_dropdown = gr.Dropdown(models, label='Выберите модель для скачивания:')
+                download_btn = gr.Button("Скачать", variant='primary')
+                download_btn.click(download_and_replace_model, inputs=model_dropdown, outputs=[])
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
             generate_btn.click(conversion,
