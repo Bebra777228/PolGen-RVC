@@ -12,7 +12,7 @@ now_dir = os.getcwd()
 from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
 RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
-ASSETS_DIR = os.path.join(now_dir, 'models', 'assets')
+HUBERT_MODEL_PATH = os.path.join(now_dir, 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(now_dir, 'song_output')
 
 def get_rvc_model(voice_model):
@@ -38,7 +38,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     rvc_model_path, rvc_index_path = get_rvc_model(voice_model)
     device = 'cuda:0'
     config = Config(device, True)
-    hubert_model = load_hubert(device, config.is_half, os.path.join(ASSETS_DIR, 'hubert_base.pt'))
+    hubert_model = load_hubert(device, config.is_half, HUBERT_MODEL_PATH)
     cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
     rvc_infer(rvc_index_path, index_rate, vocals_path, output_path, pitch_change, f0_method, cpt, version, net_g,
@@ -49,7 +49,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
     torch.cuda.empty_cache()
 
 def conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
-                        crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0autotune=False, f0_min=50, f0_max=1100):
+               crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0autotune=False, f0_min=50, f0_max=1100):
     if not uploaded_file or not voice_model:
         raise ValueError('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
 
