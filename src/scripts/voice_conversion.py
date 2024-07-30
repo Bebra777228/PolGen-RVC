@@ -74,17 +74,17 @@ def conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_
             raise FileNotFoundError(f'{uploaded_file} не существует.')
 
         orig_song_path = convert_to_stereo(uploaded_file)
-        ai_cover_path = os.path.join(OUTPUT_DIR, f'Converted_Voice.{output_format}')
+        voice_convert_path = os.path.join(OUTPUT_DIR, f'Converted_Voice.{output_format}')
 
-        if os.path.exists(ai_cover_path):
-            os.remove(ai_cover_path)
+        if os.path.exists(voice_convert_path):
+            os.remove(voice_convert_path)
 
         display_progress(0.5, '[~] Преобразование вокала...', progress)
-        voice_change(voice_model, orig_song_path, ai_cover_path, pitch_change, f0_method, index_rate,
+        voice_change(voice_model, orig_song_path, voice_convert_path, pitch_change, f0_method, index_rate,
                      filter_radius, rms_mix_rate, protect, crepe_hop_length, f0autotune, f0_min, f0_max)
 
         display_progress(1.0, '[✓] AI-кавер успешно сгенерирован!', progress)
-        return ai_cover_path
+        return voice_convert_path
     except Exception as e:
         logging.error(f"Ошибка в процессе конвертации: {e}")
         raise
