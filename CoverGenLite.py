@@ -13,7 +13,7 @@ if __name__ == '__main__':
         with gr.Tab("Велком/Контакты"):
             welcome_tab()
 
-        with gr.Tab("Преобразование одного голоса в другой"):
+        with gr.Tab("Преобразование и обработка голоса"):
             with gr.Tab("Замена голоса"):
                 conversion_tab()
 
