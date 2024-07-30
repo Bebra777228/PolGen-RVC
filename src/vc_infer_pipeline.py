@@ -1,10 +1,19 @@
-import os, gc, re, sys, torch
+import os
+import gc
+import re
+import sys
+import torch
 import torch.nn.functional as F
-import torchcrepe, faiss, librosa
+import torchcrepe
+import faiss
+import librosa
 import numpy as np
 from scipy import signal
 from functools import lru_cache
 from torch import Tensor
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 now_dir = os.getcwd()
 RMVPE_DIR = os.path.join(now_dir, 'models', 'assets', 'rmvpe.pt')
@@ -21,7 +30,6 @@ bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAM
 
 input_audio_path2wav = {}
 
-
 def change_rms(data1, sr1, data2, sr2, rate):
     rms1 = librosa.feature.rms(y=data1, frame_length=sr1 // 2 * 2, hop_length=sr1 // 2)
     rms2 = librosa.feature.rms(y=data2, frame_length=sr2 // 2 * 2, hop_length=sr2 // 2)
@@ -35,7 +43,6 @@ def change_rms(data1, sr1, data2, sr2, rate):
 
     data2 *= (torch.pow(rms1, torch.tensor(1 - rate)) * torch.pow(rms2, torch.tensor(rate - 1))).numpy()
     return data2
-
 
 class VC(object):
     def __init__(self, tgt_sr, config):
@@ -76,16 +83,16 @@ class VC(object):
         for i in range(len(self.ref_freqs) - 1):
             freq_low = self.ref_freqs[i]
             freq_high = self.ref_freqs[i + 1]
-            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
+            interpolated_freqs = np.linspace(freq_low, freq_high, num=20, endpoint=False)
             note_dict.extend(interpolated_freqs)
         note_dict.append(self.ref_freqs[-1])
         return note_dict
 
     def autotune_f0(self, f0):
-        autotuned_f0 = np.zeros_like(f0)
-        for i, freq in enumerate(f0):
-            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
-            autotuned_f0[i] = closest_note
+        f0_array = np.array(f0)
+        note_array = np.array(self.note_dict)
+        indices = np.abs(note_array[:, None] - f0_array).argmin(axis=0)
+        autotuned_f0 = note_array[indices]
         return autotuned_f0
 
     def get_f0_crepe(
@@ -142,7 +149,7 @@ class VC(object):
         if methods_str:
             methods = [method.strip() for method in methods_str.group(1).split("+")]
         f0_computation_stack = []
-        print(f"Вычисление оценок шага f0 для методов {str(methods)}")
+        logging.info(f"Вычисление оценок шага f0 для методов {str(methods)}")
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
         for method in methods:
@@ -155,7 +162,7 @@ class VC(object):
                 f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, crepe_hop_length)
 
             elif method == "rmvpe":
-                if hasattr(self, "model_rmvpe") == False:
+                if not hasattr(self, "model_rmvpe"):
                     self.model_rmvpe = RMVPE(RMVPE_DIR, is_half=self.is_half, device=self.device)
                 f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
                 f0 = f0[1:]
@@ -175,13 +182,9 @@ class VC(object):
                 gc.collect()
             f0_computation_stack.append(f0)
 
-        print(f"Вычисление гибридной медианы f0 из стека {str(methods)}")
+        logging.info(f"Вычисление гибридной медианы f0 из стека {str(methods)}")
         f0_computation_stack = [fc for fc in f0_computation_stack if fc is not None]
-        f0_median_hybrid = None
-        if len(f0_computation_stack) == 1:
-            f0_median_hybrid = f0_computation_stack[0]
-        else:
-            f0_median_hybrid = np.nanmedian(f0_computation_stack, axis=0)
+        f0_median_hybrid = np.nanmedian(f0_computation_stack, axis=0) if len(f0_computation_stack) > 1 else f0_computation_stack[0]
         return f0_median_hybrid
 
     def get_f0(
@@ -210,7 +213,7 @@ class VC(object):
             f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, crepe_hop_length)
 
         elif f0_method == "rmvpe":
-            if hasattr(self, "model_rmvpe") == False:
+            if not hasattr(self, "model_rmvpe"):
                 self.model_rmvpe = RMVPE(RMVPE_DIR, is_half=self.is_half, device=self.device)
             f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
 
@@ -249,7 +252,7 @@ class VC(object):
                 time_step,
             )
 
-        print("f0_autotune =", f0autotune)
+        logging.info(f"f0_autotune = {f0autotune}")
         if f0autotune == "True":
             f0 = self.autotune_f0(f0)
 
@@ -292,10 +295,7 @@ class VC(object):
         protect,
     ):
         feats = torch.from_numpy(audio0)
-        if self.is_half:
-            feats = feats.half()
-        else:
-            feats = feats.float()
+        feats = feats.half() if self.is_half else feats.float()
         if feats.dim() == 2:
             feats = feats.mean(-1)
         assert feats.dim() == 1, feats.dim()
@@ -310,37 +310,31 @@ class VC(object):
         with torch.no_grad():
             logits = model.extract_features(**inputs)
             feats = model.final_proj(logits[0]) if version == "v1" else logits[0]
-        if protect < 0.5 and pitch != None and pitchf != None:
+        if protect < 0.5 and pitch is not None and pitchf is not None:
             feats0 = feats.clone()
-        if (
-            isinstance(index, type(None)) == False
-            and isinstance(big_npy, type(None)) == False
-            and index_rate != 0
-        ):
+        if index is not None and big_npy is not None and index_rate != 0:
             npy = feats[0].cpu().numpy()
-            if self.is_half:
-                npy = npy.astype("float32")
+            npy = npy.astype("float32") if self.is_half else npy
 
             score, ix = index.search(npy, k=8)
             weight = np.square(1 / score)
             weight /= weight.sum(axis=1, keepdims=True)
             npy = np.sum(big_npy[ix] * np.expand_dims(weight, axis=2), axis=1)
 
-            if self.is_half:
-                npy = npy.astype("float16")
+            npy = npy.astype("float16") if self.is_half else npy
             feats = (torch.from_numpy(npy).unsqueeze(0).to(self.device) * index_rate + (1 - index_rate) * feats)
 
         feats = F.interpolate(feats.permute(0, 2, 1), scale_factor=2).permute(0, 2, 1)
-        if protect < 0.5 and pitch != None and pitchf != None:
+        if protect < 0.5 and pitch is not None and pitchf is not None:
             feats0 = F.interpolate(feats0.permute(0, 2, 1), scale_factor=2).permute(0, 2, 1)
         p_len = audio0.shape[0] // self.window
         if feats.shape[1] < p_len:
             p_len = feats.shape[1]
-            if pitch != None and pitchf != None:
+            if pitch is not None and pitchf is not None:
                 pitch = pitch[:, :p_len]
                 pitchf = pitchf[:, :p_len]
 
-        if protect < 0.5 and pitch != None and pitchf != None:
+        if protect < 0.5 and pitch is not None and pitchf is not None:
             pitchff = pitchf.clone()
             pitchff[pitchf > 0] = 1
             pitchff[pitchf < 1] = protect
@@ -349,7 +343,7 @@ class VC(object):
             feats = feats.to(feats0.dtype)
         p_len = torch.tensor([p_len], device=self.device).long()
         with torch.no_grad():
-            if pitch != None and pitchf != None:
+            if pitch is not None and pitchf is not None:
                 audio1 = ((net_g.infer(feats, p_len, pitch, pitchf, sid)[0][0, 0]).data.cpu().float().numpy())
             else:
                 audio1 = ((net_g.infer(feats, p_len, sid)[0][0, 0]).data.cpu().float().numpy())
@@ -382,15 +376,13 @@ class VC(object):
         f0_min=50,
         f0_max=1100,
     ):
-        if file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
+        index, big_npy = (None, None)
+        if file_index and os.path.exists(file_index) and index_rate != 0:
             try:
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as error:
-                print(error)
-                index = big_npy = None
-        else:
-            index = big_npy = None
+                logging.error(error)
         audio = signal.filtfilt(bh, ah, audio)
         audio_pad = np.pad(audio, (self.window // 2, self.window // 2), mode="reflect")
         opt_ts = []
@@ -411,16 +403,13 @@ class VC(object):
         audio_pad = np.pad(audio, (self.t_pad, self.t_pad), mode="reflect")
         p_len = audio_pad.shape[0] // self.window
         inp_f0 = None
-        if hasattr(f0_file, "name") == True:
+        if f0_file and hasattr(f0_file, "name"):
             try:
                 with open(f0_file.name, "r") as f:
                     lines = f.read().strip("\n").split("\n")
-                inp_f0 = []
-                for line in lines:
-                    inp_f0.append([float(i) for i in line.split(",")])
-                inp_f0 = np.array(inp_f0, dtype="float32")
+                inp_f0 = np.array([[float(i) for i in line.split(",")] for line in lines], dtype="float32")
             except Exception as error:
-                print(error)
+                logging.error(error)
         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
         if pitch_guidance == 1:
             pitch, pitchf = self.get_f0(
