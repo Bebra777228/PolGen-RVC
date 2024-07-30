@@ -21,7 +21,7 @@ if __name__ == '__main__':
                 processing_tab()
 
         with gr.Tab('Преобразование текста в речь (TTS)'):
-            tts_tab()
+            edge_tts_tab()
 
         with gr.Tab('Загрузка модели'):
             url_download()
