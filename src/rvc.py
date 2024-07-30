@@ -117,16 +117,16 @@ def get_vc(device, is_half, config, model_path):
 
     tgt_sr = cpt["config"][-1]
     cpt["config"][-3] = cpt["weight"]["emb_g.weight"].shape[0]
-    if_f0 = cpt.get("f0", 1)
+    pitch_guidance = cpt.get("f0", 1)
     version = cpt.get("version", "v1")
 
     if version == "v1":
-        if if_f0 == 1:
+        if pitch_guidance == 1:
             net_g = SynthesizerTrnMs256NSFsid(*cpt["config"], is_half=is_half)
         else:
             net_g = SynthesizerTrnMs256NSFsid_nono(*cpt["config"])
     elif version == "v2":
-        if if_f0 == 1:
+        if pitch_guidance == 1:
             net_g = SynthesizerTrnMs768NSFsid(*cpt["config"], is_half=is_half)
         else:
             net_g = SynthesizerTrnMs768NSFsid_nono(*cpt["config"])
@@ -156,7 +156,7 @@ def rvc_infer(
     net_g,
     filter_radius,
     tgt_sr,
-    rms_mix_rate,
+    volume_envelope,
     protect,
     crepe_hop_length,
     vc,
@@ -167,7 +167,7 @@ def rvc_infer(
 ):
     audio = load_audio(input_path, 16000)
     times = [0, 0, 0]
-    if_f0 = cpt.get('f0', 1)
+    pitch_guidance = cpt.get('f0', 1)
     audio_opt = vc.pipeline(
         hubert_model,
         net_g,
@@ -179,11 +179,11 @@ def rvc_infer(
         f0_method,
         index_path,
         index_rate,
-        if_f0,
+        pitch_guidance,
         filter_radius,
         tgt_sr,
         0,
-        rms_mix_rate,
+        volume_envelope,
         version,
         protect,
         crepe_hop_length,
