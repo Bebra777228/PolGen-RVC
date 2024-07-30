@@ -53,7 +53,7 @@ async def text_to_speech(text, output_path, voice):
     communicate = edge_tts.Communicate(text, voice)
     await communicate.save(output_path)
 
-def conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
+def tts_conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
               crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0autotune=False, f0_min=50, f0_max=1100):
     if not uploaded_file or not voice_model:
         raise ValueError('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
