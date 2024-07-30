@@ -9,6 +9,7 @@ from src.modules.ui_updates import *
 from src.modules.download_hubert import *
 
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
+output_dir = os.path.join(now_dir, 'song_output')
 voice_models = get_folders(rvc_models_dir)
 
 
@@ -54,7 +55,7 @@ def update_voices(selected_language):
     return gr.update(choices=voices[selected_language])
 
 
-def tts_tab():
+def edge_tts_tab():
   with gr.Row(equal_height=False):
       with gr.Column(variant='panel'):
           with gr.Group():
@@ -62,13 +63,15 @@ def tts_tab():
               ref_btn = gr.Button('Обновить список моделей', variant='primary')
           with gr.Group():
               pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
-              f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
+              f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False, visible=False)
 
       with gr.Column(variant='panel'):
           with gr.Group():
               language = gr.Dropdown(list(voices.keys()), label='Язык')
               voice = gr.Dropdown([], label='Голос')
+              gr.HTML("<center><h2>В поле для ввода текста нужно писать на том языке, который вы выбрали выше.</h2></center>")
               language.change(update_voices, inputs=language, outputs=voice)
+
 
   text_input = gr.Textbox(label='Введите текст', lines=5)
 
@@ -103,7 +106,7 @@ def tts_tab():
       hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
   
   async def generate_tts(text, language, voice, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format):
-      tts_output_path = "temp_audio.wav"
+      tts_output_path = os.path.join(output_dir, 'tts_voice.wav')
       await text_to_speech(text, tts_output_path, voice)
       result = tts_conversion(tts_output_path, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format)
       return result
