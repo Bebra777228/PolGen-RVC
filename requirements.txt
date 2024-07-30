@@ -1,13 +1,21 @@
-gradio==4.29.0
-tensorboardX
-einops
-local-attention
-pedalboard==0.7.7
-mega.py
+# Основные библиотеки для работы с данными и моделями
 requests
+tensorboardX
 fairseq==0.12.2
 faiss-cpu==1.7.3
+
+# Библиотеки для работы с аудио и звуком
 ffmpeg-python>=0.2.0
 praat-parselmouth>=0.4.2
 pyworld==0.3.4
 torchcrepe==0.0.20
+pedalboard==0.7.7
+edge-tts
+
+# Библиотеки для работы с вниманием и оптимизацией
+einops
+local-attention
+
+# Инструменты для работы с интерфейсами и облачными сервисами
+gradio==4.29.0
+mega.py
