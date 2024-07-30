@@ -43,7 +43,7 @@ def convert_to_stereo(audio_path):
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
-def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, rms_mix_rate, protect, crepe_hop_length, f0autotune, f0_min, f0_max):
+def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, volume_envelope, protect, crepe_hop_length, f0autotune, f0_min, f0_max):
     try:
         rvc_model_path, rvc_index_path = get_rvc_model(voice_model)
         device = 'cuda:0'
@@ -52,7 +52,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
         cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
         rvc_infer(rvc_index_path, index_rate, vocals_path, output_path, pitch_change, f0_method, cpt, version, net_g,
-                  filter_radius, tgt_sr, rms_mix_rate, protect, crepe_hop_length, vc, hubert_model, f0autotune, f0_min, f0_max)
+                  filter_radius, tgt_sr, volume_envelope, protect, crepe_hop_length, vc, hubert_model, f0autotune, f0_min, f0_max)
 
         del hubert_model, cpt, net_g, vc
         gc.collect()
@@ -69,7 +69,7 @@ async def text_to_speech(text, output_path, voice):
         logging.error(f"Ошибка при преобразовании текста в речь: {e}")
         raise
 
-def tts_conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, rms_mix_rate=0.25, f0_method='rmvpe',
+def tts_conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
                    crepe_hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0autotune=False, f0_min=50, f0_max=1100):
     try:
         if not uploaded_file or not voice_model:
@@ -90,7 +90,7 @@ def tts_conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, fil
 
         display_progress(0.5, '[~] Преобразование голоса...', progress)
         voice_change(voice_model, orig_song_path, tts_voice_path, pitch_change, f0_method, index_rate,
-                     filter_radius, rms_mix_rate, protect, crepe_hop_length, f0autotune, f0_min, f0_max)
+                     filter_radius, volume_envelope, protect, crepe_hop_length, f0autotune, f0_min, f0_max)
 
         return tts_voice_path
     except Exception as e:
