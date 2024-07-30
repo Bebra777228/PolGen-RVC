@@ -78,7 +78,7 @@ def edge_tts_tab():
   with gr.Group():
       with gr.Row(variant='panel'):
           generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
-          converted_voice = gr.Audio(label='Преобразованный голос', scale=5)
+          converted_tts_voice = gr.Audio(label='Преобразованный голос', scale=5)
           output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
   with gr.Accordion('Настройки преобразования голоса', open=False):
@@ -115,4 +115,4 @@ def edge_tts_tab():
   ref_btn.click(update_models_list, None, outputs=rvc_model)
   generate_btn.click(generate_tts, 
                     inputs=[text_input, language, voice, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format], 
-                    outputs=[converted_voice])
+                    outputs=[converted_tts_voice])
