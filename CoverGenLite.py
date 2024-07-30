@@ -4,6 +4,7 @@ import gradio as gr
 from src.tabs.welcome import *
 from src.tabs.conversion import *
 from src.tabs.processing import *
+from src.tabs.tts import *
 from src.tabs.model_install import *
 
 if __name__ == '__main__':
@@ -12,11 +13,15 @@ if __name__ == '__main__':
         with gr.Tab("Велком/Контакты"):
             welcome_tab()
 
-        with gr.Tab("Преобразование голоса"):
-            conversion_tab()
+        with gr.Tab("Преобразование одного голоса в другой"):
+            with gr.Tab("Замена голоса"):
+                conversion_tab()
 
-        with gr.Tab('Объединение/Обработка'):
-            processing_tab()
+            with gr.Tab('Объединение/Обработка'):
+                processing_tab()
+
+        with gr.Tab('Преобразование текста в речь (TTS)'):
+            tts_tab()
 
         with gr.Tab('Загрузка модели'):
             url_download()
