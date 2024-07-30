@@ -3,7 +3,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.scripts.voice_conversion import tts_conversion
+from src.scripts.tts_conversion import tts_conversion, text_to_speech
 from src.modules.model_management import *
 from src.modules.ui_updates import *
 from src.modules.download_hubert import *
@@ -102,14 +102,14 @@ def tts_tab():
           hubert_download_btn = gr.Button("Скачать", variant='primary')
       hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
   
-  async def generate_cover(text, language, voice, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format):
+  async def generate_tts(text, language, voice, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format):
       tts_output_path = "temp_audio.wav"
       await text_to_speech(text, tts_output_path, voice)
-      result = song_cover_pipeline(tts_output_path, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format)
+      result = tts_conversion(tts_output_path, voice_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format)
       return result
 
   hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
   ref_btn.click(update_models_list, None, outputs=rvc_model)
-  generate_btn.click(generate_cover, 
+  generate_btn.click(generate_tts, 
                     inputs=[text_input, language, voice, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate, f0_method, crepe_hop_length, protect, output_format], 
                     outputs=[converted_voice])
