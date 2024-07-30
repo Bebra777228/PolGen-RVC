@@ -166,7 +166,6 @@ def rvc_infer(
     f0_max=1100
 ):
     audio = load_audio(input_path, 16000)
-    times = [0, 0, 0]
     pitch_guidance = cpt.get('f0', 1)
     audio_opt = vc.pipeline(
         hubert_model,
@@ -174,7 +173,6 @@ def rvc_infer(
         0,
         audio,
         input_path,
-        times,
         pitch_change,
         f0_method,
         index_path,
@@ -188,6 +186,7 @@ def rvc_infer(
         protect,
         crepe_hop_length,
         f0autotune,
+        f0_file=None,
         f0_min=f0_min,
         f0_max=f0_max
     )
