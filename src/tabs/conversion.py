@@ -61,7 +61,7 @@ def conversion_tab():
           with gr.Column(variant='panel'):
               index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info='Контролирует степень влияния индексного файла на результат анализа. Более высокое значение увеличивает влияние индексного файла, но может усилить артефакты в аудио. Выбор более низкого значения может помочь снизить артефакты.')
               filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
-              rms_mix_rate = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
+              volume_envelope = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
               protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
   with gr.Accordion('Установка HuBERT модели', open=False):
@@ -74,6 +74,6 @@ def conversion_tab():
   hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
   ref_btn.click(update_models_list, None, outputs=rvc_model)
   generate_btn.click(conversion,
-                    inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, rms_mix_rate,
+                    inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, volume_envelope,
                             f0_method, crepe_hop_length, protect, output_format, f0autotune, f0_min, f0_max],
                     outputs=[converted_voice])
