@@ -13,8 +13,6 @@ from functools import lru_cache
 from torch import Tensor
 import logging
 
-from autotune import Autotune
-
 logging.basicConfig(level=logging.INFO)
 
 now_dir = os.getcwd()
@@ -24,6 +22,7 @@ FCPE_DIR = os.path.join(now_dir, 'models', 'assets', 'fcpe.pt')
 from src.infer_pack.predictor.FCPE import FCPEF0Predictor
 from src.infer_pack.predictor.RMVPE import RMVPE
 
+
 FILTER_ORDER = 5
 CUTOFF_FREQUENCY = 48
 SAMPLE_RATE = 16000
@@ -31,40 +30,74 @@ bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAM
 
 input_audio_path2wav = {}
 
-def change_rms(data1, sr1, data2, sr2, rate):
-    rms1 = librosa.feature.rms(y=data1, frame_length=sr1 // 2 * 2, hop_length=sr1 // 2)
-    rms2 = librosa.feature.rms(y=data2, frame_length=sr2 // 2 * 2, hop_length=sr2 // 2)
+class AudioProcessor:
+    def change_rms(source_audio: np.ndarray, source_rate: int, target_audio: np.ndarray, target_rate: int, rate: float) -> np.ndarray:
 
-    rms1 = torch.from_numpy(rms1)
-    rms1 = F.interpolate(rms1.unsqueeze(0), size=data2.shape[0], mode="linear").squeeze()
+        rms1 = librosa.feature.rms(y=source_audio, frame_length=source_rate // 2 * 2, hop_length=source_rate // 2)
+        rms2 = librosa.feature.rms(y=target_audio, frame_length=target_rate // 2 * 2, hop_length=target_rate // 2)
 
-    rms2 = torch.from_numpy(rms2)
-    rms2 = F.interpolate(rms2.unsqueeze(0), size=data2.shape[0], mode="linear").squeeze()
-    rms2 = torch.max(rms2, torch.zeros_like(rms2) + 1e-6)
+        rms1 = F.interpolate(torch.from_numpy(rms1).float().unsqueeze(0), size=target_audio.shape[0], mode="linear").squeeze()
+        rms2 = F.interpolate(torch.from_numpy(rms2).float().unsqueeze(0), size=target_audio.shape[0], mode="linear").squeeze()
+        rms2 = torch.maximum(rms2, torch.zeros_like(rms2) + 1e-6)
 
-    data2 *= (torch.pow(rms1, torch.tensor(1 - rate)) * torch.pow(rms2, torch.tensor(rate - 1))).numpy()
-    return data2
+        adjusted_audio = (target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy())
+        return adjusted_audio
+
+class Autotune:
+    def __init__(self, ref_freqs):
+        self.ref_freqs = ref_freqs
+        self.note_dict = self.generate_interpolated_frequencies()
+
+    def generate_interpolated_frequencies(self):
+        note_dict = []
+        for i in range(len(self.ref_freqs) - 1):
+            freq_low = self.ref_freqs[i]
+            freq_high = self.ref_freqs[i + 1]
+            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
+            note_dict.extend(interpolated_freqs)
+        note_dict.append(self.ref_freqs[-1])
+        return note_dict
+
+    def autotune_f0(self, f0):
+        autotuned_f0 = np.zeros_like(f0)
+        for i, freq in enumerate(f0):
+            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
+            autotuned_f0[i] = closest_note
+        return autotuned_f0
 
 class VC(object):
     def __init__(self, tgt_sr, config):
-        self.x_pad, self.x_query, self.x_center, self.x_max, self.is_half = (
-            config.x_pad,
-            config.x_query,
-            config.x_center,
-            config.x_max,
-            config.is_half,
-        )
-        self.sr = 16000
+        self.x_pad = config.x_pad
+        self.x_query = config.x_query
+        self.x_center = config.x_center
+        self.x_max = config.x_max
+        self.is_half = config.is_half
+        self.sample_rate = 16000
         self.window = 160
-        self.t_pad = self.sr * self.x_pad
+        self.t_pad = self.sample_rate * self.x_pad
         self.t_pad_tgt = tgt_sr * self.x_pad
         self.t_pad2 = self.t_pad * 2
-        self.t_query = self.sr * self.x_query
-        self.t_center = self.sr * self.x_center
-        self.t_max = self.sr * self.x_max
+        self.t_query = self.sample_rate * self.x_query
+        self.t_center = self.sample_rate * self.x_center
+        self.t_max = self.sample_rate * self.x_max
+        self.time_step = self.window / self.sample_rate * 1000
         self.device = config.device
-
-        self.autotune = Autotune()
+        
+        self.ref_freqs = [
+            65.41,
+            82.41,
+            110.00,
+            146.83,
+            196.00,
+            246.94,
+            329.63,
+            440.00,
+            587.33,
+            783.99,
+            1046.50,
+        ]
+        self.autotune = Autotune(self.ref_freqs)
+        self.note_dict = self.autotune.note_dict
 
     def get_f0_crepe(
         self,
@@ -72,7 +105,7 @@ class VC(object):
         f0_min,
         f0_max,
         p_len,
-        hop_length=160,
+        hop_length,
         model="full",
     ):
         x = x.astype(np.float32)
@@ -84,7 +117,7 @@ class VC(object):
         audio = audio.detach()
         pitch: Tensor = torchcrepe.predict(
             audio,
-            self.sr,
+            self.sample_rate,
             hop_length,
             f0_min,
             f0_max,
@@ -107,14 +140,11 @@ class VC(object):
     def get_f0_hybrid(
         self,
         methods_str,
-        input_audio_path,
         x,
         f0_min,
         f0_max,
         p_len,
-        filter_radius,
-        crepe_hop_length,
-        time_step,
+        hop_length,
     ):
         methods_str = re.search("hybrid\[(.+)\]", methods_str)
         if methods_str:
@@ -130,7 +160,7 @@ class VC(object):
                 f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len)
 
             elif method == "mangio-crepe":
-                f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, crepe_hop_length)
+                f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, hop_length)
 
             elif method == "rmvpe":
                 if not hasattr(self, "model_rmvpe"):
@@ -145,7 +175,7 @@ class VC(object):
                     f0_max=int(f0_max),
                     dtype=torch.float32,
                     device=self.device,
-                    sampling_rate=self.sr,
+                    sample_rate=self.sample_rate,
                     threshold=0.03,
                 )
                 f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
@@ -166,14 +196,13 @@ class VC(object):
         pitch,
         f0_method,
         filter_radius,
-        crepe_hop_length,
-        f0autotune,
+        hop_length,
+        f0_autotune,
         inp_f0=None,
         f0_min=50,
         f0_max=1100,
     ):
         global input_audio_path2wav
-        time_step = self.window / self.sr * 1000
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 
@@ -181,7 +210,7 @@ class VC(object):
             f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len)
 
         elif f0_method == "mangio-crepe":
-            f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, crepe_hop_length)
+            f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length))
 
         elif f0_method == "rmvpe":
             if not hasattr(self, "model_rmvpe"):
@@ -190,8 +219,8 @@ class VC(object):
 
         elif f0_method == "rmvpe+":
             params = {'x': x, 'p_len': p_len, 'pitch': pitch, 'f0_min': f0_min, 
-                      'f0_max': f0_max, 'time_step': time_step, 'filter_radius': filter_radius, 
-                      'crepe_hop_length': crepe_hop_length, 'model': "full"
+                      'f0_max': f0_max, 'time_step': self.time_step, 'filter_radius': filter_radius, 
+                      'crepe_hop_length': int(hop_length), 'model': "full"
                       }
             f0 = self.get_pitch_dependant_rmvpe(**params)
 
@@ -202,7 +231,7 @@ class VC(object):
                 f0_max=int(f0_max),
                 dtype=torch.float32,
                 device=self.device,
-                sampling_rate=self.sr,
+                sample_rate=self.sample_rate,
                 threshold=0.03,
             )
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
@@ -213,22 +242,21 @@ class VC(object):
             input_audio_path2wav[input_audio_path] = x.astype(np.double)
             f0 = self.get_f0_hybrid(
                 f0_method,
-                input_audio_path,
                 x,
                 f0_min,
                 f0_max,
                 p_len,
                 filter_radius,
-                crepe_hop_length,
-                time_step,
+                hop_length,
+                self.time_step,
             )
 
-        logging.info(f"f0_autotune = {f0autotune}")
-        if f0autotune == "True":
-            f0 = self.autotune.autotune_f0(f0)
+        logging.info(f"f0_autotune = {f0_autotune}")
+        if f0_autotune == True:
+            f0 = Autotune.autotune_f0(self, f0)
 
         f0 *= pow(2, pitch / 12)
-        tf0 = self.sr // self.window
+        tf0 = self.sample_rate // self.window
         if inp_f0 is not None:
             delta_t = np.round((inp_f0[:, 0].max() - inp_f0[:, 0].min()) * tf0 + 1).astype("int16")
             replace_f0 = np.interp(list(range(delta_t)), inp_f0[:, 0] * 100, inp_f0[:, 1])
@@ -341,19 +369,21 @@ class VC(object):
         volume_envelope,
         version,
         protect,
-        crepe_hop_length,
-        f0autotune,
-        f0_file=None,
+        hop_length,
+        f0_autotune,
+        f0_file,
         f0_min=50,
         f0_max=1100,
     ):
-        index, big_npy = (None, None)
-        if file_index and os.path.exists(file_index) and index_rate != 0:
+        if file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as error:
-                logging.error(error)
+                print(f"An error occurred reading the FAISS index: {error}")
+                index = big_npy = None
+        else:
+            index = big_npy = None
         audio = signal.filtfilt(bh, ah, audio)
         audio_pad = np.pad(audio, (self.window // 2, self.window // 2), mode="reflect")
         opt_ts = []
@@ -380,9 +410,9 @@ class VC(object):
                     lines = f.read().strip("\n").split("\n")
                 inp_f0 = np.array([[float(i) for i in line.split(",")] for line in lines], dtype="float32")
             except Exception as error:
-                logging.error(error)
+                print(f"An error occurred reading the F0 file: {error}")
         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
-        if pitch_guidance == 1:
+        if pitch_guidance == True:
             pitch, pitchf = self.get_f0(
                 input_audio_path,
                 audio_pad,
@@ -390,8 +420,8 @@ class VC(object):
                 pitch,
                 f0_method,
                 filter_radius,
-                crepe_hop_length,
-                f0autotune,
+                hop_length,
+                f0_autotune,
                 inp_f0,
                 f0_min,
                 f0_max,
@@ -404,7 +434,7 @@ class VC(object):
             pitchf = torch.tensor(pitchf, device=self.device).unsqueeze(0).float()
         for t in opt_ts:
             t = t // self.window * self.window
-            if pitch_guidance == 1:
+            if pitch_guidance == True:
                 audio_opt.append(
                     self.vc(
                         model,
@@ -437,7 +467,7 @@ class VC(object):
                     )[self.t_pad_tgt : -self.t_pad_tgt]
                 )
             s = t
-        if pitch_guidance == 1:
+        if pitch_guidance == True:
             audio_opt.append(
                 self.vc(
                     model,
@@ -471,8 +501,8 @@ class VC(object):
             )
         audio_opt = np.concatenate(audio_opt)
         if volume_envelope != 1:
-            audio_opt = change_rms(audio, 16000, audio_opt, tgt_sr, volume_envelope)
-        if resample_sr >= 16000 and tgt_sr != resample_sr:
+            audio_opt = AudioProcessor.change_rms(audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope)
+        if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
             audio_opt = librosa.resample(audio_opt, orig_sr=tgt_sr, target_sr=resample_sr)
         audio_max = np.abs(audio_opt).max() / 0.99
         max_int16 = 32768
