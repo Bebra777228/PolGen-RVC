@@ -161,7 +161,6 @@ def rvc_infer(
     hop_length,
     vc,
     hubert_model,
-    f0autotune,
     f0_min=50,
     f0_max=1100
 ):
@@ -185,7 +184,6 @@ def rvc_infer(
         version,
         protect,
         hop_length,
-        f0autotune,
         f0_file=None,
         f0_min=f0_min,
         f0_max=f0_max
