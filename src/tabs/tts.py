@@ -82,7 +82,7 @@ def edge_tts_tab():
   with gr.Accordion('Настройки преобразования голоса', open=False):
       with gr.Group():
           with gr.Column(variant='panel'):
-              f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
+              f0_method = gr.Dropdown(['rmvpe+', 'rmvpe', 'fcpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
               hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
               f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
               with gr.Row():
