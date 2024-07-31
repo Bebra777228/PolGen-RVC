@@ -87,8 +87,8 @@ def edge_tts_tab():
               use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
               f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
               use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
-              crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
-              f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
+              hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
+              f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
               with gr.Row():
                   f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
                   f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
@@ -105,14 +105,14 @@ def edge_tts_tab():
           hubert_download_btn = gr.Button("Скачать", variant='primary')
       hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
   
-  async def generate_tts(text, language, voice, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, crepe_hop_length, protect, output_format):
+  async def generate_tts(text, language, voice, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format):
       tts_output_path = os.path.join(output_dir, 'tts_voice.wav')
       await text_to_speech(text, tts_output_path, voice)
-      result = tts_conversion(tts_output_path, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, crepe_hop_length, protect, output_format)
+      result = tts_conversion(tts_output_path, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format)
       return result
 
   hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
   ref_btn.click(update_models_list, None, outputs=rvc_model)
   generate_btn.click(generate_tts, 
-                    inputs=[text_input, language, voice, rvc_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, crepe_hop_length, protect, output_format], 
+                    inputs=[text_input, language, voice, rvc_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format], 
                     outputs=[converted_tts_voice])
