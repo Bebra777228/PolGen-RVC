@@ -43,28 +43,6 @@ class AudioProcessor:
         adjusted_audio = (target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy())
         return adjusted_audio
 
-class Autotune:
-    def __init__(self, ref_freqs):
-        self.ref_freqs = ref_freqs
-        self.note_dict = self.generate_interpolated_frequencies()
-
-    def generate_interpolated_frequencies(self):
-        note_dict = []
-        for i in range(len(self.ref_freqs) - 1):
-            freq_low = self.ref_freqs[i]
-            freq_high = self.ref_freqs[i + 1]
-            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
-            note_dict.extend(interpolated_freqs)
-        note_dict.append(self.ref_freqs[-1])
-        return note_dict
-
-    def autotune_f0(self, f0):
-        autotuned_f0 = np.zeros_like(f0)
-        for i, freq in enumerate(f0):
-            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
-            autotuned_f0[i] = closest_note
-        return autotuned_f0
-
 class VC(object):
     def __init__(self, tgt_sr, config):
         self.x_pad = config.x_pad
@@ -82,22 +60,6 @@ class VC(object):
         self.t_max = self.sample_rate * self.x_max
         self.time_step = self.window / self.sample_rate * 1000
         self.device = config.device
-        
-        self.ref_freqs = [
-            65.41,
-            82.41,
-            110.00,
-            146.83,
-            196.00,
-            246.94,
-            329.63,
-            440.00,
-            587.33,
-            783.99,
-            1046.50,
-        ]
-        self.autotune = Autotune(self.ref_freqs)
-        self.note_dict = self.autotune.note_dict
 
     def get_f0_crepe(
         self,
@@ -146,7 +108,6 @@ class VC(object):
         f0_method,
         filter_radius,
         hop_length,
-        f0_autotune,
         inp_f0=None,
         f0_min=50,
         f0_max=1100,
@@ -155,10 +116,7 @@ class VC(object):
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 
-        if f0_method == "crepe":
-            f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len)
-
-        elif f0_method == "mangio-crepe":
+        if f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length))
 
         elif f0_method == "rmvpe":
@@ -180,16 +138,12 @@ class VC(object):
                 f0_max=int(f0_max),
                 dtype=torch.float32,
                 device=self.device,
-                sample_rate=self.sample_rate,
+                sampling_rate=self.sample_rate,
                 threshold=0.03,
             )
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
             del self.model_fcpe
             gc.collect()
-
-        logging.info(f"f0_autotune = {f0_autotune}")
-        if f0_autotune == True:
-            f0 = Autotune.autotune_f0(self, f0)
 
         f0 *= pow(2, pitch / 12)
         tf0 = self.sample_rate // self.window
@@ -306,7 +260,6 @@ class VC(object):
         version,
         protect,
         hop_length,
-        f0_autotune,
         f0_file,
         f0_min=50,
         f0_max=1100,
@@ -316,7 +269,7 @@ class VC(object):
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as error:
-                print(f"An error occurred reading the FAISS index: {error}")
+                logging.error(f"Произошла ошибка при чтении индекса FAISS: {error}")
                 index = big_npy = None
         else:
             index = big_npy = None
@@ -346,7 +299,7 @@ class VC(object):
                     lines = f.read().strip("\n").split("\n")
                 inp_f0 = np.array([[float(i) for i in line.split(",")] for line in lines], dtype="float32")
             except Exception as error:
-                print(f"An error occurred reading the F0 file: {error}")
+                logging.error(f"Произошла ошибка при чтении файла F0: {error}")
         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
         if pitch_guidance == True:
             pitch, pitchf = self.get_f0(
@@ -357,7 +310,6 @@ class VC(object):
                 f0_method,
                 filter_radius,
                 hop_length,
-                f0_autotune,
                 inp_f0,
                 f0_min,
                 f0_max,
