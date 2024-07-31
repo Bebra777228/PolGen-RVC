@@ -63,7 +63,6 @@ def edge_tts_tab():
               ref_btn = gr.Button('Обновить список моделей', variant='primary')
           with gr.Group():
               pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
-              f0autotune = gr.Checkbox(label="Автонастройка", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False, visible=False)
 
       with gr.Column(variant='panel'):
           with gr.Group():
@@ -71,7 +70,6 @@ def edge_tts_tab():
               voice = gr.Dropdown([], label='Голос')
               gr.HTML("<center><h2>В поле для ввода текста нужно писать на том языке, который вы выбрали выше.</h2></center>")
               language.change(update_voices, inputs=language, outputs=voice)
-
 
   text_input = gr.Textbox(label='Введите текст', lines=5)
 
@@ -103,14 +101,14 @@ def edge_tts_tab():
           hubert_download_btn = gr.Button("Скачать", variant='primary')
       hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
   
-  async def generate_tts(text, language, voice, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format):
+  async def generate_tts(text, language, voice, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max):
       tts_output_path = os.path.join(output_dir, 'tts_voice.wav')
       await text_to_speech(text, tts_output_path, voice)
-      result = tts_conversion(tts_output_path, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format)
+      result = tts_conversion(tts_output_path, voice_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max)
       return result
 
   hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
   ref_btn.click(update_models_list, None, outputs=rvc_model)
   generate_btn.click(generate_tts, 
-                    inputs=[text_input, language, voice, rvc_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format], 
+                    inputs=[text_input, language, voice, rvc_model, pitch, index_rate, filter_radius, volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max], 
                     outputs=[converted_tts_voice])
