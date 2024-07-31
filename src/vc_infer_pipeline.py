@@ -254,7 +254,7 @@ class VC(object):
 
         logging.info(f"f0_autotune = {f0autotune}")
         if f0autotune == "True":
-            f0 = self.autotune_f0(f0)
+            f0 = self.autotune_f0(self, f0)
 
         f0 *= pow(2, pitch / 12)
         tf0 = self.sr // self.window
