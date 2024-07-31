@@ -44,7 +44,7 @@ def conversion_tab():
       with gr.Row(variant='panel'):
           generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
           converted_voice = gr.Audio(label='Преобразованный голос', scale=5)
-          output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
+          output_format = gr.Dropdown(['wav', 'flac', 'mp3', 'ogg'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
   with gr.Accordion('Настройки преобразования голоса', open=False):
       with gr.Group():
