@@ -32,7 +32,6 @@ input_audio_path2wav = {}
 
 class AudioProcessor:
     def change_rms(source_audio: np.ndarray, source_rate: int, target_audio: np.ndarray, target_rate: int, rate: float) -> np.ndarray:
-
         rms1 = librosa.feature.rms(y=source_audio, frame_length=source_rate // 2 * 2, hop_length=source_rate // 2)
         rms2 = librosa.feature.rms(y=target_audio, frame_length=target_rate // 2 * 2, hop_length=target_rate // 2)
 
@@ -93,8 +92,7 @@ class VC(object):
         source[source < 0.001] = np.nan
         target = np.interp(
             np.arange(0, len(source) * p_len, len(source)) / p_len,
-            np.arange(0, len(source)),
-            source,
+            np.arange(0, len(source)), source,
         )
         f0 = np.nan_to_num(target)
         return f0
@@ -115,7 +113,6 @@ class VC(object):
         global input_audio_path2wav
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
-
         if f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length))
 
