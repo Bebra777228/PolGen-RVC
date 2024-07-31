@@ -83,16 +83,16 @@ class VC(object):
         for i in range(len(self.ref_freqs) - 1):
             freq_low = self.ref_freqs[i]
             freq_high = self.ref_freqs[i + 1]
-            interpolated_freqs = np.linspace(freq_low, freq_high, num=20, endpoint=False)
+            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
             note_dict.extend(interpolated_freqs)
         note_dict.append(self.ref_freqs[-1])
         return note_dict
 
     def autotune_f0(self, f0):
-        f0_array = np.array(f0)
-        note_array = np.array(self.note_dict)
-        indices = np.abs(note_array[:, None] - f0_array).argmin(axis=0)
-        autotuned_f0 = note_array[indices]
+        autotuned_f0 = np.zeros_like(f0)
+        for i, freq in enumerate(f0):
+            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
+            autotuned_f0[i] = closest_note
         return autotuned_f0
 
     def get_f0_crepe(
