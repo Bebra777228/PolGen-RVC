@@ -137,57 +137,6 @@ class VC(object):
         f0 = np.nan_to_num(target)
         return f0
 
-    def get_f0_hybrid(
-        self,
-        methods_str,
-        x,
-        f0_min,
-        f0_max,
-        p_len,
-        hop_length,
-    ):
-        methods_str = re.search("hybrid\[(.+)\]", methods_str)
-        if methods_str:
-            methods = [method.strip() for method in methods_str.group(1).split("+")]
-        f0_computation_stack = []
-        logging.info(f"Вычисление оценок шага f0 для методов {str(methods)}")
-        x = x.astype(np.float32)
-        x /= np.quantile(np.abs(x), 0.999)
-        for method in methods:
-            f0 = None
-
-            if method == "crepe":
-                f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len)
-
-            elif method == "mangio-crepe":
-                f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, hop_length)
-
-            elif method == "rmvpe":
-                if not hasattr(self, "model_rmvpe"):
-                    self.model_rmvpe = RMVPE(RMVPE_DIR, is_half=self.is_half, device=self.device)
-                f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
-                f0 = f0[1:]
-
-            elif method == "fcpe":
-                self.model_fcpe = FCPEF0Predictor(
-                    FCPE_DIR,
-                    f0_min=int(f0_min),
-                    f0_max=int(f0_max),
-                    dtype=torch.float32,
-                    device=self.device,
-                    sample_rate=self.sample_rate,
-                    threshold=0.03,
-                )
-                f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
-                del self.model_fcpe
-                gc.collect()
-            f0_computation_stack.append(f0)
-
-        logging.info(f"Вычисление гибридной медианы f0 из стека {str(methods)}")
-        f0_computation_stack = [fc for fc in f0_computation_stack if fc is not None]
-        f0_median_hybrid = np.nanmedian(f0_computation_stack, axis=0) if len(f0_computation_stack) > 1 else f0_computation_stack[0]
-        return f0_median_hybrid
-
     def get_f0(
         self,
         input_audio_path,
@@ -237,19 +186,6 @@ class VC(object):
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
             del self.model_fcpe
             gc.collect()
-
-        elif "hybrid" in f0_method:
-            input_audio_path2wav[input_audio_path] = x.astype(np.double)
-            f0 = self.get_f0_hybrid(
-                f0_method,
-                x,
-                f0_min,
-                f0_max,
-                p_len,
-                filter_radius,
-                hop_length,
-                self.time_step,
-            )
 
         logging.info(f"f0_autotune = {f0_autotune}")
         if f0_autotune == True:
