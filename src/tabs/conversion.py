@@ -50,9 +50,7 @@ def conversion_tab():
   with gr.Accordion('Настройки преобразования голоса', open=False):
       with gr.Group():
           with gr.Column(variant='panel'):
-              use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
               f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
-              use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
               hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
               f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
               with gr.Row():
