@@ -53,8 +53,8 @@ def conversion_tab():
               use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
               f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe', 'crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
               use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
-              crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
-              f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
+              hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
+              f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
               with gr.Row():
                   f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
                   f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
@@ -75,5 +75,5 @@ def conversion_tab():
   ref_btn.click(update_models_list, None, outputs=rvc_model)
   generate_btn.click(conversion,
                     inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, volume_envelope,
-                            f0_method, crepe_hop_length, protect, output_format, f0autotune, f0_min, f0_max],
+                            f0_method, hop_length, protect, output_format, f0autotune, f0_min, f0_max],
                     outputs=[converted_voice])
