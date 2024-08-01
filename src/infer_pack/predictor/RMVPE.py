@@ -1,7 +1,139 @@
+import torch, numpy as np, pdb
 import torch.nn as nn
-import torch, numpy as np
 import torch.nn.functional as F
 from librosa.filters import mel
+
+import torch, pdb
+import numpy as np
+import torch.nn.functional as F
+from scipy.signal import get_window
+from librosa.util import pad_center, tiny, normalize
+
+def window_sumsquare(
+    window,
+    n_frames,
+    hop_length=200,
+    win_length=800,
+    n_fft=800,
+    dtype=np.float32,
+    norm=None,
+):
+    if win_length is None:
+        win_length = n_fft
+
+    n = n_fft + hop_length * (n_frames - 1)
+    x = np.zeros(n, dtype=dtype)
+
+    win_sq = get_window(window, win_length, fftbins=True)
+    win_sq = normalize(win_sq, norm=norm) ** 2
+    win_sq = pad_center(win_sq, n_fft)
+
+    for i in range(n_frames):
+        sample = i * hop_length
+        x[sample : min(n, sample + n_fft)] += win_sq[: max(0, min(n_fft, n - sample))]
+    return x
+
+
+class STFT(torch.nn.Module):
+    def __init__(
+        self, filter_length=1024, hop_length=512, win_length=None, window="hann"
+    ):
+        super(STFT, self).__init__()
+        self.filter_length = filter_length
+        self.hop_length = hop_length
+        self.win_length = win_length if win_length else filter_length
+        self.window = window
+        self.forward_transform = None
+        self.pad_amount = int(self.filter_length / 2)
+        scale = self.filter_length / self.hop_length
+        fourier_basis = np.fft.fft(np.eye(self.filter_length))
+
+        cutoff = int((self.filter_length / 2 + 1))
+        fourier_basis = np.vstack(
+            [np.real(fourier_basis[:cutoff, :]), np.imag(fourier_basis[:cutoff, :])]
+        )
+        forward_basis = torch.FloatTensor(fourier_basis[:, None, :])
+        inverse_basis = torch.FloatTensor(
+            np.linalg.pinv(scale * fourier_basis).T[:, None, :]
+        )
+
+        assert filter_length >= self.win_length
+        fft_window = get_window(window, self.win_length, fftbins=True)
+        fft_window = pad_center(fft_window, size=filter_length)
+        fft_window = torch.from_numpy(fft_window).float()
+
+        forward_basis *= fft_window
+        inverse_basis *= fft_window
+
+        self.register_buffer("forward_basis", forward_basis.float())
+        self.register_buffer("inverse_basis", inverse_basis.float())
+
+    def transform(self, input_data):
+        num_batches = input_data.shape[0]
+        num_samples = input_data.shape[-1]
+
+        self.num_samples = num_samples
+
+        input_data = input_data.view(num_batches, 1, num_samples)
+        input_data = F.pad(
+            input_data.unsqueeze(1),
+            (self.pad_amount, self.pad_amount, 0, 0, 0, 0),
+            mode="reflect",
+        ).squeeze(1)
+        forward_transform = F.conv1d(
+            input_data, self.forward_basis, stride=self.hop_length, padding=0
+        )
+
+        cutoff = int((self.filter_length / 2) + 1)
+        real_part = forward_transform[:, :cutoff, :]
+        imag_part = forward_transform[:, cutoff:, :]
+
+        magnitude = torch.sqrt(real_part**2 + imag_part**2)
+
+        return magnitude
+
+    def inverse(self, magnitude, phase):
+        recombine_magnitude_phase = torch.cat(
+            [magnitude * torch.cos(phase), magnitude * torch.sin(phase)], dim=1
+        )
+
+        inverse_transform = F.conv_transpose1d(
+            recombine_magnitude_phase,
+            self.inverse_basis,
+            stride=self.hop_length,
+            padding=0,
+        )
+
+        if self.window is not None:
+            window_sum = window_sumsquare(
+                self.window,
+                magnitude.size(-1),
+                hop_length=self.hop_length,
+                win_length=self.win_length,
+                n_fft=self.filter_length,
+                dtype=np.float32,
+            )
+            approx_nonzero_indices = torch.from_numpy(
+                np.where(window_sum > tiny(window_sum))[0]
+            )
+            window_sum = torch.from_numpy(window_sum).to(inverse_transform.device)
+            inverse_transform[:, :, approx_nonzero_indices] /= window_sum[
+                approx_nonzero_indices
+            ]
+
+            inverse_transform *= float(self.filter_length) / self.hop_length
+
+        inverse_transform = inverse_transform[..., self.pad_amount :]
+        inverse_transform = inverse_transform[..., : self.num_samples]
+        inverse_transform = inverse_transform.squeeze(1)
+        return inverse_transform
+
+    def forward(self, input_data):
+        self.magnitude, self.phase = self.transform(input_data)
+        reconstruction = self.inverse(self.magnitude, self.phase)
+        return reconstruction
+
+from time import time as ttime
 
 
 class BiGRU(nn.Module):
@@ -245,6 +377,10 @@ class E2E(nn.Module):
                 nn.Dropout(0.25),
                 nn.Sigmoid(),
             )
+        else:
+            self.fc = nn.Sequential(
+                nn.Linear(3 * nn.N_MELS, nn.N_CLASS), nn.Dropout(0.25), nn.Sigmoid()
+            )
 
     def forward(self, mel):
         mel = mel.transpose(-1, -2).unsqueeze(1)
@@ -297,16 +433,14 @@ class MelSpectrogram(torch.nn.Module):
             self.hann_window[keyshift_key] = torch.hann_window(win_length_new).to(
                 audio.device
             )
-        fft = torch.stft(
-            audio,
-            n_fft=n_fft_new,
-            hop_length=hop_length_new,
-            win_length=win_length_new,
-            window=self.hann_window[keyshift_key],
-            center=center,
-            return_complex=True,
-        )
-        magnitude = torch.sqrt(fft.real.pow(2) + fft.imag.pow(2))
+        if hasattr(self, "stft") == False:
+            self.stft = STFT(
+                filter_length=n_fft_new,
+                hop_length=hop_length_new,
+                win_length=win_length_new,
+                window="hann",
+            ).to(audio.device)
+        magnitude = self.stft.transform(audio)
         if keyshift != 0:
             size = self.n_fft // 2 + 1
             resize = magnitude.size(1)
@@ -323,13 +457,6 @@ class MelSpectrogram(torch.nn.Module):
 class RMVPE:
     def __init__(self, model_path, is_half, device=None):
         self.resample_kernel = {}
-        model = E2E(4, 1, (2, 2))
-        ckpt = torch.load(model_path, map_location="cpu")
-        model.load_state_dict(ckpt)
-        model.eval()
-        if is_half == True:
-            model = model.half()
-        self.model = model
         self.resample_kernel = {}
         self.is_half = is_half
         if device is None:
@@ -338,16 +465,22 @@ class RMVPE:
         self.mel_extractor = MelSpectrogram(
             is_half, 128, 16000, 1024, 160, None, 30, 8000
         ).to(device)
+        model = E2E(4, 1, (2, 2))
+        ckpt = torch.load(model_path, map_location="cpu")
+        model.load_state_dict(ckpt)
+        model.eval()
+        if is_half == True:
+            model = model.half()
+        self.model = model
         self.model = self.model.to(device)
         cents_mapping = 20 * np.arange(360) + 1997.3794084376191
-        self.cents_mapping = np.pad(cents_mapping, (4, 4))  # 368
+        self.cents_mapping = np.pad(cents_mapping, (4, 4))
 
     def mel2hidden(self, mel):
         with torch.no_grad():
             n_frames = mel.shape[-1]
-            mel = F.pad(
-                mel, (0, 32 * ((n_frames - 1) // 32 + 1) - n_frames), mode="reflect"
-            )
+            padding = min(32 * ((n_frames - 1) // 32 + 1) - n_frames, n_frames)
+            mel = F.pad(mel, (0, padding), mode="reflect")
             hidden = self.model(mel)
             return hidden[:, :n_frames]
 
@@ -365,6 +498,17 @@ class RMVPE:
         if self.is_half == True:
             hidden = hidden.astype("float32")
         f0 = self.decode(hidden, thred=thred)
+        return f0
+
+    def infer_from_audio_with_pitch(self, audio, thred=0.03, f0_min=50, f0_max=1100):
+        audio = torch.from_numpy(audio).float().to(self.device).unsqueeze(0)
+        mel = self.mel_extractor(audio, center=True)
+        hidden = self.mel2hidden(mel)
+        hidden = hidden.squeeze(0).cpu().numpy()
+        if self.is_half == True:
+            hidden = hidden.astype("float32")
+        f0 = self.decode(hidden, thred=thred)
+        f0[(f0 < f0_min) | (f0 > f0_max)] = 0  
         return f0
 
     def to_local_average_cents(self, salience, thred=0.05):
@@ -386,14 +530,3 @@ class RMVPE:
         maxx = np.max(salience, axis=1)
         devided[maxx <= thred] = 0
         return devided
-
-    def infer_from_audio_with_pitch(self, audio, thred=0.03, f0_min=50, f0_max=1100):
-        audio = torch.from_numpy(audio).float().to(self.device).unsqueeze(0)
-        mel = self.mel_extractor(audio, center=True)
-        hidden = self.mel2hidden(mel)
-        hidden = hidden.squeeze(0).cpu().numpy()
-        if self.is_half == True:
-            hidden = hidden.astype("float32")
-        f0 = self.decode(hidden, thred=thred)
-        f0[(f0 < f0_min) | (f0 > f0_max)] = 0  
-        return f0
