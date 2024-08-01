@@ -1,4 +1,6 @@
-voices = {
+import gradio as gr
+
+edge_voices = {
     "Английский (Великобритания)": ["en-GB-SoniaNeural", "en-GB-RyanNeural"],
     "Английский (США)": ["en-US-JennyNeural", "en-US-GuyNeural"],
     "Арабский (Египет)": ["ar-EG-SalmaNeural", "ar-EG-ShakirNeural"],
@@ -36,5 +38,5 @@ voices = {
     "Японский": ["ja-JP-NanamiNeural", "ja-JP-KeitaNeural"],
 }
 
-def update_voices(selected_language):
-    return gr.update(choices=voices[selected_language])
+def update_edge_voices(selected_language):
+    return gr.update(choices=edge_voices[selected_language])
