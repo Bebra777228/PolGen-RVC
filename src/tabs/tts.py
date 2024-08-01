@@ -25,10 +25,10 @@ def edge_tts_tab():
 
         with gr.Column(variant='panel'):
             with gr.Group():
-                language = gr.Dropdown(list(voices.keys()), label='Язык')
+                language = gr.Dropdown(list(edge_voices.keys()), label='Язык')
                 voice = gr.Dropdown([], label='Голос')
                 gr.HTML("<center><h2>В поле для ввода текста нужно писать на том языке, который вы выбрали выше.</h2></center>")
-                language.change(update_voices, inputs=language, outputs=voice)
+                language.change(update_edge_voices, inputs=language, outputs=voice)
 
     text_input = gr.Textbox(label='Введите текст', lines=5)
 
