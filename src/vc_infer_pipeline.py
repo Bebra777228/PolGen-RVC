@@ -20,7 +20,7 @@ RMVPE_DIR = os.path.join(now_dir, 'models', 'assets', 'rmvpe.pt')
 FCPE_DIR = os.path.join(now_dir, 'models', 'assets', 'fcpe.pt')
 
 from src.infer_pack.predictor.FCPE import FCPEF0Predictor
-from src.infer_pack.predictor.RMVPE import RMVPE
+from src.infer_pack.predictor.RMVPE import RMVPE0Predictor
 
 
 FILTER_ORDER = 5
@@ -118,7 +118,7 @@ class VC(object):
 
         elif f0_method == "rmvpe":
             if not hasattr(self, "model_rmvpe"):
-                self.model_rmvpe = RMVPE(RMVPE_DIR, is_half=self.is_half, device=self.device)
+                self.model_rmvpe = RMVPE0Predictor(RMVPE_DIR, is_half=self.is_half, device=self.device)
             f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
 
         elif f0_method == "rmvpe+":
@@ -160,7 +160,7 @@ class VC(object):
 
     def get_pitch_dependant_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
         if not hasattr(self, "model_rmvpe"):
-            self.model_rmvpe = RMVPE(RMVPE_DIR, is_half=self.is_half, device=self.device)
+            self.model_rmvpe = RMVPE0Predictor(RMVPE_DIR, is_half=self.is_half, device=self.device)
 
         f0 = self.model_rmvpe.infer_from_audio_with_pitch(x, thred=0.03, f0_min=f0_min, f0_max=f0_max)   
 
