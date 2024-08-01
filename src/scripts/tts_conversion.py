@@ -8,6 +8,7 @@ import numpy as np
 import gradio as gr
 import edge_tts
 import logging
+import asyncio
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -61,38 +62,32 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
         logging.error(f"Ошибка при преобразовании голоса: {e}")
         raise
 
-async def text_to_speech(text, output_path, voice):
+async def text_to_speech(text, voice, output_path):
     try:
-        communicate = edge_tts.Communicate(text, voice)
+        communicate = edge_tts.Communicate(text=text, voice=voice)
         await communicate.save(output_path)
     except Exception as e:
         logging.error(f"Ошибка при преобразовании текста в речь: {e}")
         raise
 
-def tts_conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
+def tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
                    hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0_min=50, f0_max=1100):
     try:
-        if not uploaded_file or not voice_model:
-            logging.error('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
-            raise ValueError('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
+        if not text or not voice_model or not voice:
+            logging.error('Убедитесь, что все поля заполнены.')
+            raise ValueError('Убедитесь, что все поля заполнены.')
 
         display_progress(0, '[~] Запуск конвейера генерации TTS...', progress)
 
-        if not os.path.exists(uploaded_file):
-            logging.error(f'{uploaded_file} не существует.')
-            raise FileNotFoundError(f'{uploaded_file} не существует.')
-
-        orig_song_path = convert_to_stereo(uploaded_file)
-        tts_voice_path = os.path.join(OUTPUT_DIR, f'Converted_TTS_Voice.{output_format}')
-
-        if os.path.exists(tts_voice_path):
-            os.remove(tts_voice_path)
+        tts_voice_path = os.path.join(OUTPUT_DIR, f'Edge_TTS_Output.wav')
+        asyncio.run(text_to_speech(text, voice, tts_voice_path))
 
         display_progress(0.5, '[~] Преобразование голоса...', progress)
-        voice_change(voice_model, orig_song_path, tts_voice_path, pitch_change, f0_method, index_rate,
+        final_output_path = os.path.join(OUTPUT_DIR, f'Converted_TTS_Voice.{output_format}')
+        voice_change(voice_model, tts_voice_path, final_output_path, pitch_change, f0_method, index_rate,
                      filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max)
 
-        return tts_voice_path
+        return final_output_path
     except Exception as e:
         logging.error(f"Ошибка в процессе конвертации: {e}")
         raise
