@@ -24,7 +24,7 @@ os.environ["LRU_CACHE_CAPACITY"] = "3"
 def load_wav_to_torch(full_path, target_sr=None, return_empty_on_exception=False):
     sampling_rate = None
     try:
-        data, sampling_rate = sf.read(full_path, always_2d=True)  # than soundfile.
+        data, sampling_rate = sf.read(full_path, always_2d=True)
     except Exception as error:
         print(f"'{full_path}' failed to load with {error}")
         if return_empty_on_exception:
@@ -34,34 +34,20 @@ def load_wav_to_torch(full_path, target_sr=None, return_empty_on_exception=False
 
     if len(data.shape) > 1:
         data = data[:, 0]
-        assert (
-            len(data) > 2
-        )  # check duration of audio file is > 2 samples (because otherwise the slice operation was on the wrong dimension)
+        assert (len(data) > 2)
 
-    if np.issubdtype(data.dtype, np.integer):  # if audio data is type int
-        max_mag = -np.iinfo(
-            data.dtype
-        ).min  # maximum magnitude = min possible value of intXX
-    else:  # if audio data is type fp32
+    if np.issubdtype(data.dtype, np.integer):
+        max_mag = -np.iinfo(data.dtype).min
+    else:
         max_mag = max(np.amax(data), -np.amin(data))
-        max_mag = (
-            (2**31) + 1
-            if max_mag > (2**15)
-            else ((2**15) + 1 if max_mag > 1.01 else 1.0)
-        )  # data should be either 16-bit INT, 32-bit INT or [-1 to 1] float32
+        max_mag = ((2**31) + 1 if max_mag > (2**15) else ((2**15) + 1 if max_mag > 1.01 else 1.0))
 
     data = torch.FloatTensor(data.astype(np.float32)) / max_mag
 
-    if (
-        torch.isinf(data) | torch.isnan(data)
-    ).any() and return_empty_on_exception:  # resample will crash with inf/NaN inputs. return_empty_on_exception will return empty arr instead of except
+    if (torch.isinf(data) | torch.isnan(data)).any() and return_empty_on_exception:
         return [], sampling_rate or target_sr or 48000
     if target_sr is not None and sampling_rate != target_sr:
-        data = torch.from_numpy(
-            librosa.core.resample(
-                data.numpy(), orig_sr=sampling_rate, target_sr=target_sr
-            )
-        )
+        data = torch.from_numpy(librosa.core.resample(data.numpy(), orig_sr=sampling_rate, target_sr=target_sr))
         sampling_rate = target_sr
 
     return data, sampling_rate
@@ -130,9 +116,7 @@ class STFT:
 
         mel_basis_key = str(fmax) + "_" + str(y.device)
         if mel_basis_key not in mel_basis:
-            mel = librosa_mel_fn(
-                sr=sampling_rate, n_fft=n_fft, n_mels=n_mels, fmin=fmin, fmax=fmax
-            )
+            mel = librosa_mel_fn(sr=sampling_rate, n_fft=n_fft, n_mels=n_mels, fmin=fmin, fmax=fmax)
             mel_basis[mel_basis_key] = torch.from_numpy(mel).float().to(y.device)
 
         keyshift_key = str(keyshift) + "_" + str(y.device)
@@ -140,10 +124,7 @@ class STFT:
             hann_window[keyshift_key] = torch.hann_window(win_size_new).to(y.device)
 
         pad_left = (win_size_new - hop_length_new) // 2
-        pad_right = max(
-            (win_size_new - hop_length_new + 1) // 2,
-            win_size_new - y.size(-1) - pad_left,
-        )
+        pad_right = max((win_size_new - hop_length_new + 1) // 2, win_size_new - y.size(-1) - pad_left,)
         if pad_right < y.size(-1):
             mode = "reflect"
         else:
@@ -182,47 +163,28 @@ class STFT:
 
 stft = STFT()
 
-# import fast_transformers.causal_product.causal_product_cuda
 
-
-def softmax_kernel(
-    data, *, projection_matrix, is_query, normalize_data=True, eps=1e-4, device=None
-):
+def softmax_kernel(data, *, projection_matrix, is_query, normalize_data=True, eps=1e-4, device=None):
     b, h, *_ = data.shape
-    # (batch size, head, length, model_dim)
 
-    # normalize model dim
     data_normalizer = (data.shape[-1] ** -0.25) if normalize_data else 1.0
-
-    # what is ration?, projection_matrix.shape[0] --> 266
 
     ratio = projection_matrix.shape[0] ** -0.5
 
     projection = repeat(projection_matrix, "j d -> b h j d", b=b, h=h)
     projection = projection.type_as(data)
 
-    # data_dash = w^T x
     data_dash = torch.einsum("...id,...jd->...ij", (data_normalizer * data), projection)
 
-    # diag_data = D**2
     diag_data = data**2
     diag_data = torch.sum(diag_data, dim=-1)
     diag_data = (diag_data / 2.0) * (data_normalizer**2)
     diag_data = diag_data.unsqueeze(dim=-1)
 
     if is_query:
-        data_dash = ratio * (
-            torch.exp(
-                data_dash
-                - diag_data
-                - torch.max(data_dash, dim=-1, keepdim=True).values
-            )
-            + eps
-        )
+        data_dash = ratio * (torch.exp(data_dash - diag_data - torch.max(data_dash, dim=-1, keepdim=True).values) + eps)
     else:
-        data_dash = ratio * (
-            torch.exp(data_dash - diag_data + eps)
-        )  # - torch.max(data_dash)) + eps)
+        data_dash = ratio * (torch.exp(data_dash - diag_data + eps))
 
     return data_dash.type_as(data)
 
@@ -232,8 +194,6 @@ def orthogonal_matrix_chunk(cols, qr_uniform_q=False, device=None):
     q, r = torch.linalg.qr(unstructured_block.cpu(), mode="reduced")
     q, r = map(lambda t: t.to(device), (q, r))
 
-    # proposed by @Parskatt
-    # to make sure Q is uniform https://arxiv.org/pdf/math-ph/0609050.pdf
     if qr_uniform_q:
         d = torch.diag(r, 0)
         q *= d.sign()
@@ -257,8 +217,6 @@ def cast_tuple(val):
 
 
 class PCmer(nn.Module):
-    """The encoder that is used in the Transformer model."""
-
     def __init__(
         self,
         num_layers,
@@ -280,65 +238,30 @@ class PCmer(nn.Module):
 
         self._layers = nn.ModuleList([_EncoderLayer(self) for _ in range(num_layers)])
 
-    #  METHODS  ########################################################################################################
-
     def forward(self, phone, mask=None):
-
-        # apply all layers to the input
         for i, layer in enumerate(self._layers):
             phone = layer(phone, mask)
-        # provide the final sequence
         return phone
 
 
-# ==================================================================================================================== #
-#  CLASS  _ E N C O D E R  L A Y E R                                                                                   #
-# ==================================================================================================================== #
-
-
 class _EncoderLayer(nn.Module):
-    """One layer of the encoder.
-
-    Attributes:
-        attn: (:class:`mha.MultiHeadAttention`): The attention mechanism that is used to read the input sequence.
-        feed_forward (:class:`ffl.FeedForwardLayer`): The feed-forward layer on top of the attention mechanism.
-    """
-
     def __init__(self, parent: PCmer):
-        """Creates a new instance of ``_EncoderLayer``.
-
-        Args:
-            parent (Encoder): The encoder that the layers is created for.
-        """
         super().__init__()
 
         self.conformer = ConformerConvModule(parent.dim_model)
         self.norm = nn.LayerNorm(parent.dim_model)
         self.dropout = nn.Dropout(parent.residual_dropout)
-
-        # selfatt -> fastatt: performer!
-        self.attn = SelfAttention(
-            dim=parent.dim_model, heads=parent.num_heads, causal=False
-        )
-
-    #  METHODS  ########################################################################################################
+        self.attn = SelfAttention(dim=parent.dim_model, heads=parent.num_heads, causal=False)
 
     def forward(self, phone, mask=None):
-
-        # compute attention sub-layer
         phone = phone + (self.attn(self.norm(phone), mask=mask))
-
         phone = phone + (self.conformer(phone))
-
         return phone
 
 
 def calc_same_padding(kernel_size):
     pad = kernel_size // 2
     return (pad, pad - (kernel_size + 1) % 2)
-
-
-# helper classes
 
 
 class Swish(nn.Module):
@@ -378,9 +301,7 @@ class DepthWiseConv1d(nn.Module):
 
 
 class ConformerConvModule(nn.Module):
-    def __init__(
-        self, dim, causal=False, expansion_factor=2, kernel_size=31, dropout=0.0
-    ):
+    def __init__(self, dim, causal=False, expansion_factor=2, kernel_size=31, dropout=0.0):
         super().__init__()
 
         inner_dim = dim * expansion_factor
@@ -391,10 +312,7 @@ class ConformerConvModule(nn.Module):
             Transpose((1, 2)),
             nn.Conv1d(dim, inner_dim * 2, 1),
             GLU(dim=1),
-            DepthWiseConv1d(
-                inner_dim, inner_dim, kernel_size=kernel_size, padding=padding
-            ),
-            # nn.BatchNorm1d(inner_dim) if not causal else nn.Identity(),
+            DepthWiseConv1d(inner_dim, inner_dim, kernel_size=kernel_size, padding=padding),
             Swish(),
             nn.Conv1d(inner_dim, dim, 1),
             Transpose((1, 2)),
@@ -412,7 +330,6 @@ def linear_attention(q, k, v):
 
     else:
         k_cumsum = k.sum(dim=-2)
-        # k_cumsum = k.sum(dim = -2)
         D_inv = 1.0 / (torch.einsum("...nd,...d->...n", q, k_cumsum.type_as(q)) + 1e-8)
 
         context = torch.einsum("...nd,...ne->...de", k, v)
@@ -420,23 +337,17 @@ def linear_attention(q, k, v):
         return out
 
 
-def gaussian_orthogonal_random_matrix(
-    nb_rows, nb_columns, scaling=0, qr_uniform_q=False, device=None
-):
+def gaussian_orthogonal_random_matrix(nb_rows, nb_columns, scaling=0, qr_uniform_q=False, device=None):
     nb_full_blocks = int(nb_rows / nb_columns)
     block_list = []
 
     for _ in range(nb_full_blocks):
-        q = orthogonal_matrix_chunk(
-            nb_columns, qr_uniform_q=qr_uniform_q, device=device
-        )
+        q = orthogonal_matrix_chunk(nb_columns, qr_uniform_q=qr_uniform_q, device=device)
         block_list.append(q)
 
     remaining_rows = nb_rows - nb_full_blocks * nb_columns
     if remaining_rows > 0:
-        q = orthogonal_matrix_chunk(
-            nb_columns, qr_uniform_q=qr_uniform_q, device=device
-        )
+        q = orthogonal_matrix_chunk(nb_columns, qr_uniform_q=qr_uniform_q, device=device)
 
         block_list.append(q[:remaining_rows])
 
@@ -445,9 +356,7 @@ def gaussian_orthogonal_random_matrix(
     if scaling == 0:
         multiplier = torch.randn((nb_rows, nb_columns), device=device).norm(dim=1)
     elif scaling == 1:
-        multiplier = math.sqrt((float(nb_columns))) * torch.ones(
-            (nb_rows,), device=device
-        )
+        multiplier = math.sqrt((float(nb_columns))) * torch.ones((nb_rows,), device=device)
     else:
         raise ValueError(f"Invalid scaling {scaling}")
 
@@ -472,7 +381,6 @@ class FastAttention(nn.Module):
         self.dim_heads = dim_heads
         self.nb_features = nb_features
         self.ortho_scaling = ortho_scaling
-
         self.create_projection = partial(
             gaussian_orthogonal_random_matrix,
             nb_rows=self.nb_features,
@@ -482,14 +390,9 @@ class FastAttention(nn.Module):
         )
         projection_matrix = self.create_projection()
         self.register_buffer("projection_matrix", projection_matrix)
-
         self.generalized_attention = generalized_attention
         self.kernel_fn = kernel_fn
-
-        # if this is turned on, no projection will be used
-        # queries and keys will be softmax-ed as in the original efficient attention paper
         self.no_projection = no_projection
-
         self.causal = causal
 
     @torch.no_grad()
@@ -505,9 +408,7 @@ class FastAttention(nn.Module):
             q = q.softmax(dim=-1)
             k = torch.exp(k) if self.causal else k.softmax(dim=-2)
         else:
-            create_kernel = partial(
-                softmax_kernel, projection_matrix=self.projection_matrix, device=device
-            )
+            create_kernel = partial(softmax_kernel, projection_matrix=self.projection_matrix, device=device)
 
             q = create_kernel(q, is_query=True)
             k = create_kernel(k, is_query=False)
@@ -610,9 +511,7 @@ class SelfAttention(nn.Module):
             attn_outs.append(out)
 
         if not empty(lq):
-            assert (
-                not cross_attend
-            ), "local attention is not compatible with cross attention"
+            assert (not cross_attend), "local attention is not compatible with cross attention"
             out = self.local_attn(lq, lk, lv, input_mask=mask)
             attn_outs.append(out)
 
@@ -657,43 +556,22 @@ class FCPE(nn.Module):
             raise ValueError("Full model is not supported yet.")
 
         self.loss_mse_scale = loss_mse_scale if (loss_mse_scale is not None) else 10
-        self.loss_l2_regularization = (
-            loss_l2_regularization if (loss_l2_regularization is not None) else False
-        )
-        self.loss_l2_regularization_scale = (
-            loss_l2_regularization_scale
-            if (loss_l2_regularization_scale is not None)
-            else 1
-        )
+        self.loss_l2_regularization = (loss_l2_regularization if (loss_l2_regularization is not None) else False)
+        self.loss_l2_regularization_scale = (loss_l2_regularization_scale if (loss_l2_regularization_scale is not None) else 1)
         self.loss_grad1_mse = loss_grad1_mse if (loss_grad1_mse is not None) else False
-        self.loss_grad1_mse_scale = (
-            loss_grad1_mse_scale if (loss_grad1_mse_scale is not None) else 1
-        )
+        self.loss_grad1_mse_scale = (loss_grad1_mse_scale if (loss_grad1_mse_scale is not None) else 1)
         self.f0_max = f0_max if (f0_max is not None) else 1975.5
         self.f0_min = f0_min if (f0_min is not None) else 32.70
         self.confidence = confidence if (confidence is not None) else False
         self.threshold = threshold if (threshold is not None) else 0.05
         self.use_input_conv = use_input_conv if (use_input_conv is not None) else True
 
-        self.cent_table_b = torch.Tensor(
-            np.linspace(
-                self.f0_to_cent(torch.Tensor([f0_min]))[0],
-                self.f0_to_cent(torch.Tensor([f0_max]))[0],
-                out_dims,
-            )
-        )
+        self.cent_table_b = torch.Tensor(np.linspace(self.f0_to_cent(torch.Tensor([f0_min]))[0], self.f0_to_cent(torch.Tensor([f0_max]))[0], out_dims))
         self.register_buffer("cent_table", self.cent_table_b)
 
-        # conv in stack
         _leaky = nn.LeakyReLU()
-        self.stack = nn.Sequential(
-            nn.Conv1d(input_channel, n_chans, 3, 1, 1),
-            nn.GroupNorm(4, n_chans),
-            _leaky,
-            nn.Conv1d(n_chans, n_chans, 3, 1, 1),
-        )
+        self.stack = nn.Sequential(nn.Conv1d(input_channel, n_chans, 3, 1, 1), nn.GroupNorm(4, n_chans), _leaky, nn.Conv1d(n_chans, n_chans, 3, 1, 1))
 
-        # transformer
         self.decoder = PCmer(
             num_layers=n_layers,
             num_heads=8,
@@ -705,19 +583,10 @@ class FCPE(nn.Module):
         )
         self.norm = nn.LayerNorm(n_chans)
 
-        # out
         self.n_out = out_dims
         self.dense_out = weight_norm(nn.Linear(n_chans, self.n_out))
 
-    def forward(
-        self, mel, infer=True, gt_f0=None, return_hz_f0=False, cdecoder="local_argmax"
-    ):
-        """
-        input:
-            B x n_frames x n_unit
-        return:
-            dict of B x n_frames x feat
-        """
+    def forward(self, mel, infer=True, gt_f0=None, return_hz_f0=False, cdecoder="local_argmax"):
         if cdecoder == "argmax":
             self.cdecoder = self.cents_decoder
         elif cdecoder == "local_argmax":
@@ -728,19 +597,14 @@ class FCPE(nn.Module):
             x = mel
         x = self.decoder(x)
         x = self.norm(x)
-        x = self.dense_out(x)  # [B,N,D]
+        x = self.dense_out(x)
         x = torch.sigmoid(x)
         if not infer:
-            gt_cent_f0 = self.f0_to_cent(gt_f0)  # mel f0  #[B,N,1]
-            gt_cent_f0 = self.gaussian_blurred_cent(gt_cent_f0)  # #[B,N,out_dim]
-            loss_all = self.loss_mse_scale * F.binary_cross_entropy(
-                x, gt_cent_f0
-            )  # bce loss
-            # l2 regularization
+            gt_cent_f0 = self.f0_to_cent(gt_f0)
+            gt_cent_f0 = self.gaussian_blurred_cent(gt_cent_f0)
+            loss_all = self.loss_mse_scale * F.binary_cross_entropy(x, gt_cent_f0)
             if self.loss_l2_regularization:
-                loss_all = loss_all + l2_regularization(
-                    model=self, l2_alpha=self.loss_l2_regularization_scale
-                )
+                loss_all = loss_all + l2_regularization(model=self, l2_alpha=self.loss_l2_regularization_scale)
             x = loss_all
         if infer:
             x = self.cdecoder(x)
@@ -752,9 +616,7 @@ class FCPE(nn.Module):
     def cents_decoder(self, y, mask=True):
         B, N, _ = y.size()
         ci = self.cent_table[None, None, :].expand(B, N, -1)
-        rtn = torch.sum(ci * y, dim=-1, keepdim=True) / torch.sum(
-            y, dim=-1, keepdim=True
-        )  # cents: [B,N,1]
+        rtn = torch.sum(ci * y, dim=-1, keepdim=True) / torch.sum(y, dim=-1, keepdim=True)
         if mask:
             confident = torch.max(y, dim=-1, keepdim=True)[0]
             confident_mask = torch.ones_like(confident)
@@ -774,9 +636,7 @@ class FCPE(nn.Module):
         local_argmax_index[local_argmax_index >= self.n_out] = self.n_out - 1
         ci_l = torch.gather(ci, -1, local_argmax_index)
         y_l = torch.gather(y, -1, local_argmax_index)
-        rtn = torch.sum(ci_l * y_l, dim=-1, keepdim=True) / torch.sum(
-            y_l, dim=-1, keepdim=True
-        )  # cents: [B,N,1]
+        rtn = torch.sum(ci_l * y_l, dim=-1, keepdim=True) / torch.sum(y_l, dim=-1, keepdim=True)
         if mask:
             confident_mask = torch.ones_like(confident)
             confident_mask[confident <= self.threshold] = float("-INF")
@@ -792,7 +652,7 @@ class FCPE(nn.Module):
     def f0_to_cent(self, f0):
         return 1200.0 * torch.log2(f0 / 10.0)
 
-    def gaussian_blurred_cent(self, cents):  # cents: [B,N,1]
+    def gaussian_blurred_cent(self, cents):
         mask = (cents > 0.1) & (cents < (1200.0 * np.log2(self.f0_max / 10.0)))
         B, N, _ = cents.size()
         ci = self.cent_table[None, None, :].expand(B, N, -1)
@@ -841,7 +701,6 @@ class FCPEInfer:
 class Wav2Mel:
 
     def __init__(self, args, device=None, dtype=torch.float32):
-        # self.args = args
         self.sampling_rate = args.mel.sampling_rate
         self.hop_size = args.mel.hop_size
         if device is None:
@@ -860,31 +719,21 @@ class Wav2Mel:
         self.resample_kernel = {}
 
     def extract_nvstft(self, audio, keyshift=0, train=False):
-        mel = self.stft.get_mel(audio, keyshift=keyshift, train=train).transpose(
-            1, 2
-        )  # B, n_frames, bins
+        mel = self.stft.get_mel(audio, keyshift=keyshift, train=train).transpose(1, 2)
         return mel
 
     def extract_mel(self, audio, sample_rate, keyshift=0, train=False):
         audio = audio.to(self.dtype).to(self.device)
-        # resample
         if sample_rate == self.sampling_rate:
             audio_res = audio
         else:
             key_str = str(sample_rate)
             if key_str not in self.resample_kernel:
-                self.resample_kernel[key_str] = Resample(
-                    sample_rate, self.sampling_rate, lowpass_filter_width=128
-                )
-            self.resample_kernel[key_str] = (
-                self.resample_kernel[key_str].to(self.dtype).to(self.device)
-            )
+                self.resample_kernel[key_str] = Resample(sample_rate, self.sampling_rate, lowpass_filter_width=128)
+            self.resample_kernel[key_str] = (self.resample_kernel[key_str].to(self.dtype).to(self.device))
             audio_res = self.resample_kernel[key_str](audio)
 
-        # extract
-        mel = self.extract_nvstft(
-            audio_res, keyshift=keyshift, train=train
-        )  # B, n_frames, bins
+        mel = self.extract_nvstft(audio_res, keyshift=keyshift, train=train)
         n_frames = int(audio.shape[1] // self.hop_size) + 1
         if n_frames > int(mel.shape[1]):
             mel = torch.cat((mel, mel[:, -1:, :]), 1)
@@ -907,19 +756,9 @@ class DotDict(dict):
 
 class F0Predictor(object):
     def compute_f0(self, wav, p_len):
-        """
-        input: wav:[signal_length]
-               p_len:int
-        output: f0:[signal_length//hop_length]
-        """
         pass
 
     def compute_f0_uv(self, wav, p_len):
-        """
-        input: wav:[signal_length]
-               p_len:int
-        output: f0:[signal_length//hop_length],uv:[signal_length//hop_length]
-        """
         pass
 
 
@@ -990,7 +829,6 @@ class FCPEF0Predictor(F0Predictor):
         vuv_vector[f0 > 0.0] = 1.0
         vuv_vector[f0 <= 0.0] = 0.0
 
-        # 去掉0频率, 并线性插值
         nzindex = torch.nonzero(f0).squeeze()
         f0 = torch.index_select(f0, dim=0, index=nzindex).cpu().numpy()
         time_org = self.hop_length / sampling_rate * nzindex.cpu().numpy()
@@ -999,18 +837,11 @@ class FCPEF0Predictor(F0Predictor):
         vuv_vector = F.interpolate(vuv_vector[None, None, :], size=pad_to)[0][0]
 
         if f0.shape[0] <= 0:
-            return (
-                torch.zeros(pad_to, dtype=torch.float, device=x.device).cpu().numpy(),
-                vuv_vector.cpu().numpy(),
-            )
+            return (torch.zeros(pad_to, dtype=torch.float, device=x.device).cpu().numpy(), vuv_vector.cpu().numpy())
         if f0.shape[0] == 1:
-            return (
-                torch.ones(pad_to, dtype=torch.float, device=x.device) * f0[0]
-            ).cpu().numpy(), vuv_vector.cpu().numpy()
+            return (torch.ones(pad_to, dtype=torch.float, device=x.device) * f0[0]).cpu().numpy(), vuv_vector.cpu().numpy()
 
-        # 大概可以用 torch 重写?
         f0 = np.interp(time_frame, time_org, f0, left=f0[0], right=f0[-1])
-        # vuv_vector = np.ceil(scipy.ndimage.zoom(vuv_vector,pad_to/len(vuv_vector),order = 0))
 
         return f0, vuv_vector.cpu().numpy()
 
