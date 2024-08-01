@@ -35,9 +35,7 @@ def window_sumsquare(
 
 
 class STFT(torch.nn.Module):
-    def __init__(
-        self, filter_length=1024, hop_length=512, win_length=None, window="hann"
-    ):
+    def __init__(self, filter_length=1024, hop_length=512, win_length=None, window="hann"):
         super(STFT, self).__init__()
         self.filter_length = filter_length
         self.hop_length = hop_length
@@ -49,13 +47,9 @@ class STFT(torch.nn.Module):
         fourier_basis = np.fft.fft(np.eye(self.filter_length))
 
         cutoff = int((self.filter_length / 2 + 1))
-        fourier_basis = np.vstack(
-            [np.real(fourier_basis[:cutoff, :]), np.imag(fourier_basis[:cutoff, :])]
-        )
+        fourier_basis = np.vstack([np.real(fourier_basis[:cutoff, :]), np.imag(fourier_basis[:cutoff, :])])
         forward_basis = torch.FloatTensor(fourier_basis[:, None, :])
-        inverse_basis = torch.FloatTensor(
-            np.linalg.pinv(scale * fourier_basis).T[:, None, :]
-        )
+        inverse_basis = torch.FloatTensor(np.linalg.pinv(scale * fourier_basis).T[:, None, :])
 
         assert filter_length >= self.win_length
         fft_window = get_window(window, self.win_length, fftbins=True)
@@ -75,14 +69,8 @@ class STFT(torch.nn.Module):
         self.num_samples = num_samples
 
         input_data = input_data.view(num_batches, 1, num_samples)
-        input_data = F.pad(
-            input_data.unsqueeze(1),
-            (self.pad_amount, self.pad_amount, 0, 0, 0, 0),
-            mode="reflect",
-        ).squeeze(1)
-        forward_transform = F.conv1d(
-            input_data, self.forward_basis, stride=self.hop_length, padding=0
-        )
+        input_data = F.pad(input_data.unsqueeze(1), (self.pad_amount, self.pad_amount, 0, 0, 0, 0), mode="reflect").squeeze(1)
+        forward_transform = F.conv1d(input_data, self.forward_basis, stride=self.hop_length, padding=0)
 
         cutoff = int((self.filter_length / 2) + 1)
         real_part = forward_transform[:, :cutoff, :]
@@ -93,33 +81,15 @@ class STFT(torch.nn.Module):
         return magnitude
 
     def inverse(self, magnitude, phase):
-        recombine_magnitude_phase = torch.cat(
-            [magnitude * torch.cos(phase), magnitude * torch.sin(phase)], dim=1
-        )
+        recombine_magnitude_phase = torch.cat([magnitude * torch.cos(phase), magnitude * torch.sin(phase)], dim=1)
 
-        inverse_transform = F.conv_transpose1d(
-            recombine_magnitude_phase,
-            self.inverse_basis,
-            stride=self.hop_length,
-            padding=0,
-        )
+        inverse_transform = F.conv_transpose1d(recombine_magnitude_phase, self.inverse_basis, stride=self.hop_length, padding=0)
 
         if self.window is not None:
-            window_sum = window_sumsquare(
-                self.window,
-                magnitude.size(-1),
-                hop_length=self.hop_length,
-                win_length=self.win_length,
-                n_fft=self.filter_length,
-                dtype=np.float32,
-            )
-            approx_nonzero_indices = torch.from_numpy(
-                np.where(window_sum > tiny(window_sum))[0]
-            )
+            window_sum = window_sumsquare(self.window, magnitude.size(-1), hop_length=self.hop_length, win_length=self.win_length, n_fft=self.filter_length, dtype=np.float32)
+            approx_nonzero_indices = torch.from_numpy(np.where(window_sum > tiny(window_sum))[0])
             window_sum = torch.from_numpy(window_sum).to(inverse_transform.device)
-            inverse_transform[:, :, approx_nonzero_indices] /= window_sum[
-                approx_nonzero_indices
-            ]
+            inverse_transform[:, :, approx_nonzero_indices] /= window_sum[approx_nonzero_indices]
 
             inverse_transform *= float(self.filter_length) / self.hop_length
 
@@ -139,13 +109,7 @@ from time import time as ttime
 class BiGRU(nn.Module):
     def __init__(self, input_features, hidden_features, num_layers):
         super(BiGRU, self).__init__()
-        self.gru = nn.GRU(
-            input_features,
-            hidden_features,
-            num_layers=num_layers,
-            batch_first=True,
-            bidirectional=True,
-        )
+        self.gru = nn.GRU(input_features, hidden_features, num_layers=num_layers, batch_first=True, bidirectional=True)
 
     def forward(self, x):
         return self.gru(x)[0]
@@ -206,11 +170,7 @@ class Encoder(nn.Module):
         self.layers = nn.ModuleList()
         self.latent_channels = []
         for i in range(self.n_encoders):
-            self.layers.append(
-                ResEncoderBlock(
-                    in_channels, out_channels, kernel_size, n_blocks, momentum=momentum
-                )
-            )
+            self.layers.append(ResEncoderBlock(in_channels, out_channels, kernel_size, n_blocks, momentum=momentum))
             self.latent_channels.append([out_channels, in_size])
             in_channels = out_channels
             out_channels *= 2
@@ -228,9 +188,7 @@ class Encoder(nn.Module):
 
 
 class ResEncoderBlock(nn.Module):
-    def __init__(
-        self, in_channels, out_channels, kernel_size, n_blocks=1, momentum=0.01
-    ):
+    def __init__(self, in_channels, out_channels, kernel_size, n_blocks=1, momentum=0.01):
         super(ResEncoderBlock, self).__init__()
         self.n_blocks = n_blocks
         self.conv = nn.ModuleList()
@@ -255,13 +213,9 @@ class Intermediate(nn.Module):
         super(Intermediate, self).__init__()
         self.n_inters = n_inters
         self.layers = nn.ModuleList()
-        self.layers.append(
-            ResEncoderBlock(in_channels, out_channels, None, n_blocks, momentum)
-        )
+        self.layers.append(ResEncoderBlock(in_channels, out_channels, None, n_blocks, momentum))
         for i in range(self.n_inters - 1):
-            self.layers.append(
-                ResEncoderBlock(out_channels, out_channels, None, n_blocks, momentum)
-            )
+            self.layers.append(ResEncoderBlock(out_channels, out_channels, None, n_blocks, momentum))
 
     def forward(self, x):
         for i in range(self.n_inters):
@@ -307,9 +261,7 @@ class Decoder(nn.Module):
         self.n_decoders = n_decoders
         for i in range(self.n_decoders):
             out_channels = in_channels // 2
-            self.layers.append(
-                ResDecoderBlock(in_channels, out_channels, stride, n_blocks, momentum)
-            )
+            self.layers.append(ResDecoderBlock(in_channels, out_channels, stride, n_blocks, momentum))
             in_channels = out_channels
 
     def forward(self, x, concat_tensors):
@@ -329,18 +281,9 @@ class DeepUnet(nn.Module):
         en_out_channels=16,
     ):
         super(DeepUnet, self).__init__()
-        self.encoder = Encoder(
-            in_channels, 128, en_de_layers, kernel_size, n_blocks, en_out_channels
-        )
-        self.intermediate = Intermediate(
-            self.encoder.out_channel // 2,
-            self.encoder.out_channel,
-            inter_layers,
-            n_blocks,
-        )
-        self.decoder = Decoder(
-            self.encoder.out_channel, en_de_layers, kernel_size, n_blocks
-        )
+        self.encoder = Encoder(in_channels, 128, en_de_layers, kernel_size, n_blocks, en_out_channels)
+        self.intermediate = Intermediate(self.encoder.out_channel // 2, self.encoder.out_channel, inter_layers, n_blocks)
+        self.decoder = Decoder(self.encoder.out_channel, en_de_layers, kernel_size, n_blocks)
 
     def forward(self, x):
         x, concat_tensors = self.encoder(x)
@@ -361,26 +304,12 @@ class E2E(nn.Module):
         en_out_channels=16,
     ):
         super(E2E, self).__init__()
-        self.unet = DeepUnet(
-            kernel_size,
-            n_blocks,
-            en_de_layers,
-            inter_layers,
-            in_channels,
-            en_out_channels,
-        )
+        self.unet = DeepUnet(kernel_size, n_blocks, en_de_layers, inter_layers, in_channels, en_out_channels)
         self.cnn = nn.Conv2d(en_out_channels, 3, (3, 3), padding=(1, 1))
         if n_gru:
-            self.fc = nn.Sequential(
-                BiGRU(3 * 128, 256, n_gru),
-                nn.Linear(512, 360),
-                nn.Dropout(0.25),
-                nn.Sigmoid(),
-            )
+            self.fc = nn.Sequential(BiGRU(3 * 128, 256, n_gru), nn.Linear(512, 360), nn.Dropout(0.25), nn.Sigmoid())
         else:
-            self.fc = nn.Sequential(
-                nn.Linear(3 * nn.N_MELS, nn.N_CLASS), nn.Dropout(0.25), nn.Sigmoid()
-            )
+            self.fc = nn.Sequential(nn.Linear(3 * nn.N_MELS, nn.N_CLASS), nn.Dropout(0.25), nn.Sigmoid())
 
     def forward(self, mel):
         mel = mel.transpose(-1, -2).unsqueeze(1)
@@ -405,14 +334,7 @@ class MelSpectrogram(torch.nn.Module):
         super().__init__()
         n_fft = win_length if n_fft is None else n_fft
         self.hann_window = {}
-        mel_basis = mel(
-            sr=sampling_rate,
-            n_fft=n_fft,
-            n_mels=n_mel_channels,
-            fmin=mel_fmin,
-            fmax=mel_fmax,
-            htk=True,
-        )
+        mel_basis = mel(sr=sampling_rate, n_fft=n_fft, n_mels=n_mel_channels, fmin=mel_fmin, fmax=mel_fmax, htk=True)
         mel_basis = torch.from_numpy(mel_basis).float()
         self.register_buffer("mel_basis", mel_basis)
         self.n_fft = win_length if n_fft is None else n_fft
@@ -430,16 +352,9 @@ class MelSpectrogram(torch.nn.Module):
         hop_length_new = int(np.round(self.hop_length * speed))
         keyshift_key = str(keyshift) + "_" + str(audio.device)
         if keyshift_key not in self.hann_window:
-            self.hann_window[keyshift_key] = torch.hann_window(win_length_new).to(
-                audio.device
-            )
+            self.hann_window[keyshift_key] = torch.hann_window(win_length_new).to(audio.device)
         if hasattr(self, "stft") == False:
-            self.stft = STFT(
-                filter_length=n_fft_new,
-                hop_length=hop_length_new,
-                win_length=win_length_new,
-                window="hann",
-            ).to(audio.device)
+            self.stft = STFT(filter_length=n_fft_new, hop_length=hop_length_new, win_length=win_length_new, window="hann").to(audio.device)
         magnitude = self.stft.transform(audio)
         if keyshift != 0:
             size = self.n_fft // 2 + 1
@@ -462,9 +377,7 @@ class RMVPE0Predictor:
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
-        self.mel_extractor = MelSpectrogram(
-            is_half, 128, 16000, 1024, 160, None, 30, 8000
-        ).to(device)
+        self.mel_extractor = MelSpectrogram(is_half, 128, 16000, 1024, 160, None, 30, 8000).to(device)
         model = E2E(4, 1, (2, 2))
         ckpt = torch.load(model_path, map_location="cpu")
         model.load_state_dict(ckpt)
