@@ -454,7 +454,7 @@ class MelSpectrogram(torch.nn.Module):
         return log_mel_spec
 
 
-class RMVPE:
+class RMVPE0Predictor:
     def __init__(self, model_path, is_half, device=None):
         self.resample_kernel = {}
         self.resample_kernel = {}
