@@ -3,7 +3,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.scripts.conversion.edge_tts_conversion import edge_tts_conversion
+from src.scripts.conversion.tts_conversion import tts_conversion
 from src.modules.model_management import *
 from src.modules.ui_updates import *
 from src.modules.download_hubert import *
@@ -62,7 +62,7 @@ def edge_tts_tab():
 
     hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
     ref_btn.click(update_models_list, None, outputs=rvc_model)
-    generate_btn.click(edge_tts_conversion, 
+    generate_btn.click(tts_conversion, 
                       inputs=[
                         text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
                         f0_method, hop_length, protect, output_format, f0_min, f0_max
