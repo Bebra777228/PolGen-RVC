@@ -9,7 +9,7 @@ on:
       - CoverGenLite-dev
 
 jobs:
-  test:
+  rvc_cli:
     runs-on: ubuntu-latest
 
     steps:
