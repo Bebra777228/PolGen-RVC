@@ -1,10 +1,7 @@
 import argparse
 import os
 
-from conversion.voice_conversion import conversion
-
-now_dir = os.getcwd()
-
+from src.scripts.conversion.voice_conversion import conversion
 from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
