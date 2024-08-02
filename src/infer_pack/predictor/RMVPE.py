@@ -289,8 +289,11 @@ class RMVPE0Predictor:
     def mel2hidden(self, mel):
         with torch.no_grad():
             n_frames = mel.shape[-1]
+            mel = mel.float()
             padding = min(32 * ((n_frames - 1) // 32 + 1) - n_frames, n_frames)
             mel = F.pad(mel, (0, padding), mode="reflect")
+            if self.is_half:
+                mel = mel.half()
             hidden = self.model(mel)
             return hidden[:, :n_frames]
 
