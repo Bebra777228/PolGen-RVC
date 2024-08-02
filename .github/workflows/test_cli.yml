@@ -26,11 +26,15 @@ jobs:
         python -m pip install pip==23.0
         pip install -r requirements.txt
 
-    - name: Install models
+    - name: Install assets
       run: |
         python download_models.py
-        wget -nc https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
-        wget -nc https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
+
+    - name: Install models
+      run: |
+        mkdir -p models/rvc_models/Tsoi
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
 
     - name: Run script
       run: |
