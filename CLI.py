@@ -17,7 +17,7 @@ parser.add_argument('-d', '--rvc_dirname', type=str, required=True)
 parser.add_argument('-p', '--pitch', type=int, required=True)
 parser.add_argument('-ir', '--index_rate', type=float, default=0)
 parser.add_argument('-fr', '--filter_radius', type=int, default=3)
-parser.add_argument('-rms', '--rms_mix_rate', type=float, default=0.25)
+parser.add_argument('-rms', '--volume_envelope', type=float, default=0.25)
 parser.add_argument('-m', '--method', type=str, default='rmvpe')
 parser.add_argument('-hop', '--hop_length', type=int, default=128)
 parser.add_argument('-pro', '--protect', type=float, default=0.33)
@@ -31,7 +31,7 @@ if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
 cover_path = conversion(
     args.song_input, rvc_dirname, args.pitch,
     index_rate=args.index_rate, filter_radius=args.filter_radius,
-    rms_mix_rate=args.rms_mix_rate, f0_method=args.method,
+    volume_envelope=args.volume_envelope, f0_method=args.method,
     hop_length=args.hop_length, protect=args.protect,
     output_format=args.format
 )
