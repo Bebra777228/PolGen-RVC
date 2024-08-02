@@ -35,8 +35,7 @@ class AudioProcessor:
         rms2 = F.interpolate(torch.from_numpy(rms2).float().unsqueeze(0), size=target_audio.shape[0], mode="linear").squeeze()
         rms2 = torch.maximum(rms2, torch.zeros_like(rms2) + 1e-6)
 
-        adjusted_audio = target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy()
-        return adjusted_audio
+        return target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy()
 
 class VC:
     def __init__(self, tgt_sr, config):
@@ -56,11 +55,18 @@ class VC:
         self.time_step = self.window / self.sample_rate * 1000
         self.device = config.device
 
-    def get_f0_crepe(self, x, f0_min, f0_max, p_len, hop_length, model="full"):
+    def get_f0_crepe(
+        self,
+        x,
+        f0_min,
+        f0_max,
+        p_len,
+        hop_length,
+        model="full"
+    ):
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
         audio = torch.from_numpy(x).to(self.device, copy=True).unsqueeze(0)
-
         if audio.ndim == 2 and audio.shape[0] > 1:
             audio = torch.mean(audio, dim=0, keepdim=True)
 
@@ -73,25 +79,32 @@ class VC:
             model,
             batch_size=hop_length * 2,
             device=self.device,
-            pad=True,
+            pad=True
         )
 
         p_len = p_len or x.shape[0] // hop_length
         source = np.array(pitch.squeeze(0).cpu().float().numpy())
         source[source < 0.001] = np.nan
+        target = np.interp(np.arange(0, len(source) * p_len, len(source)) / p_len, np.arange(0, len(source)), source)
+        return np.nan_to_num(target)
 
-        target = np.interp(
-            np.arange(0, len(source) * p_len, len(source)) / p_len,
-            np.arange(0, len(source)),
-            source,
-        )
-        f0 = np.nan_to_num(target)
-        return f0
-
-    def get_f0(self, input_audio_path, x, p_len, pitch, f0_method, filter_radius, hop_length, inp_f0=None, f0_min=50, f0_max=1100):
+    def get_f0(
+        self,
+        input_audio_path,
+        x,
+        p_len,
+        pitch,
+        f0_method,
+        filter_radius,
+        hop_length,
+        inp_f0=None,
+        f0_min=50,
+        f0_max=1100
+    ):
         global input_audio_path2wav
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
+        
         if f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length))
 
@@ -135,19 +148,27 @@ class VC:
         f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * 254 / (f0_mel_max - f0_mel_min) + 1
         f0_mel[f0_mel <= 1] = 1
         f0_mel[f0_mel > 255] = 255
-        f0_coarse = np.rint(f0_mel).astype(int)
-
-        return f0_coarse, f0bak
+        return np.rint(f0_mel).astype(int), f0bak
 
     def get_pitch_dependant_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
         if not hasattr(self, "model_rmvpe"):
             self.model_rmvpe = RMVPE0Predictor(RMVPE_DIR, is_half=self.is_half, device=self.device)
+        return self.model_rmvpe.infer_from_audio_with_pitch(x, thred=0.03, f0_min=f0_min, f0_max=f0_max)
 
-        f0 = self.model_rmvpe.infer_from_audio_with_pitch(x, thred=0.03, f0_min=f0_min, f0_max=f0_max)   
-
-        return f0
-
-    def vc(self, model, net_g, sid, audio0, pitch, pitchf, index, big_npy, index_rate, version, protect):
+    def vc(
+        self,
+        model,
+        net_g,
+        sid,
+        audio0,
+        pitch,
+        pitchf,
+        index,
+        big_npy,
+        index_rate,
+        version,
+        protect
+    ):
         feats = torch.from_numpy(audio0)
         feats = feats.half() if self.is_half else feats.float()
         if feats.dim() == 2:
@@ -159,7 +180,7 @@ class VC:
         inputs = {
             "source": feats.to(self.device),
             "padding_mask": padding_mask,
-            "output_layer": 9 if version == "v1" else 12,
+            "output_layer": 9 if version == "v1" else 12
         }
         with torch.no_grad():
             logits = model.extract_features(**inputs)
@@ -169,12 +190,10 @@ class VC:
         if index is not None and big_npy is not None and index_rate != 0:
             npy = feats[0].cpu().numpy()
             npy = npy.astype("float32") if self.is_half else npy
-
             score, ix = index.search(npy, k=8)
             weight = np.square(1 / score)
             weight /= weight.sum(axis=1, keepdims=True)
             npy = np.sum(big_npy[ix] * np.expand_dims(weight, axis=2), axis=1)
-
             npy = npy.astype("float16") if self.is_half else npy
             feats = (torch.from_numpy(npy).unsqueeze(0).to(self.device) * index_rate + (1 - index_rate) * feats)
 
@@ -206,7 +225,29 @@ class VC:
             torch.cuda.empty_cache()
         return audio1
 
-    def pipeline(self, model, net_g, sid, audio, input_audio_path, pitch, f0_method, file_index, index_rate, pitch_guidance, filter_radius, tgt_sr, resample_sr, volume_envelope, version, protect, hop_length, f0_file, f0_min=50, f0_max=1100):
+    def pipeline(
+        self,
+        model,
+        net_g,
+        sid,
+        audio,
+        input_audio_path,
+        pitch,
+        f0_method,
+        file_index,
+        index_rate,
+        pitch_guidance,
+        filter_radius,
+        tgt_sr,
+        resample_sr,
+        volume_envelope,
+        version,
+        protect,
+        hop_length,
+        f0_file,
+        f0_min=50,
+        f0_max=1100
+    ):
         if file_index != "" and os.path.exists(file_index) and index_rate != 0:
             try:
                 index = faiss.read_index(file_index)
@@ -225,10 +266,8 @@ class VC:
                 audio_sum += audio_pad[i : i - self.window]
             for t in range(self.t_center, audio.shape[0], self.t_center):
                 opt_ts.append(
-                    t - self.t_query + np.where(
-                        np.abs(audio_sum[t - self.t_query : t + self.t_query])
-                        == np.abs(audio_sum[t - self.t_query : t + self.t_query]).min()
-                    )[0][0]
+                    t - self.t_query + np.where(np.abs(audio_sum[t - self.t_query : t + self.t_query])
+                    == np.abs(audio_sum[t - self.t_query : t + self.t_query]).min())[0][0]
                 )
         s = 0
         audio_opt = []
@@ -255,7 +294,7 @@ class VC:
                 hop_length,
                 inp_f0,
                 f0_min,
-                f0_max,
+                f0_max
             )
             pitch = pitch[:p_len]
             pitchf = pitchf[:p_len]
@@ -268,66 +307,34 @@ class VC:
             if pitch_guidance:
                 audio_opt.append(
                     self.vc(
-                        model,
-                        net_g,
-                        sid,
-                        audio_pad[s : t + self.t_pad2 + self.window],
+                        model, net_g, sid, audio_pad[s : t + self.t_pad2 + self.window],
                         pitch[:, s // self.window : (t + self.t_pad2) // self.window],
                         pitchf[:, s // self.window : (t + self.t_pad2) // self.window],
-                        index,
-                        big_npy,
-                        index_rate,
-                        version,
-                        protect,
+                        index, big_npy, index_rate, version, protect
                     )[self.t_pad_tgt : -self.t_pad_tgt]
                 )
             else:
                 audio_opt.append(
                     self.vc(
-                        model,
-                        net_g,
-                        sid,
-                        audio_pad[s : t + self.t_pad2 + self.window],
-                        None,
-                        None,
-                        index,
-                        big_npy,
-                        index_rate,
-                        version,
-                        protect,
+                        model, net_g, sid, audio_pad[s : t + self.t_pad2 + self.window],
+                        None, None, index, big_npy, index_rate, version, protect
                     )[self.t_pad_tgt : -self.t_pad_tgt]
                 )
             s = t
         if pitch_guidance:
             audio_opt.append(
                 self.vc(
-                    model,
-                    net_g,
-                    sid,
-                    audio_pad[t:],
+                    model, net_g, sid, audio_pad[t:],
                     pitch[:, t // self.window :] if t is not None else pitch,
                     pitchf[:, t // self.window :] if t is not None else pitchf,
-                    index,
-                    big_npy,
-                    index_rate,
-                    version,
-                    protect,
+                    index, big_npy, index_rate, version, protect
                 )[self.t_pad_tgt : -self.t_pad_tgt]
             )
         else:
             audio_opt.append(
                 self.vc(
-                    model,
-                    net_g,
-                    sid,
-                    audio_pad[t:],
-                    None,
-                    None,
-                    index,
-                    big_npy,
-                    index_rate,
-                    version,
-                    protect,
+                    model, net_g, sid, audio_pad[t:], None, None,
+                    index, big_npy, index_rate, version, protect
                 )[self.t_pad_tgt : -self.t_pad_tgt]
             )
         audio_opt = np.concatenate(audio_opt)
