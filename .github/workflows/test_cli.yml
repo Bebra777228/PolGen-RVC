@@ -30,6 +30,11 @@ jobs:
       run: |
         python download_models.py
 
+    - name: Install audio for test
+      run: |
+        mkdir -p audio
+        wget https://huggingface.co/Politrees/audio_for_test/resolve/main/test1.wav -O audio/test.wav
+
     - name: Install models
       run: |
         mkdir -p models/rvc_models/Tsoi
@@ -38,4 +43,4 @@ jobs:
 
     - name: Run script
       run: |
-        python CLI.py -i audio/test.mp3 -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -f "mp3"
+        python CLI.py -i audio/test.wav -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -f "mp3"
