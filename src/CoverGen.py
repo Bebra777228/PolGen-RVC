@@ -251,8 +251,6 @@ if __name__ == '__main__':
 
                 with gr.Column(scale=5):
                     with gr.Box():
-                        #with gr.Row():
-                            #back_converted = gr.Checkbox(label="Преобразовать бэки вместе с основным вокалом", value=False)
                         ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
                             ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
@@ -291,9 +289,7 @@ if __name__ == '__main__':
                                     chorus_mix, clipping_threshold, f0autotune, f0_min, f0_max,
                                     ai_cover, ai_vocals, main_vocals_dereverb, backup_vocals, instrumentals])
 
-
-#        with gr.Tab("Video-CoverGen"):
-#            gr.Label('Это на будущее, если найду силы сделать)', show_label=False)
+#        Andik иди нахуй =) - из за тебя закрою репозиторий в будущем, чтоб не копировал больше ничего
 
         with gr.Tab('Загрузка модели'):
             with gr.Tab('Загрузить по ссылке'):
