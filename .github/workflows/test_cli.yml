@@ -26,6 +26,11 @@ jobs:
         python -m pip install pip==23.0
         pip install -r requirements.txt
 
+    - name: Install ffmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
     - name: Install assets
       run: |
         python download_models.py
