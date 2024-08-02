@@ -12,10 +12,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    container:
-      image: nvidia/cuda:11.0-base
-      options: --gpus 1
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -32,8 +28,8 @@ jobs:
 
     - name: Install ffmpeg
       run: |
-        apt-get update
-        apt-get install -y ffmpeg
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
 
     - name: Install assets
       run: |
@@ -49,6 +45,11 @@ jobs:
         mkdir -p models/rvc_models/Tsoi
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
+
+    - name: Set up CUDA
+      uses: actions/setup-cuda@v1
+      with:
+        cuda-version: '11.0'
 
     - name: Run script
       run: |
