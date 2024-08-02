@@ -4,6 +4,7 @@ import os
 from src.scripts.conversion.voice_conversion import conversion
 from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
+now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
 output_dir = os.path.join(now_dir, 'song_output')
 
