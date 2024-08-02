@@ -46,11 +46,6 @@ jobs:
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
 
-    - name: Set up CUDA
-      uses: actions/setup-cuda@v1
-      with:
-        cuda-version: '11.0'
-
     - name: Run script
       run: |
         python rvc_cli.py -i audio/test.wav -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -f "mp3"
