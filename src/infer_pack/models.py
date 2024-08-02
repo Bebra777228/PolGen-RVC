@@ -1,5 +1,4 @@
 import math, pdb, os
-from time import time as ttime
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -13,8 +12,6 @@ from src.infer_pack import modules
 from src.infer_pack import attentions
 from src.infer_pack import commons
 from src.infer_pack.commons import init_weights, get_padding
-from src.infer_pack.commons import init_weights
-from src.infer_pack import commons
 
 
 class TextEncoder256(nn.Module):
