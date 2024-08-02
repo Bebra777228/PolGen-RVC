@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from voice_conversion import conversion
+from conversion.voice_conversion import conversion
 
 now_dir = os.getcwd()
 
