@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install pip==23.0
-        pip install -r requirements.txt
+        pip install -qq -r requirements.txt
 
     - name: Install ffmpeg
       run: |
@@ -65,7 +65,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install pip==23.0
-        pip install -r requirements.txt
+        pip install -qq -r requirements.txt
 
     - name: Install ffmpeg
       run: |
