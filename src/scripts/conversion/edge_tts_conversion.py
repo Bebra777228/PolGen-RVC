@@ -70,7 +70,7 @@ async def text_to_speech(text, voice, output_path):
         logging.error(f"Ошибка при преобразовании текста в речь: {e}")
         raise
 
-def tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
+def edge_tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
                    hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0_min=50, f0_max=1100):
     try:
         if not text or not voice_model or not voice:
