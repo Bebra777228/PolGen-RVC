@@ -70,7 +70,7 @@ async def text_to_speech(text, voice, output_path):
         logging.error(f"Ошибка при преобразовании текста в речь: {e}")
         raise
 
-def edge_tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
+def tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
                    hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0_min=50, f0_max=1100):
     try:
         if not text or not voice_model or not voice:
@@ -79,7 +79,7 @@ def edge_tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, 
 
         display_progress(0, '[~] Запуск конвейера генерации TTS...', progress)
 
-        tts_voice_path = os.path.join(OUTPUT_DIR, f'Edge_TTS_Output.wav')
+        tts_voice_path = os.path.join(OUTPUT_DIR, f'TTS_Output.wav')
         asyncio.run(text_to_speech(text, voice, tts_voice_path))
 
         display_progress(0.5, '[~] Преобразование голоса...', progress)
@@ -87,7 +87,7 @@ def edge_tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, 
         voice_change(voice_model, tts_voice_path, final_output_path, pitch_change, f0_method, index_rate,
                      filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max)
 
-        return final_output_path
+        return final_output_path, tts_voice_path
     except Exception as e:
         logging.error(f"Ошибка в процессе конвертации: {e}")
         raise
