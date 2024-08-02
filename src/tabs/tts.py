@@ -16,14 +16,17 @@ voice_models = get_folders(rvc_models_dir)
 
 def edge_tts_tab():
     with gr.Row(equal_height=False):
-        with gr.Column(variant='panel'):
+        with gr.Column(variant='panel', scale=1):
             with gr.Group():
                 rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
                 ref_btn = gr.Button('Обновить список моделей', variant='primary')
             with gr.Group():
                 pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
 
-        with gr.Column(variant='panel'):
+        with gr.Column(variant='panel', scale=2):
+            tts_voice = gr.Audio(label='TTS голос')
+        
+        with gr.Column(variant='panel', scale=1):
             with gr.Group():
                 language = gr.Dropdown(list(edge_voices.keys()), label='Язык')
                 voice = gr.Dropdown([], label='Голос')
@@ -67,4 +70,4 @@ def edge_tts_tab():
                         text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
                         f0_method, hop_length, protect, output_format, f0_min, f0_max
                         ],
-                      outputs=[converted_tts_voice])
+                      outputs=[converted_tts_voice, tts_voice])
