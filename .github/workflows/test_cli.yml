@@ -43,4 +43,4 @@ jobs:
 
     - name: Run script
       run: |
-        python CLI.py -i audio/test.wav -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -f "mp3"
+        python rvc_cli.py -i audio/test.wav -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -f "mp3"
