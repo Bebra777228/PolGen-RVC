@@ -17,7 +17,7 @@ from src.infer_pack.commons import init_weights, get_padding, sequence_mask, ran
 class TextEncoder(nn.Module):
     def __init__(
         self,
-        input_dim
+        input_dim,
         out_channels,
         hidden_channels,
         filter_channels,
