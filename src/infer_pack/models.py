@@ -17,7 +17,13 @@ from src.infer_pack.commons import init_weights, get_padding, sequence_mask, ran
 class TextEncoder(nn.Module):
     def __init__(self, input_dim, out_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, p_dropout, f0=True):
         super().__init__()
+        self.out_channels = out_channels
         self.hidden_channels = hidden_channels
+        self.filter_channels = filter_channels
+        self.n_heads = n_heads
+        self.n_layers = n_layers
+        self.kernel_size = kernel_size
+        self.p_dropout = p_dropout
         self.emb_phone = nn.Linear(input_dim, hidden_channels)
         self.lrelu = nn.LeakyReLU(0.1, inplace=True)
         self.emb_pitch = nn.Embedding(256, hidden_channels) if f0 else None
@@ -39,7 +45,17 @@ class TextEncoder(nn.Module):
 class ResidualCouplingBlock(nn.Module):
     def __init__(self, channels, hidden_channels, kernel_size, dilation_rate, n_layers, n_flows=4, gin_channels=0):
         super().__init__()
-        self.flows = nn.ModuleList([ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True), Flip()] * n_flows)
+        self.channels = channels
+        self.hidden_channels = hidden_channels
+        self.kernel_size = kernel_size
+        self.dilation_rate = dilation_rate
+        self.n_layers = n_layers
+        self.n_flows = n_flows
+        self.gin_channels = gin_channels
+        self.flows = nn.ModuleList()
+        for i in range(n_flows):
+            self.flows.append(ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+            self.flows.append(Flip())
 
     def forward(self, x, x_mask, g=None, reverse=False):
         flows = reversed(self.flows) if reverse else self.flows
@@ -55,6 +71,13 @@ class ResidualCouplingBlock(nn.Module):
 class PosteriorEncoder(nn.Module):
     def __init__(self, in_channels, out_channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=0):
         super().__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.hidden_channels = hidden_channels
+        self.kernel_size = kernel_size
+        self.dilation_rate = dilation_rate
+        self.n_layers = n_layers
+        self.gin_channels = gin_channels
         self.pre = nn.Conv1d(in_channels, hidden_channels, 1)
         self.enc = WN(hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels)
         self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
@@ -72,37 +95,45 @@ class PosteriorEncoder(nn.Module):
         self.enc.remove_weight_norm()
 
 
-class Generator(nn.Module):
+class Generator(torch.nn.Module):
     def __init__(self, initial_channel, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=0):
-        super().__init__()
+        super(Generator, self).__init__()
         self.num_kernels = len(resblock_kernel_sizes)
         self.num_upsamples = len(upsample_rates)
         self.conv_pre = Conv1d(initial_channel, upsample_initial_channel, 7, 1, padding=3)
         resblock = ResBlock1 if resblock == "1" else ResBlock2
 
         self.ups = nn.ModuleList()
-        self.resblocks = nn.ModuleList()
         for i, (u, k) in enumerate(zip(upsample_rates, upsample_kernel_sizes)):
             self.ups.append(weight_norm(ConvTranspose1d(upsample_initial_channel // (2**i), upsample_initial_channel // (2 ** (i + 1)), k, u, padding=(k - u) // 2)))
+
+        self.resblocks = nn.ModuleList()
+        for i in range(len(self.ups)):
             ch = upsample_initial_channel // (2 ** (i + 1))
-            self.resblocks.extend([resblock(ch, rk, rd) for rk, rd in zip(resblock_kernel_sizes, resblock_dilation_sizes)])
+            for j, (k, d) in enumerate(zip(resblock_kernel_sizes, resblock_dilation_sizes)):
+                self.resblocks.append(resblock(ch, k, d))
 
         self.conv_post = Conv1d(ch, 1, 7, 1, padding=3, bias=False)
         self.ups.apply(init_weights)
+
         if gin_channels:
             self.cond = nn.Conv1d(gin_channels, upsample_initial_channel, 1)
 
     def forward(self, x, g=None):
         x = self.conv_pre(x)
         if g is not None:
-            x += self.cond(g)
+            x = x + self.cond(g)
 
         for i in range(self.num_upsamples):
             x = F.leaky_relu(x, 0.1)
             x = self.ups[i](x)
-            xs = sum([self.resblocks[i * self.num_kernels + j](x) for j in range(self.num_kernels)]) / self.num_kernels
-            x = xs
-
+            xs = None
+            for j in range(self.num_kernels):
+                if xs is None:
+                    xs = self.resblocks[i * self.num_kernels + j](x)
+                else:
+                    xs += self.resblocks[i * self.num_kernels + j](x)
+            x = xs / self.num_kernels
         x = F.leaky_relu(x)
         x = self.conv_post(x)
         return torch.tanh(x)
@@ -114,9 +145,9 @@ class Generator(nn.Module):
             l.remove_weight_norm()
 
 
-class SineGen(nn.Module):
+class SineGen(torch.nn.Module):
     def __init__(self, samp_rate, harmonic_num=0, sine_amp=0.1, noise_std=0.003, voiced_threshold=0, flag_for_pulse=False):
-        super().__init__()
+        super(SineGen, self).__init__()
         self.sine_amp = sine_amp
         self.noise_std = noise_std
         self.harmonic_num = harmonic_num
@@ -125,29 +156,31 @@ class SineGen(nn.Module):
         self.voiced_threshold = voiced_threshold
 
     def _f02uv(self, f0):
-        return (f0 > self.voiced_threshold).float()
+        uv = torch.ones_like(f0)
+        uv = uv * (f0 > self.voiced_threshold)
+        if uv.device.type == "privateuseone":
+            uv = uv.float()
+        return uv
 
     def forward(self, f0, upp):
         with torch.no_grad():
             f0 = f0[:, None].transpose(1, 2)
             f0_buf = torch.zeros(f0.shape[0], f0.shape[1], self.dim, device=f0.device)
             f0_buf[:, :, 0] = f0[:, :, 0]
-            for idx in range(self.harmonic_num):
+            for idx in np.arange(self.harmonic_num):
                 f0_buf[:, :, idx + 1] = f0_buf[:, :, 0] * (idx + 2)
-
             rad_values = (f0_buf / self.sampling_rate) % 1
             rand_ini = torch.rand(f0_buf.shape[0], f0_buf.shape[2], device=f0_buf.device)
             rand_ini[:, 0] = 0
-            rad_values[:, 0, :] += rand_ini
-            tmp_over_one = torch.cumsum(rad_values, 1) * upp
+            rad_values[:, 0, :] = rad_values[:, 0, :] + rand_ini
+            tmp_over_one = torch.cumsum(rad_values, 1)
+            tmp_over_one *= upp
             tmp_over_one = F.interpolate(tmp_over_one.transpose(2, 1), scale_factor=upp, mode="linear", align_corners=True).transpose(2, 1)
             rad_values = F.interpolate(rad_values.transpose(2, 1), scale_factor=upp, mode="nearest").transpose(2, 1)
             tmp_over_one %= 1
-
             tmp_over_one_idx = (tmp_over_one[:, 1:, :] - tmp_over_one[:, :-1, :]) < 0
             cumsum_shift = torch.zeros_like(rad_values)
             cumsum_shift[:, 1:, :] = tmp_over_one_idx * -1.0
-
             sine_waves = torch.sin(torch.cumsum(rad_values + cumsum_shift, dim=1) * 2 * np.pi) * self.sine_amp
             uv = self._f02uv(f0)
             uv = F.interpolate(uv.transpose(2, 1), scale_factor=upp, mode="nearest").transpose(2, 1)
@@ -157,45 +190,59 @@ class SineGen(nn.Module):
         return sine_waves, uv, noise
 
 
-class SourceModuleHnNSF(nn.Module):
+class SourceModuleHnNSF(torch.nn.Module):
     def __init__(self, sampling_rate, harmonic_num=0, sine_amp=0.1, add_noise_std=0.003, voiced_threshod=0, is_half=True):
-        super().__init__()
+        super(SourceModuleHnNSF, self).__init__()
+
+        self.sine_amp = sine_amp
+        self.noise_std = add_noise_std
+        self.is_half = is_half
         self.l_sin_gen = SineGen(sampling_rate, harmonic_num, sine_amp, add_noise_std, voiced_threshod)
-        self.l_linear = nn.Linear(harmonic_num + 1, 1)
-        self.l_tanh = nn.Tanh()
+        self.l_linear = torch.nn.Linear(harmonic_num + 1, 1)
+        self.l_tanh = torch.nn.Tanh()
 
     def forward(self, x, upp=None):
+        if hasattr(self, "ddtype") == False:
+            self.ddtype = self.l_linear.weight.dtype
         sine_wavs, uv, _ = self.l_sin_gen(x, upp)
-        sine_wavs = sine_wavs.to(self.l_linear.weight.dtype)
+        if sine_wavs.dtype != self.ddtype:
+            sine_wavs = sine_wavs.to(self.ddtype)
         sine_merge = self.l_tanh(self.l_linear(sine_wavs))
         return sine_merge, None, None
 
 
-class GeneratorNSF(nn.Module):
+class GeneratorNSF(torch.nn.Module):
     def __init__(self, initial_channel, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels, sr, is_half=False):
-        super().__init__()
+        super(GeneratorNSF, self).__init__()
         self.num_kernels = len(resblock_kernel_sizes)
         self.num_upsamples = len(upsample_rates)
-        self.f0_upsamp = nn.Upsample(scale_factor=np.prod(upsample_rates))
+        self.f0_upsamp = torch.nn.Upsample(scale_factor=np.prod(upsample_rates))
         self.m_source = SourceModuleHnNSF(sampling_rate=sr, harmonic_num=0, is_half=is_half)
         self.noise_convs = nn.ModuleList()
         self.conv_pre = Conv1d(initial_channel, upsample_initial_channel, 7, 1, padding=3)
         resblock = ResBlock1 if resblock == "1" else ResBlock2
-
         self.ups = nn.ModuleList()
-        self.resblocks = nn.ModuleList()
         for i, (u, k) in enumerate(zip(upsample_rates, upsample_kernel_sizes)):
             c_cur = upsample_initial_channel // (2 ** (i + 1))
             self.ups.append(weight_norm(ConvTranspose1d(upsample_initial_channel // (2**i), upsample_initial_channel // (2 ** (i + 1)), k, u, padding=(k - u) // 2)))
-            stride_f0 = np.prod(upsample_rates[i + 1 :]) if i + 1 < len(upsample_rates) else 1
-            self.noise_convs.append(Conv1d(1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
+            if i + 1 < len(upsample_rates):
+                stride_f0 = np.prod(upsample_rates[i + 1 :])
+                self.noise_convs.append(Conv1d(1, c_cur, kernel_size=stride_f0 * 2, stride=stride_f0, padding=stride_f0 // 2))
+            else:
+                self.noise_convs.append(Conv1d(1, c_cur, kernel_size=1))
+
+        self.resblocks = nn.ModuleList()
+        for i in range(len(self.ups)):
             ch = upsample_initial_channel // (2 ** (i + 1))
-            self.resblocks.extend([resblock(ch, rk, rd) for rk, rd in zip(resblock_kernel_sizes, resblock_dilation_sizes)])
+            for j, (k, d) in enumerate(zip(resblock_kernel_sizes, resblock_dilation_sizes)):
+                self.resblocks.append(resblock(ch, k, d))
 
         self.conv_post = Conv1d(ch, 1, 7, 1, padding=3, bias=False)
         self.ups.apply(init_weights)
+
         if gin_channels:
             self.cond = nn.Conv1d(gin_channels, upsample_initial_channel, 1)
+
         self.upp = np.prod(upsample_rates)
 
     def forward(self, x, f0, g=None):
@@ -203,16 +250,20 @@ class GeneratorNSF(nn.Module):
         har_source = har_source.transpose(1, 2)
         x = self.conv_pre(x)
         if g is not None:
-            x += self.cond(g)
+            x = x + self.cond(g)
 
         for i in range(self.num_upsamples):
             x = F.leaky_relu(x, 0.1)
             x = self.ups[i](x)
             x_source = self.noise_convs[i](har_source)
-            x += x_source
-            xs = sum([self.resblocks[i * self.num_kernels + j](x) for j in range(self.num_kernels)]) / self.num_kernels
-            x = xs
-
+            x = x + x_source
+            xs = None
+            for j in range(self.num_kernels):
+                if xs is None:
+                    xs = self.resblocks[i * self.num_kernels + j](x)
+                else:
+                    xs += self.resblocks[i * self.num_kernels + j](x)
+            x = xs / self.num_kernels
         x = F.leaky_relu(x)
         x = self.conv_post(x)
         return torch.tanh(x)
@@ -227,7 +278,7 @@ class GeneratorNSF(nn.Module):
 sr2sr = {
     "32k": 32000,
     "40k": 40000,
-    "48k": 48000,
+    "48k": 48000
 }
 
 
@@ -235,11 +286,29 @@ class Synthesizer(nn.Module):
     def __init__(self, input_dim, spec_channels, segment_size, inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, p_dropout, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, spk_embed_dim, gin_channels, sr, **kwargs):
         super().__init__()
         sr = sr2sr[sr] if isinstance(sr, str) else sr
+        self.spec_channels = spec_channels
+        self.inter_channels = inter_channels
+        self.hidden_channels = hidden_channels
+        self.filter_channels = filter_channels
+        self.n_heads = n_heads
+        self.n_layers = n_layers
+        self.kernel_size = kernel_size
+        self.p_dropout = p_dropout
+        self.resblock = resblock
+        self.resblock_kernel_sizes = resblock_kernel_sizes
+        self.resblock_dilation_sizes = resblock_dilation_sizes
+        self.upsample_rates = upsample_rates
+        self.upsample_initial_channel = upsample_initial_channel
+        self.upsample_kernel_sizes = upsample_kernel_sizes
+        self.segment_size = segment_size
+        self.gin_channels = gin_channels
+        self.spk_embed_dim = spk_embed_dim
         self.enc_p = TextEncoder(input_dim, inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, p_dropout)
         self.dec = GeneratorNSF(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels, sr=sr, is_half=kwargs["is_half"])
         self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
         self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 3, gin_channels=gin_channels)
-        self.emb_g = nn.Embedding(spk_embed_dim, gin_channels)
+        self.emb_g = nn.Embedding(self.spk_embed_dim, gin_channels)
+        
 
     def remove_weight_norm(self):
         self.dec.remove_weight_norm()
@@ -273,11 +342,29 @@ class Synthesizer(nn.Module):
 class Synthesizer_nono(nn.Module):
     def __init__(self, input_dim, spec_channels, segment_size, inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, p_dropout, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, spk_embed_dim, gin_channels, sr=None, **kwargs):
         super().__init__()
+        self.spec_channels = spec_channels
+        self.inter_channels = inter_channels
+        self.hidden_channels = hidden_channels
+        self.filter_channels = filter_channels
+        self.n_heads = n_heads
+        self.n_layers = n_layers
+        self.kernel_size = kernel_size
+        self.p_dropout = p_dropout
+        self.resblock = resblock
+        self.resblock_kernel_sizes = resblock_kernel_sizes
+        self.resblock_dilation_sizes = resblock_dilation_sizes
+        self.upsample_rates = upsample_rates
+        self.upsample_initial_channel = upsample_initial_channel
+        self.upsample_kernel_sizes = upsample_kernel_sizes
+        self.segment_size = segment_size
+        self.gin_channels = gin_channels
+        self.spk_embed_dim = spk_embed_dim
         self.enc_p = TextEncoder(input_dim, inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, p_dropout, f0=False)
         self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
         self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
         self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 3, gin_channels=gin_channels)
-        self.emb_g = nn.Embedding(spk_embed_dim, gin_channels)
+        self.emb_g = nn.Embedding(self.spk_embed_dim, gin_channels)
+        
 
     def remove_weight_norm(self):
         self.dec.remove_weight_norm()
@@ -306,17 +393,21 @@ class Synthesizer_nono(nn.Module):
         return o, x_mask, (z, z_p, m_p, logs_p)
 
 
-class MultiPeriodDiscriminator(nn.Module):
+class MultiPeriodDiscriminator(torch.nn.Module):
     def __init__(self, use_spectral_norm=False):
-        super().__init__()
+        super(MultiPeriodDiscriminator, self).__init__()
         periods = [2, 3, 5, 7, 11, 17]
+
         discs = [DiscriminatorS(use_spectral_norm=use_spectral_norm)]
-        discs += [DiscriminatorP(p, use_spectral_norm=use_spectral_norm) for p in periods]
+        discs = discs + [DiscriminatorP(i, use_spectral_norm=use_spectral_norm) for i in periods]
         self.discriminators = nn.ModuleList(discs)
 
     def forward(self, y, y_hat):
-        y_d_rs, y_d_gs, fmap_rs, fmap_gs = [], [], [], []
-        for d in self.discriminators:
+        y_d_rs = []
+        y_d_gs = []
+        fmap_rs = []
+        fmap_gs = []
+        for i, d in enumerate(self.discriminators):
             y_d_r, fmap_r = d(y)
             y_d_g, fmap_g = d(y_hat)
             y_d_rs.append(y_d_r)
@@ -326,17 +417,21 @@ class MultiPeriodDiscriminator(nn.Module):
         return y_d_rs, y_d_gs, fmap_rs, fmap_gs
 
 
-class MultiPeriodDiscriminatorV2(nn.Module):
+class MultiPeriodDiscriminatorV2(torch.nn.Module):
     def __init__(self, use_spectral_norm=False):
-        super().__init__()
+        super(MultiPeriodDiscriminatorV2, self).__init__()
         periods = [2, 3, 5, 7, 11, 17, 23, 37]
+
         discs = [DiscriminatorS(use_spectral_norm=use_spectral_norm)]
-        discs += [DiscriminatorP(p, use_spectral_norm=use_spectral_norm) for p in periods]
+        discs = discs + [DiscriminatorP(i, use_spectral_norm=use_spectral_norm) for i in periods]
         self.discriminators = nn.ModuleList(discs)
 
     def forward(self, y, y_hat):
-        y_d_rs, y_d_gs, fmap_rs, fmap_gs = [], [], [], []
-        for d in self.discriminators:
+        y_d_rs = []
+        y_d_gs = []
+        fmap_rs = []
+        fmap_gs = []
+        for i, d in enumerate(self.discriminators):
             y_d_r, fmap_r = d(y)
             y_d_g, fmap_g = d(y_hat)
             y_d_rs.append(y_d_r)
@@ -346,9 +441,9 @@ class MultiPeriodDiscriminatorV2(nn.Module):
         return y_d_rs, y_d_gs, fmap_rs, fmap_gs
 
 
-class DiscriminatorS(nn.Module):
+class DiscriminatorS(torch.nn.Module):
     def __init__(self, use_spectral_norm=False):
-        super().__init__()
+        super(DiscriminatorS, self).__init__()
         norm_f = weight_norm if not use_spectral_norm else spectral_norm
         self.convs = nn.ModuleList([
             norm_f(Conv1d(1, 16, 15, 1, padding=7)),
@@ -370,10 +465,9 @@ class DiscriminatorS(nn.Module):
         x = torch.flatten(x, 1, -1)
         return x, fmap
 
-
-class DiscriminatorP(nn.Module):
+class DiscriminatorP(torch.nn.Module):
     def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
-        super().__init__()
+        super(DiscriminatorP, self).__init__()
         self.period = period
         norm_f = weight_norm if not use_spectral_norm else spectral_norm
         self.convs = nn.ModuleList([
@@ -400,4 +494,3 @@ class DiscriminatorP(nn.Module):
         fmap.append(x)
         x = torch.flatten(x, 1, -1)
         return x, fmap
-
