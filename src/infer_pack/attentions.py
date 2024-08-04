@@ -9,7 +9,6 @@ now_dir = os.getcwd()
 from src.infer_pack import commons
 from src.infer_pack.modules import LayerNorm
 
-
 def init_layer_list(num_layers, layer_fn, *args, **kwargs):
     return nn.ModuleList([layer_fn(*args, **kwargs) for _ in range(num_layers)])
 
@@ -19,7 +18,7 @@ class Encoder(nn.Module):
         super().__init__()
         self.hidden_channels = hidden_channels
         self.drop = nn.Dropout(p_dropout)
-        
+
         self.attn_layers = init_layer_list(n_layers, MultiHeadAttention, hidden_channels, hidden_channels, n_heads, p_dropout, window_size)
         self.norm_layers_1 = init_layer_list(n_layers, LayerNorm, hidden_channels)
         self.ffn_layers = init_layer_list(n_layers, FFN, hidden_channels, hidden_channels, filter_channels, kernel_size, p_dropout)
@@ -41,7 +40,7 @@ class Decoder(nn.Module):
         super().__init__()
         self.hidden_channels = hidden_channels
         self.drop = nn.Dropout(p_dropout)
-        
+
         self.self_attn_layers = init_layer_list(n_layers, MultiHeadAttention, hidden_channels, hidden_channels, n_heads, p_dropout, None, True, None, proximal_bias, proximal_init)
         self.norm_layers_0 = init_layer_list(n_layers, LayerNorm, hidden_channels)
         self.encdec_attn_layers = init_layer_list(n_layers, MultiHeadAttention, hidden_channels, hidden_channels, n_heads, p_dropout)
