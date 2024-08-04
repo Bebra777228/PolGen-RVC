@@ -24,7 +24,7 @@ class TextEncoder256(nn.Module):
         n_layers,
         kernel_size,
         p_dropout,
-        f0=True,
+        f0=True
     ):
         super().__init__()
         self.out_channels = out_channels
@@ -67,7 +67,7 @@ class TextEncoder768(nn.Module):
         n_layers,
         kernel_size,
         p_dropout,
-        f0=True,
+        f0=True
     ):
         super().__init__()
         self.out_channels = out_channels
@@ -109,7 +109,7 @@ class ResidualCouplingBlock(nn.Module):
         dilation_rate,
         n_layers,
         n_flows=4,
-        gin_channels=0,
+        gin_channels=0
     ):
         super().__init__()
         self.channels = channels
@@ -148,7 +148,7 @@ class PosteriorEncoder(nn.Module):
         kernel_size,
         dilation_rate,
         n_layers,
-        gin_channels=0,
+        gin_channels=0
     ):
         super().__init__()
         self.in_channels = in_channels
@@ -186,7 +186,7 @@ class Generator(nn.Module):
         upsample_rates,
         upsample_initial_channel,
         upsample_kernel_sizes,
-        gin_channels=0,
+        gin_channels=0
     ):
         super().__init__()
         self.num_kernels = len(resblock_kernel_sizes)
@@ -246,7 +246,7 @@ class SineGen(nn.Module):
         sine_amp=0.1,
         noise_std=0.003,
         voiced_threshold=0,
-        flag_for_pulse=False,
+        flag_for_pulse=False
     ):
         super().__init__()
         self.sine_amp = sine_amp
@@ -300,7 +300,7 @@ class SourceModuleHnNSF(nn.Module):
         sine_amp=0.1,
         add_noise_std=0.003,
         voiced_threshod=0,
-        is_half=True,
+        is_half=True
     ):
         super().__init__()
 
@@ -334,7 +334,7 @@ class GeneratorNSF(nn.Module):
         upsample_kernel_sizes,
         gin_channels,
         sr,
-        is_half=False,
+        is_half=False
     ):
         super().__init__()
         self.num_kernels = len(resblock_kernel_sizes)
@@ -404,7 +404,7 @@ class GeneratorNSF(nn.Module):
 sr2sr = {
     "32k": 32000,
     "40k": 40000,
-    "48k": 48000,
+    "48k": 48000
 }
 
 
@@ -773,7 +773,7 @@ class DiscriminatorS(nn.Module):
                 norm_f(Conv1d(64, 256, 41, 4, groups=16, padding=20)),
                 norm_f(Conv1d(256, 1024, 41, 4, groups=64, padding=20)),
                 norm_f(Conv1d(1024, 1024, 41, 4, groups=256, padding=20)),
-                norm_f(Conv1d(1024, 1024, 5, 1, padding=2)),
+                norm_f(Conv1d(1024, 1024, 5, 1, padding=2))
             ]
         )
         self.conv_post = norm_f(Conv1d(1024, 1, 3, 1, padding=1))
@@ -802,7 +802,7 @@ class DiscriminatorP(nn.Module):
             norm_f(Conv2d(32, 128, (kernel_size, 1), (stride, 1), padding=(get_padding(kernel_size, 1), 0))),
             norm_f(Conv2d(128, 512, (kernel_size, 1), (stride, 1), padding=(get_padding(kernel_size, 1), 0))),
             norm_f(Conv2d(512, 1024, (kernel_size, 1), (stride, 1), padding=(get_padding(kernel_size, 1), 0))),
-            norm_f(Conv2d(1024, 1024, (kernel_size, 1), 1, padding=(get_padding(kernel_size, 1), 0))),
+            norm_f(Conv2d(1024, 1024, (kernel_size, 1), 1, padding=(get_padding(kernel_size, 1), 0)))
         ])
         self.conv_post = norm_f(Conv2d(1024, 1, (3, 1), 1, padding=(1, 0)))
 
