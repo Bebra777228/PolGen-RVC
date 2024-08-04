@@ -1,59 +1,41 @@
 import math
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
 
-
 def init_weights(m, mean=0.0, std=0.01):
-    classname = m.__class__.__name__
-    if classname.find("Conv") != -1:
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Conv1d):
         m.weight.data.normal_(mean, std)
 
-
 def get_padding(kernel_size, dilation=1):
-    return int((kernel_size * dilation - dilation) / 2)
-
+    return (kernel_size * dilation - dilation) // 2
 
 def convert_pad_shape(pad_shape):
-    l = pad_shape[::-1]
-    pad_shape = [item for sublist in l for item in sublist]
-    return pad_shape
-
+    return [item for sublist in pad_shape[::-1] for item in sublist]
 
 def kl_divergence(m_p, logs_p, m_q, logs_q):
     kl = (logs_q - logs_p) - 0.5
     kl += (0.5 * (torch.exp(2.0 * logs_p) + ((m_p - m_q) ** 2)) * torch.exp(-2.0 * logs_q))
     return kl
 
-
 def rand_gumbel(shape):
     uniform_samples = torch.rand(shape) * 0.99998 + 0.00001
     return -torch.log(-torch.log(uniform_samples))
 
-
 def rand_gumbel_like(x):
-    g = rand_gumbel(x.size()).to(dtype=x.dtype, device=x.device)
-    return g
-
+    return rand_gumbel(x.size()).to(dtype=x.dtype, device=x.device)
 
 def slice_segments(x, ids_str, segment_size=4):
     ret = torch.zeros_like(x[:, :, :segment_size])
     for i in range(x.size(0)):
-        idx_str = ids_str[i]
-        idx_end = idx_str + segment_size
-        ret[i] = x[i, :, idx_str:idx_end]
+        ret[i] = x[i, :, ids_str[i]:ids_str[i] + segment_size]
     return ret
-
 
 def slice_segments2(x, ids_str, segment_size=4):
     ret = torch.zeros_like(x[:, :segment_size])
     for i in range(x.size(0)):
-        idx_str = ids_str[i]
-        idx_end = idx_str + segment_size
-        ret[i] = x[i, idx_str:idx_end]
+        ret[i] = x[i, ids_str[i]:ids_str[i] + segment_size]
     return ret
-
 
 def rand_slice_segments(x, x_lengths=None, segment_size=4):
     b, d, t = x.size()
@@ -63,7 +45,6 @@ def rand_slice_segments(x, x_lengths=None, segment_size=4):
     ids_str = (torch.rand([b]).to(device=x.device) * ids_str_max).to(dtype=torch.long)
     ret = slice_segments(x, ids_str, segment_size)
     return ret, ids_str
-
 
 def get_timing_signal_1d(length, channels, min_timescale=1.0, max_timescale=1.0e4):
     position = torch.arange(length, dtype=torch.float)
@@ -76,23 +57,18 @@ def get_timing_signal_1d(length, channels, min_timescale=1.0, max_timescale=1.0e
     signal = signal.view(1, channels, length)
     return signal
 
-
 def add_timing_signal_1d(x, min_timescale=1.0, max_timescale=1.0e4):
     b, channels, length = x.size()
     signal = get_timing_signal_1d(length, channels, min_timescale, max_timescale)
     return x + signal.to(dtype=x.dtype, device=x.device)
-
 
 def cat_timing_signal_1d(x, min_timescale=1.0, max_timescale=1.0e4, axis=1):
     b, channels, length = x.size()
     signal = get_timing_signal_1d(length, channels, min_timescale, max_timescale)
     return torch.cat([x, signal.to(dtype=x.dtype, device=x.device)], axis)
 
-
 def subsequent_mask(length):
-    mask = torch.tril(torch.ones(length, length)).unsqueeze(0).unsqueeze(0)
-    return mask
-
+    return torch.tril(torch.ones(length, length)).unsqueeze(0).unsqueeze(0)
 
 @torch.jit.script
 def fused_add_tanh_sigmoid_multiply(input_a, input_b, n_channels):
@@ -103,24 +79,14 @@ def fused_add_tanh_sigmoid_multiply(input_a, input_b, n_channels):
     acts = t_act * s_act
     return acts
 
-
-def convert_pad_shape(pad_shape):
-    l = pad_shape[::-1]
-    pad_shape = [item for sublist in l for item in sublist]
-    return pad_shape
-
-
 def shift_1d(x):
-    x = F.pad(x, convert_pad_shape([[0, 0], [0, 0], [1, 0]]))[:, :, :-1]
-    return x
-
+    return F.pad(x, convert_pad_shape([[0, 0], [0, 0], [1, 0]]))[:, :, :-1]
 
 def sequence_mask(length, max_length=None):
     if max_length is None:
         max_length = length.max()
     x = torch.arange(max_length, dtype=length.dtype, device=length.device)
     return x.unsqueeze(0) < length.unsqueeze(1)
-
 
 def generate_path(duration, mask):
     device = duration.device
@@ -134,7 +100,6 @@ def generate_path(duration, mask):
     path = path - F.pad(path, convert_pad_shape([[0, 0], [1, 0], [0, 0]]))[:, :-1]
     path = path.unsqueeze(1).transpose(2, 3) * mask
     return path
-
 
 def clip_grad_value_(parameters, clip_value, norm_type=2):
     if isinstance(parameters, torch.Tensor):
