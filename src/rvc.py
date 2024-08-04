@@ -8,12 +8,7 @@ from scipy.io import wavfile
 
 now_dir = Path(os.getcwd())
 
-from src.infer_pack.models import (
-    SynthesizerTrnMs256NSFsid,
-    SynthesizerTrnMs256NSFsid_nono,
-    SynthesizerTrnMs768NSFsid,
-    SynthesizerTrnMs768NSFsid_nono,
-)
+from src.infer_pack.models import Synthesizer, Synthesizer_nono
 from src.my_utils import load_audio
 from src.vc_infer_pipeline import VC
 
@@ -97,10 +92,12 @@ def get_vc(device, is_half, config, model_path):
     pitch_guidance = cpt.get("f0", 1)
     version = cpt.get("version", "v1")
 
+    input_dim = 256 if version == "v1" else 768
+    
     if version == "v1":
-        net_g = SynthesizerTrnMs256NSFsid(*cpt["config"], is_half=is_half) if pitch_guidance == 1 else SynthesizerTrnMs256NSFsid_nono(*cpt["config"])
-    elif version == "v2":
-        net_g = SynthesizerTrnMs768NSFsid(*cpt["config"], is_half=is_half) if pitch_guidance == 1 else SynthesizerTrnMs768NSFsid_nono(*cpt["config"])
+        net_g = Synthesizer(input_dim, *cpt["config"], is_half=is_half, f0=pitch_guidance == 1) if pitch_guidance == 1 else Synthesizer_nono(input_dim, *cpt["config"])
+    else:
+        net_g = Synthesizer(input_dim, *cpt["config"], is_half=is_half, f0=pitch_guidance == 1) if pitch_guidance == 1 else Synthesizer_nono(input_dim, *cpt["config"])
 
     del net_g.enc_q
     logger.info(net_g.load_state_dict(cpt["weight"], strict=False))
