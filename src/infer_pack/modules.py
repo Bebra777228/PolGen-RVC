@@ -7,13 +7,12 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d
+from torch.nn import Conv1d
 from torch.nn.utils import weight_norm, remove_weight_norm
 
 now_dir = os.getcwd()
 
-from src.infer_pack import commons
-from src.infer_pack.commons import init_weights, get_padding
+from src.infer_pack.commons import fused_add_tanh_sigmoid_multiply, init_weights, get_padding
 from src.infer_pack.transforms import piecewise_rational_quadratic_transform
 
 
@@ -170,7 +169,7 @@ class WN(torch.nn.Module):
             else:
                 g_l = torch.zeros_like(x_in)
 
-            acts = commons.fused_add_tanh_sigmoid_multiply(x_in, g_l, n_channels_tensor)
+            acts = fused_add_tanh_sigmoid_multiply(x_in, g_l, n_channels_tensor)
             acts = self.drop(acts)
 
             res_skip_acts = self.res_skip_layers[i](acts)
