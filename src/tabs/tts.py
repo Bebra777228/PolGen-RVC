@@ -22,6 +22,7 @@ def edge_tts_tab():
                 ref_btn = gr.Button('Обновить список моделей', variant='primary')
             with gr.Group():
                 pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
+                f0autotune = gr.Checkbox(label="Автотюн", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
 
         with gr.Column(variant='panel', scale=3):
             tts_voice = gr.Audio(label='TTS голос')
@@ -68,6 +69,6 @@ def edge_tts_tab():
     generate_btn.click(tts_conversion, 
                       inputs=[
                         text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
-                        f0_method, hop_length, protect, output_format, f0_min, f0_max
+                        f0_method, hop_length, protect, output_format, f0autotune, f0_min, f0_max
                         ],
                       outputs=[converted_tts_voice, tts_voice])
