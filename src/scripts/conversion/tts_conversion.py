@@ -44,7 +44,7 @@ def convert_to_stereo(audio_path):
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
-def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max):
+def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0autotune, f0_min, f0_max):
     try:
         rvc_model_path, rvc_index_path = get_rvc_model(voice_model)
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -53,7 +53,7 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
         cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
         rvc_infer(rvc_index_path, index_rate, vocals_path, output_path, pitch_change, f0_method, cpt, version, net_g,
-                  filter_radius, tgt_sr, volume_envelope, protect, hop_length, vc, hubert_model, f0_min, f0_max)
+                  filter_radius, tgt_sr, volume_envelope, protect, hop_length, vc, hubert_model, f0autotune, f0_min, f0_max)
 
         del hubert_model, cpt, net_g, vc
         gc.collect()
@@ -71,7 +71,7 @@ async def text_to_speech(text, voice, output_path):
         raise
 
 def tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
-                   hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0_min=50, f0_max=1100):
+                   hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0autotune=False, f0_min=50, f0_max=1100):
     try:
         if not text or not voice_model or not voice:
             logging.error('Убедитесь, что все поля заполнены.')
@@ -85,7 +85,7 @@ def tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filte
         display_progress(0.5, '[~] Преобразование голоса...', progress)
         final_output_path = os.path.join(OUTPUT_DIR, f'Converted_TTS_Voice.{output_format}')
         voice_change(voice_model, tts_voice_path, final_output_path, pitch_change, f0_method, index_rate,
-                     filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max)
+                     filter_radius, volume_envelope, protect, hop_length, f0autotune, f0_min, f0_max)
 
         return final_output_path, tts_voice_path
     except Exception as e:
