@@ -25,6 +25,7 @@ bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAM
 
 input_audio_path2wav = {}
 
+
 class AudioProcessor:
     @staticmethod
     def change_rms(source_audio, source_rate, target_audio, target_rate, rate):
@@ -36,6 +37,30 @@ class AudioProcessor:
         rms2 = torch.maximum(rms2, torch.zeros_like(rms2) + 1e-6)
 
         return target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy()
+
+
+class Autotune:
+    def __init__(self, ref_freqs):
+        self.ref_freqs = ref_freqs
+        self.note_dict = self.generate_interpolated_frequencies()
+
+    def generate_interpolated_frequencies(self):
+        note_dict = []
+        for i in range(len(self.ref_freqs) - 1):
+            freq_low = self.ref_freqs[i]
+            freq_high = self.ref_freqs[i + 1]
+            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
+            note_dict.extend(interpolated_freqs)
+        note_dict.append(self.ref_freqs[-1])
+        return note_dict
+
+    def autotune_f0(self, f0):
+        autotuned_f0 = np.zeros_like(f0)
+        for i, freq in enumerate(f0):
+            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
+            autotuned_f0[i] = closest_note
+        return autotuned_f0
+
 
 class VC:
     def __init__(self, tgt_sr, config):
@@ -55,15 +80,7 @@ class VC:
         self.time_step = self.window / self.sample_rate * 1000
         self.device = config.device
 
-    def get_f0_crepe(
-        self,
-        x,
-        f0_min,
-        f0_max,
-        p_len,
-        hop_length,
-        model="full"
-    ):
+    def get_f0_crepe(self, x,f0_min, f0_max, p_len, hop_length, model="full"):
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
         audio = torch.from_numpy(x).to(self.device, copy=True).unsqueeze(0)
@@ -97,6 +114,7 @@ class VC:
         f0_method,
         filter_radius,
         hop_length,
+        f0_autotune,
         inp_f0=None,
         f0_min=50,
         f0_max=1100
@@ -134,6 +152,12 @@ class VC:
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
             del self.model_fcpe
             gc.collect()
+
+
+        logging.info(f"f0_autotune = {f0_autotune}")
+        if f0_autotune == True:
+            f0 = Autotune.autotune_f0(self, f0)
+
 
         f0 *= pow(2, pitch / 12)
         tf0 = self.sample_rate // self.window
@@ -244,6 +268,7 @@ class VC:
         version,
         protect,
         hop_length,
+        f0_autotune,
         f0_file,
         f0_min=50,
         f0_max=1100
@@ -292,6 +317,7 @@ class VC:
                 f0_method,
                 filter_radius,
                 hop_length,
+                f0_autotune,
                 inp_f0,
                 f0_min,
                 f0_max
