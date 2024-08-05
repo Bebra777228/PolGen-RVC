@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from src.scripts.conversion.tts_conversion import tts_conversion
+from src.scripts.tts_conversion import tts_conversion
 from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
