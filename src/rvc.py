@@ -10,7 +10,7 @@ now_dir = Path(os.getcwd())
 
 from src.infer_pack.models import Synthesizer, Synthesizer_nono
 from src.my_utils import load_audio
-from src.vc_infer_pipeline import VC
+from src.pipeline import VC
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
