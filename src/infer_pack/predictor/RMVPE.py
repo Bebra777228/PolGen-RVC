@@ -61,10 +61,7 @@ class STFT(nn.Module):
         cutoff = int((self.filter_length / 2) + 1)
         real_part = forward_transform[:, :cutoff, :]
         imag_part = forward_transform[:, cutoff:, :]
-
-        magnitude = torch.sqrt(real_part**2 + imag_part**2)
-
-        return magnitude
+        return torch.sqrt(real_part**2 + imag_part**2)
 
     def inverse(self, magnitude, phase):
         recombine_magnitude_phase = torch.cat([magnitude * torch.cos(phase), magnitude * torch.sin(phase)], dim=1)
@@ -79,13 +76,11 @@ class STFT(nn.Module):
 
         inverse_transform = inverse_transform[..., self.pad_amount:]
         inverse_transform = inverse_transform[..., :self.num_samples]
-        inverse_transform = inverse_transform.squeeze(1)
-        return inverse_transform
+        return inverse_transform.squeeze(1)
 
     def forward(self, input_data):
         self.magnitude, self.phase = self.transform(input_data)
-        reconstruction = self.inverse(self.magnitude, self.phase)
-        return reconstruction
+        return self.inverse(self.magnitude, self.phase)
 
 
 class BiGRU(nn.Module):
@@ -209,8 +204,7 @@ class DeepUnet(nn.Module):
     def forward(self, x):
         x, concat_tensors = self.encoder(x)
         x = self.intermediate(x)
-        x = self.decoder(x, concat_tensors)
-        return x
+        return self.decoder(x, concat_tensors)
 
 
 class E2E(nn.Module):
@@ -226,21 +220,20 @@ class E2E(nn.Module):
     def forward(self, mel):
         mel = mel.transpose(-1, -2).unsqueeze(1)
         x = self.cnn(self.unet(mel)).transpose(1, 2).flatten(-2)
-        x = self.fc(x)
-        return x
+        return self.fc(x)
 
 
 class MelSpectrogram(nn.Module):
-    def __init__(self, is_half, n_mel_channels, sampling_rate, win_length, hop_length, n_fft=None, mel_fmin=0, mel_fmax=None, clamp=1e-5):
+    def __init__(self, is_half, n_mel_channels, sample_rate, win_length, hop_length, n_fft=None, mel_fmin=0, mel_fmax=None, clamp=1e-5):
         super(MelSpectrogram, self).__init__()
         n_fft = win_length if n_fft is None else n_fft
         self.hann_window = {}
-        mel_basis = mel(sr=sampling_rate, n_fft=n_fft, n_mels=n_mel_channels, fmin=mel_fmin, fmax=mel_fmax, htk=True)
+        mel_basis = mel(sr=sample_rate, n_fft=n_fft, n_mels=n_mel_channels, fmin=mel_fmin, fmax=mel_fmax, htk=True)
         self.register_buffer("mel_basis", torch.from_numpy(mel_basis).float())
         self.n_fft = n_fft
         self.hop_length = hop_length
         self.win_length = win_length
-        self.sampling_rate = sampling_rate
+        self.sample_rate = sample_rate
         self.n_mel_channels = n_mel_channels
         self.clamp = clamp
         self.is_half = is_half
@@ -265,8 +258,7 @@ class MelSpectrogram(nn.Module):
         mel_output = torch.matmul(self.mel_basis, magnitude)
         if self.is_half:
             mel_output = mel_output.half()
-        log_mel_spec = torch.log(torch.clamp(mel_output, min=self.clamp))
-        return log_mel_spec
+        return torch.log(torch.clamp(mel_output, min=self.clamp))
 
 
 class RMVPE0Predictor:
@@ -310,8 +302,7 @@ class RMVPE0Predictor:
         hidden = hidden.squeeze(0).cpu().numpy()
         if self.is_half:
             hidden = hidden.astype("float32")
-        f0 = self.decode(hidden, thred=thred)
-        return f0
+        return self.decode(hidden, thred=thred)
 
     def infer_from_audio_with_pitch(self, audio, thred=0.03, f0_min=50, f0_max=1100):
         audio = torch.from_numpy(audio).float().to(self.device).unsqueeze(0)
