@@ -3,10 +3,10 @@ name: TEST_CLI
 on:
   push:
     branches:
-      - CoverGenLite-dev
+      - PolGen-Lite-dev
   pull_request:
     branches:
-      - CoverGenLite-dev
+      - PolGen-Lite-dev
 
 jobs:
   rvc_cli:
