@@ -20,7 +20,7 @@ def get_rvc_model(voice_model):
     rvc_model_path = next((os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.endswith('.pth')), None)
     rvc_index_path = next((os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.endswith('.index')), None)
     if not rvc_model_path:
-        print(f'В каталоге {model_dir} отсутствует файл модели.')
+        raise ValueError(f'В каталоге {model_dir} отсутствует файл модели.')
     return rvc_model_path, rvc_index_path
 
 def convert_to_stereo(audio_path):
@@ -51,12 +51,12 @@ def voice_change(voice_model, vocals_path, output_path, pitch_change, f0_method,
 def conversion(uploaded_file, voice_model, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
                hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0autotune=False, f0_min=50, f0_max=1100):
     if not uploaded_file or not voice_model:
-        print('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
+        raise ValueError('Убедитесь, что поле ввода песни и поле модели голоса заполнены.')
 
     display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
 
     if not os.path.exists(uploaded_file):
-        print(f'{uploaded_file} не существует.')
+        raise ValueError(f'{uploaded_file} не существует.')
 
     orig_song_path = convert_to_stereo(uploaded_file)
     voice_convert_path = os.path.join(OUTPUT_DIR, f'Converted_Voice.{output_format}')
