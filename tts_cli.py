@@ -6,10 +6,7 @@ from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
-output_dir = os.path.join(now_dir, 'song_output')
-
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
+output_dir = os.path.join(now_dir, 'output')
 
 parser = argparse.ArgumentParser(description='Замена голоса в директории song_output/id.', add_help=True)
 parser.add_argument('-i', '--text_input', type=str, required=True)
