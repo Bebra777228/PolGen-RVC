@@ -1,4 +1,3 @@
-import logging
 import os
 from multiprocessing import cpu_count
 from pathlib import Path
@@ -11,9 +10,6 @@ now_dir = Path(os.getcwd())
 from src.infer_pack.models import Synthesizer, Synthesizer_nono
 from src.my_utils import load_audio
 from src.pipeline import VC
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -29,10 +25,10 @@ class Config:
         if torch.cuda.is_available():
             self._configure_gpu()
         elif torch.backends.mps.is_available():
-            logger.info("Не обнаружена поддерживаемая N-карта, используйте MPS для вывода")
+            print("Не обнаружена поддерживаемая N-карта, используйте MPS для вывода")
             self.device = "mps"
         else:
-            logger.info("Не обнаружена поддерживаемая N-карта, используйте CPU для вывода")
+            print("Не обнаружена поддерживаемая N-карта, используйте CPU для вывода")
             self.device = "cpu"
             self.is_half = True
 
@@ -49,7 +45,7 @@ class Config:
     def _configure_gpu(self):
         self.gpu_name = torch.cuda.get_device_name(self.device)
         if "16" in self.gpu_name and "V100" not in self.gpu_name.upper() or "P40" in self.gpu_name.upper() or "1060" in self.gpu_name or "1070" in self.gpu_name or "1080" in self.gpu_name:
-            logger.info("16 серия/10 серия P40 принудительно используется одинарная точность")
+            print("16 серия/10 серия P40 принудительно используется одинарная точность")
             self.is_half = False
             self._update_config_files()
         self.gpu_mem = int(torch.cuda.get_device_properties(self.device).total_memory / 1024 / 1024 / 1024 + 0.4)
@@ -132,32 +128,29 @@ def rvc_infer(
     f0_min=50,
     f0_max=1100
 ):
-    try:
-        audio = load_audio(input_path, 16000)
-        pitch_guidance = cpt.get('f0', 1)
-        audio_opt = vc.pipeline(
-            hubert_model,
-            net_g,
-            0,
-            audio,
-            input_path,
-            pitch_change,
-            f0_method,
-            index_path,
-            index_rate,
-            pitch_guidance,
-            filter_radius,
-            tgt_sr,
-            0,
-            volume_envelope,
-            version,
-            protect,
-            hop_length,
-            f0autotune,
-            f0_file=None,
-            f0_min=f0_min,
-            f0_max=f0_max
-        )
-        wavfile.write(output_path, tgt_sr, audio_opt)
-    except Exception as e:
-        logger.error(f"Ошибка во время вывода: {e}")
+    audio = load_audio(input_path, 16000)
+    pitch_guidance = cpt.get('f0', 1)
+    audio_opt = vc.pipeline(
+        hubert_model,
+        net_g,
+        0,
+        audio,
+        input_path,
+        pitch_change,
+        f0_method,
+        index_path,
+        index_rate,
+        pitch_guidance,
+        filter_radius,
+        tgt_sr,
+        0,
+        volume_envelope,
+        version,
+        protect,
+        hop_length,
+        f0autotune,
+        f0_file=None,
+        f0_min=f0_min,
+        f0_max=f0_max
+    )
+    wavfile.write(output_path, tgt_sr, audio_opt)
