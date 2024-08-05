@@ -8,12 +8,6 @@ now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
 output_dir = os.path.join(now_dir, 'output')
 
-if not os.path.exists(rvc_models_dir):
-    os.makedirs(rvc_models_dir)
-
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
-
 parser = argparse.ArgumentParser(description='Замена голоса в директории song_output/id.', add_help=True)
 parser.add_argument('-i', '--song_input', type=str, required=True)
 parser.add_argument('-d', '--rvc_dirname', type=str, required=True)
@@ -33,10 +27,16 @@ if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
     raise Exception(f'Папки {os.path.join(rvc_models_dir, rvc_dirname)} не существует.')
 
 cover_path = conversion(
-    args.song_input, rvc_dirname, args.pitch,
-    index_rate=args.index_rate, filter_radius=args.filter_radius,
-    volume_envelope=args.volume_envelope, f0_method=args.method,
-    hop_length=args.hop_length, protect=args.protect,
-    f0autotune=args.autotune, output_format=args.format
+    args.song_input,
+    rvc_dirname,
+    args.pitch,
+    index_rate=args.index_rate,
+    filter_radius=args.filter_radius,
+    volume_envelope=args.volume_envelope,
+    f0_method=args.method,
+    hop_length=args.hop_length,
+    protect=args.protect,
+    f0autotune=args.autotune,
+    output_format=args.format
 )
 print(f'\033[1;92m\nГолос успешно заменен!\033[0m')
