@@ -96,7 +96,7 @@ def get_vc(device, is_half, config, model_path):
         net_g = Synthesizer(input_dim, *cpt["config"], is_half=is_half, f0=pitch_guidance == 1) if pitch_guidance == 1 else Synthesizer_nono(input_dim, *cpt["config"])
 
     del net_g.enc_q
-    logger.info(net_g.load_state_dict(cpt["weight"], strict=False))
+    print(net_g.load_state_dict(cpt["weight"], strict=False))
     net_g.eval().to(device)
 
     if is_half:
