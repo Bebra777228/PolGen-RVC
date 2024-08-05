@@ -6,7 +6,7 @@ from src.rvc import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
-output_dir = os.path.join(now_dir, 'song_output')
+output_dir = os.path.join(now_dir, 'output')
 
 if not os.path.exists(rvc_models_dir):
     os.makedirs(rvc_models_dir)
@@ -32,14 +32,11 @@ rvc_dirname = args.rvc_dirname
 if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
     raise Exception(f'Папки {os.path.join(rvc_models_dir, rvc_dirname)} не существует.')
 
-try:
-    cover_path = conversion(
-        args.song_input, rvc_dirname, args.pitch,
-        index_rate=args.index_rate, filter_radius=args.filter_radius,
-        volume_envelope=args.volume_envelope, f0_method=args.method,
-        hop_length=args.hop_length, protect=args.protect,
-        f0autotune=args.autotune, output_format=args.format
-    )
-    print(f'\033[1;92m\nГолос успешно заменен!\nПуть к файлу: {cover_path}\033[0m')
-except Exception as e:
-    print(f'\033[1;91m\nОшибка при замене голоса: {e}\033[0m')
+cover_path = conversion(
+    args.song_input, rvc_dirname, args.pitch,
+    index_rate=args.index_rate, filter_radius=args.filter_radius,
+    volume_envelope=args.volume_envelope, f0_method=args.method,
+    hop_length=args.hop_length, protect=args.protect,
+    f0autotune=args.autotune, output_format=args.format
+)
+print(f'\033[1;92m\nГолос успешно заменен!\033[0m')
