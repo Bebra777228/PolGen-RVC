@@ -3,7 +3,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.scripts.conversion.voice_conversion import conversion
+from src.scripts.voice_conversion import conversion
 from src.modules.model_management import *
 from src.modules.ui_updates import *
 from src.modules.download_hubert import *
