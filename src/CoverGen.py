@@ -16,7 +16,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 mdxnet_models_dir = os.path.join(BASE_DIR, 'mdxnet_models')
 rvc_models_dir = os.path.join(BASE_DIR, 'rvc_models')
 output_dir = os.path.join(BASE_DIR, 'song_output')
-image_path = "/content/CoverGen/content/CoverGen.png"
+image_path = "/content/PolGen/content/CoverGen.png"
 
 def get_current_models(models_dir):
     models_list = os.listdir(models_dir)
