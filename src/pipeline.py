@@ -162,7 +162,7 @@ class VC:
                 f0_max=int(f0_max),
                 dtype=torch.float32,
                 device=self.device,
-                sampling_rate=self.sample_rate,
+                sample_rate=self.sample_rate,
                 threshold=0.03,
             )
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
