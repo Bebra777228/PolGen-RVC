@@ -3,7 +3,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.scripts.processing.audio_processing import processing
+from src.scripts.audio_processing import processing
 from src.modules.model_management import *
 from src.modules.ui_updates import *
 
