@@ -7,9 +7,6 @@ import faiss
 import librosa
 import numpy as np
 from scipy import signal
-import logging
-
-logging.basicConfig(level=logging.INFO)
 
 now_dir = os.getcwd()
 RMVPE_DIR = os.path.join(now_dir, 'models', 'assets', 'rmvpe.pt')
@@ -170,7 +167,7 @@ class VC:
             gc.collect()
 
 
-        logging.info(f"f0_autotune = {f0_autotune}")
+        print(f"f0_autotune = {f0_autotune}")
         if f0_autotune == True:
             f0 = Autotune.autotune_f0(self, f0)
 
@@ -293,8 +290,8 @@ class VC:
             try:
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
-            except Exception as error:
-                logging.error(f"Произошла ошибка при чтении индекса FAISS: {error}")
+            except Exception as e:
+                print(f"Произошла ошибка при чтении индекса FAISS: {e}")
                 index = big_npy = None
         else:
             index = big_npy = None
@@ -321,8 +318,8 @@ class VC:
                 with open(f0_file.name, "r") as f:
                     lines = f.read().strip("\n").split("\n")
                 inp_f0 = np.array([[float(i) for i in line.split(",")] for line in lines], dtype="float32")
-            except Exception as error:
-                logging.error(f"Произошла ошибка при чтении файла F0: {error}")
+            except Exception as e:
+                print(f"Произошла ошибка при чтении файла F0: {e}")
         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
         if pitch_guidance:
             pitch, pitchf = self.get_f0(
