@@ -80,6 +80,22 @@ class VC:
         self.time_step = self.window / self.sample_rate * 1000
         self.device = config.device
 
+        self.ref_freqs = [
+            65.41,
+            82.41,
+            110.00,
+            146.83,
+            196.00,
+            246.94,
+            329.63,
+            440.00,
+            587.33,
+            783.99,
+            1046.50
+        ]
+        self.autotune = Autotune(self.ref_freqs)
+        self.note_dict = self.autotune.note_dict
+
     def get_f0_crepe(self, x,f0_min, f0_max, p_len, hop_length, model="full"):
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
