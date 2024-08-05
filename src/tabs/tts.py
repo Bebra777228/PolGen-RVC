@@ -22,7 +22,6 @@ def edge_tts_tab():
                 ref_btn = gr.Button('Обновить список моделей', variant='primary')
             with gr.Group():
                 pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
-                f0autotune = gr.Checkbox(label="Автотюн", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
 
         with gr.Column(variant='panel', scale=3):
             tts_voice = gr.Audio(label='TTS голос')
@@ -31,7 +30,6 @@ def edge_tts_tab():
             with gr.Group():
                 language = gr.Dropdown(list(edge_voices.keys()), label='Язык')
                 voice = gr.Dropdown([], label='Голос')
-                gr.HTML("<center><h2>В поле для ввода текста нужно писать на том языке, который вы выбрали выше.</h2></center>")
                 language.change(update_edge_voices, inputs=language, outputs=voice)
 
     text_input = gr.Textbox(label='Введите текст', lines=5)
@@ -42,22 +40,29 @@ def edge_tts_tab():
             converted_tts_voice = gr.Audio(label='Преобразованный голос', scale=5)
             output_format = gr.Dropdown(['wav', 'flac', 'mp3', 'ogg'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
-    with gr.Accordion('Настройки преобразования голоса', open=False):
-        with gr.Group():
-            with gr.Column(variant='panel'):
-                f0_method = gr.Dropdown(['rmvpe+', 'rmvpe', 'fcpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
-                hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
-                f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
-                with gr.Row():
-                    f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
-                    f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
-            with gr.Column(variant='panel'):
-                index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info='Контролирует степень влияния индексного файла на результат анализа. Более высокое значение увеличивает влияние индексного файла, но может усилить артефакты в аудио. Выбор более низкого значения может помочь снизить артефакты.')
-                filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
-                volume_envelope = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
-                protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
+    with gr.Tab('Настройки преобразования'):
+        with gr.Accordion('Стандартные настройки', open=False):
+            with gr.Group():
+                with gr.Column(variant='panel'):
+                    f0_method = gr.Dropdown(['rmvpe+', 'rmvpe', 'fcpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
+                    hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
+                    f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
+                with gr.Column(variant='panel'):
+                    index_rate = gr.Slider(0, 1, value=0, label='Влияние индекса', info='Контролирует степень влияния индексного файла на результат анализа. Более высокое значение увеличивает влияние индексного файла, но может усилить артефакты в аудио. Выбор более низкого значения может помочь снизить артефакты.')
+                    filter_radius = gr.Slider(0, 7, value=3, step=1, label='Радиус фильтра', info='Управляет радиусом фильтрации результатов анализа тона. Если значение фильтрации равняется или превышает три, применяется медианная фильтрация для уменьшения шума дыхания в аудиозаписи.')
+                    volume_envelope = gr.Slider(0, 1, value=0.25, step=0.01, label='Скорость смешивания RMS', info='Контролирует степень смешивания выходного сигнала с его оболочкой громкости. Значение близкое к 1 увеличивает использование оболочки громкости выходного сигнала, что может улучшить качество звука.')
+                    protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
-    with gr.Accordion('Установка HuBERT модели', open=False):
+        with gr.Accordion('Расширенные настройки', open=False):
+            with gr.Group():
+                with gr.Column(variant='panel'):
+                    f0autotune = gr.Checkbox(label="Автотюн", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
+                with gr.Column(variant='panel'):
+                    with gr.Row():
+                        f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
+                        f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
+
+    with gr.Tab('Установка HuBERT моделей'):
         gr.HTML("<center><h2>Если вы не меняли HuBERT при тренировке модели, то не трогайте этот блок.</h2></center>")
         with gr.Row(variant='panel'):
             hubert_model_dropdown = gr.Dropdown(list(models.keys()), label='HuBERT модели:')
