@@ -22,7 +22,7 @@ def get_rvc_model(voice_model):
     rvc_model_path = next((os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.endswith('.pth')), None)
     rvc_index_path = next((os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.endswith('.index')), None)
     if not rvc_model_path:
-        print(f'В каталоге {model_dir} отсутствует файл модели.')
+        raise ValueError(f'В каталоге {model_dir} отсутствует файл модели.')
     return rvc_model_path, rvc_index_path
 
 def convert_to_stereo(audio_path):
@@ -57,7 +57,7 @@ async def text_to_speech(text, voice, output_path):
 def tts_conversion(text, voice_model, voice, pitch_change, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
                    hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0autotune=False, f0_min=50, f0_max=1100):
     if not text or not voice_model or not voice:
-        print('Убедитесь, что все поля заполнены.')
+        raise ValueError('Убедитесь, что все поля заполнены.')
 
     display_progress(0, '[~] Запуск конвейера генерации TTS...', progress)
 
