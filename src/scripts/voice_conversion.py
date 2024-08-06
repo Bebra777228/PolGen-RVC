@@ -15,7 +15,7 @@ RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(now_dir, 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(now_dir, 'output')
 
-def display_progress(percent, message, progress=gr.Progress()):
+def display_progress(progress, percent, message):
     progress(percent, desc=message)
 
 def load_rvc_model(voice_model):
@@ -52,11 +52,11 @@ def perform_voice_conversion(voice_model, vocals_path, output_path, pitch, f0_me
     torch.cuda.empty_cache()
 
 def voice_pipeline(uploaded_file, voice_model, pitch, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
-                      hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0_autotune=False, f0_min=50, f0_max=1100):
+                   hop_length=128, protect=0.33, output_format='mp3', progress=gr.Progress(), f0_autotune=False, f0_min=50, f0_max=1100):
     if not uploaded_file or not voice_model:
         raise ValueError('Заполните все необходимые поля.')
 
-    display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
+    display_progress(progress, 0, '[~] Запуск конвейера генерации AI-кавера...')
 
     if not os.path.exists(uploaded_file):
         raise ValueError(f'{uploaded_file} не существует.')
@@ -67,7 +67,7 @@ def voice_pipeline(uploaded_file, voice_model, pitch, index_rate=0.5, filter_rad
     if os.path.exists(voice_convert_path):
         os.remove(voice_convert_path)
 
-    display_progress(0.5, '[~] Преобразование вокала...', progress)
+    display_progress(progress, 0.5, '[~] Преобразование вокала...')
     perform_voice_conversion(voice_model, orig_song_path, voice_convert_path, pitch, f0_method, index_rate,
                              filter_radius, volume_envelope, protect, hop_length, f0_autotune, f0_min, f0_max)
 
