@@ -3,7 +3,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.scripts.voice_conversion import conversion
+from src.scripts.voice_conversion import voice_pipeline
 from src.modules.model_management import *
 from src.modules.ui_updates import *
 from src.modules.download_hubert import *
@@ -77,7 +77,7 @@ def conversion_tab():
                       
     hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
     ref_btn.click(update_models_list, None, outputs=rvc_model)
-    generate_btn.click(conversion,
+    generate_btn.click(voice_pipeline,
                       inputs=[uploaded_file, rvc_model, pitch, index_rate, filter_radius, volume_envelope,
                               f0_method, hop_length, protect, output_format, f0autotune, f0_min, f0_max],
                       outputs=[converted_voice])
