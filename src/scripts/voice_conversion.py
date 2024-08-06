@@ -15,9 +15,6 @@ RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(now_dir, 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(now_dir, 'output')
 
-def display_progress(percent, message, progress):
-    progress(percent, desc=message)
-
 def load_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
     model_files = os.listdir(model_dir)
@@ -36,6 +33,9 @@ def convert_audio_to_stereo(audio_path):
         subprocess.run(shlex.split(f'ffmpeg -y -loglevel error -i "{audio_path}" -ac 2 -f wav "{stereo_path}"'))
         return stereo_path
     return audio_path
+
+def display_progress(percent, message, progress=gr.Progress()):
+    progress(percent, desc=message)
 
 def perform_voice_conversion(voice_model, vocals_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_autotune, f0_min, f0_max):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
