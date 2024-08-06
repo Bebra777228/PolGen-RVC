@@ -62,8 +62,6 @@ def voice_pipeline(
 ):
     if not uploaded_file or not voice_model:
         raise ValueError('Заполните все необходимые поля.')
-
-    print("\n\n\n", progress, "\n\n\n")
                        
     display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
 
