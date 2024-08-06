@@ -26,7 +26,7 @@ rvc_dirname = args.rvc_dirname
 if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
     raise Exception(f'Папки {os.path.join(rvc_models_dir, rvc_dirname)} не существует.')
 
-cover_path = tts_conversion(
+cover_path = tts_pipeline(
   args.text_input,
   rvc_dirname,
   args.tts_voice,
