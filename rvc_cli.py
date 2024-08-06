@@ -39,4 +39,5 @@ cover_path = voice_pipeline(
     args.autotune,
     args.format
 )
+
 print(f'\033[1;92m\nГолос успешно заменен!\033[0m')
