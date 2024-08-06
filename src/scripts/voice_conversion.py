@@ -15,7 +15,7 @@ RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(now_dir, 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(now_dir, 'output')
 
-def display_progress(progress, percent, message):
+def display_progress(percent, message, progress):
     progress(percent, desc=message)
 
 def load_rvc_model(voice_model):
@@ -23,10 +23,10 @@ def load_rvc_model(voice_model):
     model_files = os.listdir(model_dir)
     rvc_model_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.pth')), None)
     rvc_index_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.index')), None)
-    
+
     if not rvc_model_path:
         raise ValueError(f'Файл модели не найден в каталоге {model_dir}.')
-    
+
     return rvc_model_path, rvc_index_path
 
 def convert_audio_to_stereo(audio_path):
@@ -56,7 +56,7 @@ def voice_pipeline(uploaded_file, voice_model, pitch, index_rate=0.5, filter_rad
     if not uploaded_file or not voice_model:
         raise ValueError('Заполните все необходимые поля.')
 
-    display_progress(progress, 0, '[~] Запуск конвейера генерации AI-кавера...')
+    display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
 
     if not os.path.exists(uploaded_file):
         raise ValueError(f'{uploaded_file} не существует.')
@@ -67,7 +67,7 @@ def voice_pipeline(uploaded_file, voice_model, pitch, index_rate=0.5, filter_rad
     if os.path.exists(voice_convert_path):
         os.remove(voice_convert_path)
 
-    display_progress(progress, 0.5, '[~] Преобразование вокала...')
+    display_progress(0.5, '[~] Преобразование вокала...', progress)
     perform_voice_conversion(voice_model, orig_song_path, voice_convert_path, pitch, f0_method, index_rate,
                              filter_radius, volume_envelope, protect, hop_length, f0_autotune, f0_min, f0_max)
 
