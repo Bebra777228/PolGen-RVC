@@ -112,7 +112,7 @@ def rvc_infer(
     index_rate,
     input_path,
     output_path,
-    pitch_change,
+    pitch,
     f0_method,
     cpt,
     version,
@@ -124,7 +124,7 @@ def rvc_infer(
     hop_length,
     vc,
     hubert_model,
-    f0autotune,
+    f0_autotune,
     f0_min=50,
     f0_max=1100
 ):
@@ -136,7 +136,7 @@ def rvc_infer(
         0,
         audio,
         input_path,
-        pitch_change,
+        pitch,
         f0_method,
         index_path,
         index_rate,
@@ -148,7 +148,7 @@ def rvc_infer(
         version,
         protect,
         hop_length,
-        f0autotune,
+        f0_autotune,
         f0_file=None,
         f0_min=f0_min,
         f0_max=f0_max
