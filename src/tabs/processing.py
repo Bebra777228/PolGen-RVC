@@ -3,7 +3,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.scripts.audio_processing import processing
+from src.scripts.audio_processing import process_audio
 from src.modules.model_management import *
 from src.modules.ui_updates import *
 
@@ -111,7 +111,7 @@ def processing_tab():
                               noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
 
   use_effects.change(show_effects, inputs=use_effects, outputs=effects_accordion)
-  process_btn.click(processing,
+  process_btn.click(process_audio,
                   inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                   reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
                   noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
