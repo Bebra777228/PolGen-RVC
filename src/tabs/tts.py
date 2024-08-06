@@ -56,7 +56,7 @@ def edge_tts_tab():
         with gr.Accordion('Расширенные настройки', open=False):
             with gr.Group():
                 with gr.Column(variant='panel'):
-                    f0autotune = gr.Checkbox(label="Автотюн", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
+                    f0_autotune = gr.Checkbox(label="Автотюн", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
                 with gr.Column(variant='panel'):
                     with gr.Row():
                         f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
@@ -74,6 +74,6 @@ def edge_tts_tab():
     generate_btn.click(tts_pipeline, 
                       inputs=[
                         text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
-                        f0_method, hop_length, protect, output_format, f0autotune, f0_min, f0_max
+                        f0_method, hop_length, protect, output_format, f0_autotune, f0_min, f0_max
                         ],
                       outputs=[converted_tts_voice, tts_voice])
