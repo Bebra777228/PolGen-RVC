@@ -18,8 +18,8 @@ parser.add_argument('-rms', '--volume_envelope', type=float, default=0.25)
 parser.add_argument('-m', '--method', type=str, default='rmvpe')
 parser.add_argument('-hop', '--hop_length', type=int, default=128)
 parser.add_argument('-pro', '--protect', type=float, default=0.33)
-parser.add_argument('-tune', '--autotune', type=str, default='False')
 parser.add_argument('-f', '--format', type=str, default='mp3')
+parser.add_argument('-tune', '--autotune', type=str, default='False')
 args = parser.parse_args()
 
 rvc_dirname = args.rvc_dirname
@@ -36,8 +36,8 @@ cover_path = voice_pipeline(
     args.method,
     args.hop_length,
     args.protect,
-    args.autotune,
-    args.format
+    args.format,
+    args.autotune
 )
 
 print(f'\033[1;92m\nГолос успешно заменен!\033[0m')
