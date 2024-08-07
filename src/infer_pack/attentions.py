@@ -18,7 +18,7 @@ class Encoder(nn.Module):
     def __init__(self, hidden_channels, filter_channels, n_heads, n_layers, kernel_size=1, p_dropout=0.0, window_size=10):
         super().__init__()
         self.hidden_channels = hidden_channels
-        self.drop = nn.Dropout(p_dropout)
+        self.drop = p_dropout  # Используем p_dropout как значение, а не объект
 
         self.attn_layers = init_layer_list(n_layers, MultiHeadAttention, hidden_channels, hidden_channels, n_heads, p_dropout, window_size)
         self.norm_layers_1 = init_layer_list(n_layers, LayerNorm, hidden_channels)
@@ -29,9 +29,9 @@ class Encoder(nn.Module):
         attn_mask = x_mask.unsqueeze(2) * x_mask.unsqueeze(-1)
         x = x * x_mask
         for attn_layer, norm1, ffn_layer, norm2 in zip(self.attn_layers, self.norm_layers_1, self.ffn_layers, self.norm_layers_2):
-            y = self.drop(attn_layer(x, x, attn_mask))
+            y = F.dropout(attn_layer(x, x, attn_mask), p=self.drop, training=self.training)
             x = norm1(x + y)
-            y = self.drop(ffn_layer(x, x_mask))
+            y = F.dropout(ffn_layer(x, x_mask), p=self.drop, training=self.training)
             x = norm2(x + y)
         return x * x_mask
 
@@ -39,7 +39,7 @@ class Decoder(nn.Module):
     def __init__(self, hidden_channels, filter_channels, n_heads, n_layers, kernel_size=1, p_dropout=0.0, proximal_bias=False, proximal_init=True):
         super().__init__()
         self.hidden_channels = hidden_channels
-        self.drop = nn.Dropout(p_dropout)
+        self.drop = p_dropout  # Используем p_dropout как значение, а не объект
 
         self.self_attn_layers = init_layer_list(n_layers, MultiHeadAttention, hidden_channels, hidden_channels, n_heads, p_dropout, None, True, None, proximal_bias, proximal_init)
         self.norm_layers_0 = init_layer_list(n_layers, LayerNorm, hidden_channels)
@@ -53,11 +53,11 @@ class Decoder(nn.Module):
         encdec_attn_mask = h_mask.unsqueeze(2) * x_mask.unsqueeze(-1)
         x = x * x_mask
         for self_attn_layer, norm0, encdec_attn_layer, norm1, ffn_layer, norm2 in zip(self.self_attn_layers, self.norm_layers_0, self.encdec_attn_layers, self.norm_layers_1, self.ffn_layers, self.norm_layers_2):
-            y = self.drop(self_attn_layer(x, x, self_attn_mask))
+            y = F.dropout(self_attn_layer(x, x, self_attn_mask), p=self.drop, training=self.training)
             x = norm0(x + y)
-            y = self.drop(encdec_attn_layer(x, h, encdec_attn_mask))
+            y = F.dropout(encdec_attn_layer(x, h, encdec_attn_mask), p=self.drop, training=self.training)
             x = norm1(x + y)
-            y = self.drop(ffn_layer(x, x_mask))
+            y = F.dropout(ffn_layer(x, x_mask), p=self.drop, training=self.training)
             x = norm2(x + y)
         return x * x_mask
 
@@ -128,7 +128,7 @@ class MultiHeadAttention(nn.Module):
                 block_mask = (torch.ones_like(scores).triu(-self.block_length).tril(self.block_length))
                 scores = scores.masked_fill(block_mask == 0, -1e4)
         p_attn = F.softmax(scores, dim=-1)
-        p_attn = self.drop(p_attn)
+        p_attn = F.dropout(p_attn, p=self.p_dropout, training=self.training)
         output = torch.matmul(p_attn, value)
         if self.window_size is not None:
             relative_weights = self._absolute_position_to_relative_position(p_attn)
@@ -194,7 +194,7 @@ class FFN(nn.Module):
             x = x * torch.sigmoid(1.702 * x)
         else:
             x = torch.relu(x)
-        x = self.drop(x)
+        x = F.dropout(x, p=self.p_dropout, training=self.training)
         x = self.conv_2(self.padding(x * x_mask))
         return x * x_mask
 
