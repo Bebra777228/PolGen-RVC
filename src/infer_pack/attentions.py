@@ -9,9 +9,10 @@ now_dir = os.getcwd()
 from src.infer_pack.commons import subsequent_mask, convert_pad_shape
 from src.infer_pack.modules import LayerNorm
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def init_layer_list(num_layers, layer_fn, *args, **kwargs):
     return nn.ModuleList([layer_fn(*args, **kwargs) for _ in range(num_layers)])
-
 
 class Encoder(nn.Module):
     def __init__(self, hidden_channels, filter_channels, n_heads, n_layers, kernel_size=1, p_dropout=0.0, window_size=10):
@@ -33,7 +34,6 @@ class Encoder(nn.Module):
             y = self.drop(ffn_layer(x, x_mask))
             x = norm2(x + y)
         return x * x_mask
-
 
 class Decoder(nn.Module):
     def __init__(self, hidden_channels, filter_channels, n_heads, n_layers, kernel_size=1, p_dropout=0.0, proximal_bias=False, proximal_init=True):
@@ -60,7 +60,6 @@ class Decoder(nn.Module):
             y = self.drop(ffn_layer(x, x_mask))
             x = norm2(x + y)
         return x * x_mask
-
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, channels, out_channels, n_heads, p_dropout=0.0, window_size=None, heads_share=True, block_length=None, proximal_bias=False, proximal_init=False):
@@ -172,7 +171,6 @@ class MultiHeadAttention(nn.Module):
         r = torch.arange(length, dtype=torch.float32)
         diff = torch.unsqueeze(r, 0) - torch.unsqueeze(r, 1)
         return torch.unsqueeze(torch.unsqueeze(-torch.log1p(torch.abs(diff)), 0), 0)
-
 
 class FFN(nn.Module):
     def __init__(self, in_channels, out_channels, filter_channels, kernel_size, p_dropout=0.0, activation=None, causal=False):
