@@ -4,10 +4,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-now_dir = os.getcwd()
-
-from rvc.infer_pack.commons import subsequent_mask, convert_pad_shape
-from rvc.infer_pack.modules import LayerNorm
+from rvc.infer.commons import subsequent_mask, convert_pad_shape
+from rvc.infer.modules import LayerNorm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -18,7 +16,7 @@ class Encoder(nn.Module):
     def __init__(self, hidden_channels, filter_channels, n_heads, n_layers, kernel_size=1, p_dropout=0.0, window_size=10):
         super().__init__()
         self.hidden_channels = hidden_channels
-        self.drop = p_dropout  # Используем p_dropout как значение, а не объект
+        self.drop = p_dropout
 
         self.attn_layers = init_layer_list(n_layers, MultiHeadAttention, hidden_channels, hidden_channels, n_heads, p_dropout, window_size)
         self.norm_layers_1 = init_layer_list(n_layers, LayerNorm, hidden_channels)
@@ -39,7 +37,7 @@ class Decoder(nn.Module):
     def __init__(self, hidden_channels, filter_channels, n_heads, n_layers, kernel_size=1, p_dropout=0.0, proximal_bias=False, proximal_init=True):
         super().__init__()
         self.hidden_channels = hidden_channels
-        self.drop = p_dropout  # Используем p_dropout как значение, а не объект
+        self.drop = p_dropout
 
         self.self_attn_layers = init_layer_list(n_layers, MultiHeadAttention, hidden_channels, hidden_channels, n_heads, p_dropout, None, True, None, proximal_bias, proximal_init)
         self.norm_layers_0 = init_layer_list(n_layers, LayerNorm, hidden_channels)

@@ -8,10 +8,9 @@ import gradio as gr
 import edge_tts
 import asyncio
 
-now_dir = os.getcwd()
-
 from rvc.rvc import Config, load_hubert, get_vc, rvc_infer
 
+now_dir = os.getcwd()
 RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(now_dir, 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(now_dir, 'output')

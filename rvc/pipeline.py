@@ -8,12 +8,12 @@ import librosa
 import numpy as np
 from scipy import signal
 
+from rvc.infer.predictor.FCPE import FCPEF0Predictor
+from rvc.infer.predictor.RMVPE import RMVPE0Predictor
+
 now_dir = os.getcwd()
 RMVPE_DIR = os.path.join(now_dir, 'models', 'assets', 'rmvpe.pt')
 FCPE_DIR = os.path.join(now_dir, 'models', 'assets', 'fcpe.pt')
-
-from rvc.infer_pack.predictor.FCPE import FCPEF0Predictor
-from rvc.infer_pack.predictor.RMVPE import RMVPE0Predictor
 
 FILTER_ORDER = 5
 CUTOFF_FREQUENCY = 48

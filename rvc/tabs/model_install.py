@@ -1,9 +1,9 @@
 import os
 import gradio as gr
 
-now_dir = os.getcwd()
-
 from rvc.modules.model_management import *
+
+now_dir = os.getcwd()
 
 def url_download():
   with gr.Tab('Загрузить по ссылке'):

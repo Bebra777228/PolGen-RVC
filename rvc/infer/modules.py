@@ -6,10 +6,8 @@ import torch.nn.functional as F
 from torch.nn import Conv1d
 from torch.nn.utils import weight_norm, remove_weight_norm
 
-now_dir = os.getcwd()
-
-from rvc.infer_pack.commons import fused_add_tanh_sigmoid_multiply, init_weights, get_padding
-from rvc.infer_pack.transforms import piecewise_rational_quadratic_transform
+from rvc.infer.commons import fused_add_tanh_sigmoid_multiply, init_weights, get_padding
+from rvc.infer.transforms import piecewise_rational_quadratic_transform
 
 LRELU_SLOPE = 0.1
 

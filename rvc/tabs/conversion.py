@@ -1,13 +1,12 @@
 import os
 import gradio as gr
 
-now_dir = os.getcwd()
-
 from rvc.scripts.voice_conversion import voice_pipeline
 from rvc.modules.model_management import *
 from rvc.modules.ui_updates import *
 from rvc.modules.download_hubert import *
 
+now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
 voice_models = get_folders(rvc_models_dir)
 
