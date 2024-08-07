@@ -3,9 +3,9 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.scripts.audio_processing import process_audio
-from src.modules.model_management import *
-from src.modules.ui_updates import *
+from rvc.scripts.audio_processing import process_audio
+from rvc.modules.model_management import *
+from rvc.modules.ui_updates import *
 
 def processing_tab():
   with gr.Row(equal_height=False):

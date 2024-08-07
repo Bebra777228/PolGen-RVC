@@ -3,7 +3,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.modules.model_management import *
+from rvc.modules.model_management import *
 
 def url_download():
   with gr.Tab('Загрузить по ссылке'):

@@ -1,3 +1,4 @@
+import os
 import math
 import torch
 from torch import nn
@@ -6,11 +7,13 @@ from torch.nn import Conv1d, ConvTranspose1d, Conv2d
 from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
 import numpy as np
 
+now_dir = os.getcwd()
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-from src.infer_pack.modules import ResidualCouplingLayer, Flip, WN, ResBlock1, ResBlock2
-from src.infer_pack.attentions import Encoder
-from src.infer_pack.commons import init_weights, get_padding, sequence_mask, rand_slice_segments, slice_segments2
+from rvc.infer_pack.modules import ResidualCouplingLayer, Flip, WN, ResBlock1, ResBlock2
+from rvc.infer_pack.attentions import Encoder
+from rvc.infer_pack.commons import init_weights, get_padding, sequence_mask, rand_slice_segments, slice_segments2
 
 
 class TextEncoder(nn.Module):

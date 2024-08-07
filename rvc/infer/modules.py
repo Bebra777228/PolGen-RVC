@@ -3,12 +3,13 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torch.nn import Conv1d
 from torch.nn.utils import weight_norm, remove_weight_norm
 
-from src.infer_pack.commons import fused_add_tanh_sigmoid_multiply, init_weights, get_padding
-from src.infer_pack.transforms import piecewise_rational_quadratic_transform
+now_dir = os.getcwd()
+
+from rvc.infer_pack.commons import fused_add_tanh_sigmoid_multiply, init_weights, get_padding
+from rvc.infer_pack.transforms import piecewise_rational_quadratic_transform
 
 LRELU_SLOPE = 0.1
 

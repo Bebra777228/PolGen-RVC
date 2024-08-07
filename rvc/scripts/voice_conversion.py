@@ -9,7 +9,7 @@ import gradio as gr
 
 now_dir = os.getcwd()
 
-from src.rvc import Config, load_hubert, get_vc, rvc_infer
+from rvc.rvc import Config, load_hubert, get_vc, rvc_infer
 
 RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(now_dir, 'models', 'assets', 'hubert_base.pt')

@@ -6,8 +6,8 @@ from torch.nn import functional as F
 
 now_dir = os.getcwd()
 
-from src.infer_pack.commons import subsequent_mask, convert_pad_shape
-from src.infer_pack.modules import LayerNorm
+from rvc.infer_pack.commons import subsequent_mask, convert_pad_shape
+from rvc.infer_pack.modules import LayerNorm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -7,9 +7,9 @@ from scipy.io import wavfile
 
 now_dir = Path(os.getcwd())
 
-from src.infer_pack.models import Synthesizer, Synthesizer_nono
-from src.my_utils import load_audio
-from src.pipeline import VC
+from rvc.infer_pack.models import Synthesizer, Synthesizer_nono
+from rvc.my_utils import load_audio
+from rvc.pipeline import VC
 
 
 class Config:
@@ -54,9 +54,9 @@ class Config:
 
     def _update_config_files(self):
         for config_file in ["32k.json", "40k.json", "48k.json"]:
-            config_path = now_dir / "src" / "configs" / config_file
+            config_path = now_dir / "rvc" / "configs" / config_file
             self._replace_in_file(config_path, "true", "false")
-        trainset_path = now_dir / "src" / "trainset_preprocess_pipeline_print.py"
+        trainset_path = now_dir / "rvc" / "trainset_preprocess_pipeline_print.py"
         self._replace_in_file(trainset_path, "3.7", "3.0")
 
     @staticmethod
