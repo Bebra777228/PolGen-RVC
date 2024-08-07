@@ -93,7 +93,7 @@ class VC:
         self.autotune = Autotune(self.ref_freqs)
         self.note_dict = self.autotune.note_dict
 
-    def get_f0_crepe(self, x,f0_min, f0_max, p_len, hop_length, model="full"):
+    def get_f0_crepe(self, x, f0_min, f0_max, p_len, hop_length, model="full"):
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
         audio = torch.from_numpy(x).to(self.device, copy=True).unsqueeze(0)
