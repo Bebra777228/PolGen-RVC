@@ -7,7 +7,7 @@ import torch
 import numpy as np
 import gradio as gr
 
-from rvc.infer.rvc import Config, load_hubert, get_vc, rvc_infer
+from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
 RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
