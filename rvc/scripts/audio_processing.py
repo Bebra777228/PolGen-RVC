@@ -8,7 +8,6 @@ from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
 now_dir = os.getcwd()
-RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 OUTPUT_DIR = os.path.join(now_dir, 'output')
 
 if not os.path.exists(OUTPUT_DIR):

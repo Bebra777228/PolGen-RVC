@@ -1,4 +1,3 @@
-import os
 import gradio as gr
 
 from tabs.welcome import *
