@@ -1,4 +1,17 @@
+import os
 import gradio as gr
+
+from rvc.scripts.tts_conversion import tts_pipeline
+from rvc.modules.model_management import *
+
+from tabs.install.install_huberts import *
+from tabs.conversion.conversion_settings import *
+
+now_dir = os.getcwd()
+rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
+output_dir = os.path.join(now_dir, 'song_output')
+voice_models = get_folders(rvc_models_dir)
+
 
 edge_voices = {
     "Английский (Великобритания)": ["en-GB-SoniaNeural", "en-GB-RyanNeural"],
@@ -40,3 +53,41 @@ edge_voices = {
 
 def update_edge_voices(selected_language):
     return gr.update(choices=edge_voices[selected_language])
+
+
+def edge_tts_tab():
+    with gr.Row(equal_height=False):
+        with gr.Column(variant='panel', scale=2):
+            with gr.Group():
+                rvc_model = gr.Dropdown(voice_models, label='Модели голоса')
+                ref_btn = gr.Button('Обновить список моделей', variant='primary')
+            with gr.Group():
+                pitch = gr.Slider(-24, 24, value=0, step=0.5, label='Регулировка тона', info='-24 - мужской голос || 24 - женский голос')
+
+        with gr.Column(variant='panel', scale=3):
+            tts_voice = gr.Audio(label='TTS голос')
+        
+        with gr.Column(variant='panel', scale=2):
+            with gr.Group():
+                language = gr.Dropdown(list(edge_voices.keys()), label='Язык')
+                voice = gr.Dropdown([], label='Голос')
+                language.change(update_edge_voices, inputs=language, outputs=voice)
+
+    text_input = gr.Textbox(label='Введите текст', lines=5)
+
+    with gr.Group():
+        with gr.Row(variant='panel'):
+            generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
+            converted_tts_voice = gr.Audio(label='Преобразованный голос', scale=5)
+            output_format = gr.Dropdown(['wav', 'flac', 'mp3', 'ogg'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
+
+    conversion_settings_tab()
+    install_hubert_tab()
+
+    ref_btn.click(update_models_list, None, outputs=rvc_model)
+    generate_btn.click(tts_pipeline, 
+                      inputs=[
+                        text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
+                        f0_method, hop_length, protect, output_format, f0_autotune, f0_min, f0_max
+                        ],
+                      outputs=[converted_tts_voice, tts_voice])

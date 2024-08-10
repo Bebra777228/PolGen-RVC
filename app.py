@@ -2,10 +2,10 @@ import os
 import gradio as gr
 
 from tabs.welcome import *
-from tabs.conversion import *
-from tabs.processing import *
-from tabs.tts import *
-from tabs.model_install import *
+from tabs.conversion.conversion import *
+from tabs.conversion.tts import *
+from tabs.processing.processing import *
+from tabs.install.install_models import *
 
 if __name__ == '__main__':
     with gr.Blocks(title='PolGen Lite - Politrees (v1.1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:

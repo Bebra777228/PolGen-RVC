@@ -37,3 +37,14 @@ def download_and_replace_model(model_desc, progress=gr.Progress()):
         return f'Модель "{model_desc}" успешно установлена.'
     except Exception as e:
         return f'Ошибка при установке модели "{model_desc}": {str(e)}'
+
+
+def install_hubert_tab():
+    with gr.Tab('Установка HuBERT моделей'):
+        gr.HTML("<center><h2>Если вы не меняли HuBERT при тренировке модели, то не трогайте этот блок.</h2></center>")
+        with gr.Row(variant='panel'):
+            hubert_model_dropdown = gr.Dropdown(list(models.keys()), label='HuBERT модели:')
+            hubert_download_btn = gr.Button("Скачать", variant='primary')
+        hubert_output_message = gr.Text(label='Сообщение вывода', interactive=False)
+        
+    hubert_download_btn.click(download_and_replace_model, inputs=hubert_model_dropdown, outputs=hubert_output_message)
