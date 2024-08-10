@@ -5,9 +5,9 @@ import torch
 from fairseq import checkpoint_utils
 from scipy.io import wavfile
 
-from rvc.infer.models import Synthesizer, Synthesizer_nono
-from rvc.my_utils import load_audio
-from rvc.pipeline import VC
+from rvc.lib.algorithm.synthesizers import Synthesizer
+from rvc.lib.my_utils import load_audio
+from rvc.infer.pipeline import VC
 
 now_dir = os.getcwd()
 
@@ -86,14 +86,10 @@ def get_vc(device, is_half, config, model_path):
     cpt["config"][-3] = cpt["weight"]["emb_g.weight"].shape[0]
     pitch_guidance = cpt.get("f0", 1)
     version = cpt.get("version", "v1")
+    input_dim = 768 if version == "v2" else 256
 
-    input_dim = 256 if version == "v1" else 768
+    net_g = Synthesizer(*cpt["config"], use_f0=pitch_guidance, text_enc_hidden_dim=input_dim, is_half=is_half)
     
-    if version == "v1":
-        net_g = Synthesizer(input_dim, *cpt["config"], is_half=is_half, f0=pitch_guidance == 1) if pitch_guidance == 1 else Synthesizer_nono(input_dim, *cpt["config"])
-    else:
-        net_g = Synthesizer(input_dim, *cpt["config"], is_half=is_half, f0=pitch_guidance == 1) if pitch_guidance == 1 else Synthesizer_nono(input_dim, *cpt["config"])
-
     del net_g.enc_q
     print(net_g.load_state_dict(cpt["weight"], strict=False))
     net_g.eval().to(device)

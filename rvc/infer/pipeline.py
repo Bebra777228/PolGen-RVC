@@ -8,8 +8,8 @@ import librosa
 import numpy as np
 from scipy import signal
 
-from rvc.infer.predictor.FCPE import FCPEF0Predictor
-from rvc.infer.predictor.RMVPE import RMVPE0Predictor
+from rvc.lib.predictors.FCPE import FCPEF0Predictor
+from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
 now_dir = os.getcwd()
 RMVPE_DIR = os.path.join(now_dir, 'models', 'assets', 'rmvpe.pt')
@@ -286,7 +286,7 @@ class VC:
         f0_min=50,
         f0_max=1100
     ):
-        if file_index != "" and os.path.exists(file_index) and index_rate != 0:
+        if file_index is not None and file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
@@ -385,8 +385,9 @@ class VC:
         max_int16 = 32768
         if audio_max > 1:
             max_int16 /= audio_max
-        audio_opt = (audio_opt * max_int16).astype(np.int16)
+        
         del pitch, pitchf, sid
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        return audio_opt
+        
+        return (audio_opt * max_int16).astype(np.int16)

@@ -11,6 +11,9 @@ now_dir = os.getcwd()
 RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 OUTPUT_DIR = os.path.join(now_dir, 'output')
 
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
+
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 

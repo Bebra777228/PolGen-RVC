@@ -6,7 +6,6 @@ from rvc.rvc import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
 rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
-output_dir = os.path.join(now_dir, 'output')
 
 parser = argparse.ArgumentParser(description='Замена голоса в директории song_output/id.', add_help=True)
 parser.add_argument('-i', '--text_input', type=str, required=True)
@@ -27,7 +26,7 @@ args = parser.parse_args()
 
 rvc_dirname = args.rvc_dirname
 if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
-    raise Exception(f'Папки {os.path.join(rvc_models_dir, rvc_dirname)} не существует.')
+    raise Exception(f'\033[91mМодели {rvc_dirname} не существует. Возможно, вы неправильно ввели имя.\033[0m')
 
 cover_path = tts_pipeline(
     text = args.text_input,

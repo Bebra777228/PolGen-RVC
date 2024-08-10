@@ -7,12 +7,15 @@ import torch
 import numpy as np
 import gradio as gr
 
-from rvc.rvc import Config, load_hubert, get_vc, rvc_infer
+from rvc.infer.rvc import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
 RVC_MODELS_DIR = os.path.join(now_dir, 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(now_dir, 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(now_dir, 'output')
+
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
 
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
@@ -24,7 +27,7 @@ def load_rvc_model(voice_model):
     rvc_index_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.index')), None)
 
     if not rvc_model_path:
-        raise ValueError(f'Файл модели не найден в каталоге {model_dir}.')
+        raise ValueError(f'\033[91mМодели {voice_model} не существует. Возможно, вы неправильно ввели имя.\033[0m')
 
     return rvc_model_path, rvc_index_path
 
@@ -65,7 +68,7 @@ def voice_pipeline(
     display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
 
     if not os.path.exists(uploaded_file):
-        raise ValueError(f'{uploaded_file} не существует.')
+        raise ValueError(f'Файл {uploaded_file} не найден.')
 
     orig_song_path = convert_audio_to_stereo(uploaded_file)
     voice_convert_path = os.path.join(OUTPUT_DIR, f'Converted_Voice.{output_format}')
