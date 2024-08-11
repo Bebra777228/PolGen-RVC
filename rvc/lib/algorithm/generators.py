@@ -88,7 +88,7 @@ class SineGen(torch.nn.Module):
         sine_amp=0.1,
         noise_std=0.003,
         voiced_threshold=0,
-        flag_for_pulse=False,
+        flag_for_pulse=False
     ):
         super(SineGen, self).__init__()
         self.sine_amp = sine_amp
