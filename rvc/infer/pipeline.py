@@ -28,11 +28,11 @@ class AudioProcessor:
     def change_rms(source_audio, source_rate, target_audio, target_rate, rate):
         rms1 = librosa.feature.rms(y=source_audio, frame_length=source_rate // 2 * 2, hop_length=source_rate // 2)
         rms2 = librosa.feature.rms(y=target_audio, frame_length=target_rate // 2 * 2, hop_length=target_rate // 2)
-
-        rms1 = F.interpolate(torch.from_numpy(rms1).float().unsqueeze(0), size=target_audio.shape[0], mode="linear").squeeze()
-        rms2 = F.interpolate(torch.from_numpy(rms2).float().unsqueeze(0), size=target_audio.shape[0], mode="linear").squeeze()
+    
+        rms1 = F.interpolate(torch.from_numpy(rms1).float().unsqueeze(0), size=target_audio.shape[1], mode="linear").squeeze()
+        rms2 = F.interpolate(torch.from_numpy(rms2).float().unsqueeze(0), size=target_audio.shape[1], mode="linear").squeeze()
         rms2 = torch.maximum(rms2, torch.zeros_like(rms2) + 1e-6)
-
+    
         return target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy()
 
 
@@ -209,9 +209,9 @@ class VC:
         feats = torch.from_numpy(audio0)
         feats = feats.half() if self.is_half else feats.float()
         if feats.dim() == 2:
-            feats = feats.mean(-1)
-        assert feats.dim() == 1, feats.dim()
-        feats = feats.view(1, -1)
+            pass
+        assert feats.dim() == 2, feats.dim()
+        feats = feats.view(1, -1, 2)
         padding_mask = torch.BoolTensor(feats.shape).to(self.device).fill_(False)
 
         inputs = {
@@ -376,7 +376,7 @@ class VC:
                     index, big_npy, index_rate, version, protect
                 )[self.t_pad_tgt : -self.t_pad_tgt]
             )
-        audio_opt = np.concatenate(audio_opt)
+        audio_opt = np.concatenate(audio_opt, axis=1)
         if volume_envelope != 1:
             audio_opt = AudioProcessor.change_rms(audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope)
         if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
