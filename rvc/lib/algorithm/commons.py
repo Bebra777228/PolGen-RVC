@@ -36,7 +36,7 @@ def slice_segments2(x, ids_str, segment_size=4):
         ret[i] = x[i, idx_str:idx_end]
     return ret
 
-def rand_slice_segments(x, ids_str, x_lengths=None, segment_size=4):
+def rand_slice_segments(x, x_lengths=None, segment_size=4):
     b, d, t = x.size()
     if x_lengths is None:
         x_lengths = t
