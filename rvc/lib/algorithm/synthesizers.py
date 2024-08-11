@@ -9,7 +9,7 @@ from rvc.lib.algorithm.encoders import TextEncoder, PosteriorEncoder
 from rvc.lib.algorithm.attentions import FFT
 
 
-class F0Decoder(nn.Module):
+class F0Decoder(torch.nn.Module):
     def __init__(
         self,
         out_channels,
