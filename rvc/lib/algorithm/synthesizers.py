@@ -205,7 +205,7 @@ class Synthesizer_test(torch.nn.Module):
         text_enc_hidden_dim=768,
         **kwargs
     ):
-        super(Synthesizer, self).__init__()
+        super(Synthesizer_test, self).__init__()
         self.spec_channels = spec_channels
         self.inter_channels = inter_channels
         self.hidden_channels = hidden_channels
