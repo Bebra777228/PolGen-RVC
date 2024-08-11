@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 from typing import Optional
 
 from rvc.lib.algorithm.nsf import GeneratorNSF
@@ -7,6 +8,7 @@ from rvc.lib.algorithm.commons import slice_segments2, rand_slice_segments
 from rvc.lib.algorithm.residuals import ResidualCouplingBlock
 from rvc.lib.algorithm.encoders import TextEncoder, PosteriorEncoder
 from rvc.lib.algorithm.attentions import FFT
+from rvc.infer.pipeline import normalize_f0
 
 
 class F0Decoder(torch.nn.Module):
