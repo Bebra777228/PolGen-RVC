@@ -65,7 +65,7 @@ class TextEncoder(torch.nn.Module):
         kernel_size,
         p_dropout,
         embedding_dim,
-        f0=True,
+        f0=True
     ):
         super(TextEncoder, self).__init__()
         self.out_channels = out_channels
@@ -107,7 +107,7 @@ class PosteriorEncoder(torch.nn.Module):
         kernel_size,
         dilation_rate,
         n_layers,
-        gin_channels=0,
+        gin_channels=0
     ):
         super(PosteriorEncoder, self).__init__()
         self.in_channels = in_channels
