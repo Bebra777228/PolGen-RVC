@@ -37,18 +37,6 @@ def normalize_f0(f0, x_mask, pitch, random_scale=True):
         exit(0)
     return f0_norm * x_mask
 
-def f0_to_coarse(f0):
-    f0_mel = 1127 * (1 + f0 / 700).log()
-    a = (f0_bin - 2) / (f0_mel_max - f0_mel_min)
-    b = f0_mel_min * a - 1.
-    f0_mel = torch.where(f0_mel > 0, f0_mel * a - b, f0_mel)
-    f0_coarse = torch.round(f0_mel).long()
-    f0_coarse = f0_coarse * (f0_coarse > 0)
-    f0_coarse = f0_coarse + ((f0_coarse < 1) * 1)
-    f0_coarse = f0_coarse * (f0_coarse < f0_bin)
-    f0_coarse = f0_coarse + ((f0_coarse >= f0_bin) * (f0_bin - 1))
-    return f0_coarse
-
 
 class AudioProcessor:
     @staticmethod
