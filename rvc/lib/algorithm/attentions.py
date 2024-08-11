@@ -1,8 +1,10 @@
 import math
 import torch
+from torch import nn
 
 from rvc.lib.algorithm.normalization import LayerNorm
 from rvc.lib.algorithm.commons import convert_pad_shape, fused_add_tanh_sigmoid_multiply, subsequent_mask
+from rvc.lib.algorithm.DSConv import weight_norm_modules
 
 
 class FFT(torch.nn.Module):
