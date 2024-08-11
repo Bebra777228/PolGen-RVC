@@ -10,7 +10,7 @@ class WaveNet(torch.nn.Module):
         dilation_rate,
         n_layers,
         gin_channels=0,
-        p_dropout=0,
+        p_dropout=0
     ):
         super(WaveNet, self).__init__()
         assert kernel_size % 2 == 1
