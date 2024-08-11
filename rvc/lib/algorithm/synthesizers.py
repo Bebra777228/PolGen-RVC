@@ -53,55 +53,15 @@ class Synthesizer(torch.nn.Module):
         self.spk_embed_dim = spk_embed_dim
         self.use_f0 = use_f0
 
-        self.enc_p = TextEncoder(
-            inter_channels,
-            hidden_channels,
-            filter_channels,
-            n_heads,
-            n_layers,
-            kernel_size,
-            float(p_dropout),
-            text_enc_hidden_dim,
-            f0=use_f0,
-        )
+        self.enc_p = TextEncoder(inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, float(p_dropout), text_enc_hidden_dim, f0=use_f0)
 
         if use_f0:
-            self.dec = GeneratorNSF(
-                inter_channels,
-                resblock,
-                resblock_kernel_sizes,
-                resblock_dilation_sizes,
-                upsample_rates,
-                upsample_initial_channel,
-                upsample_kernel_sizes,
-                gin_channels=gin_channels,
-                sr=sr,
-                is_half=kwargs["is_half"],
-            )
+            self.dec = GeneratorNSF(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels, sr=sr, is_half=kwargs["is_half"])
         else:
-            self.dec = Generator(
-                inter_channels,
-                resblock,
-                resblock_kernel_sizes,
-                resblock_dilation_sizes,
-                upsample_rates,
-                upsample_initial_channel,
-                upsample_kernel_sizes,
-                gin_channels=gin_channels,
-            )
+            self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
 
-        self.enc_q = PosteriorEncoder(
-            spec_channels,
-            inter_channels,
-            hidden_channels,
-            5,
-            1,
-            16,
-            gin_channels=gin_channels,
-        )
-        self.flow = ResidualCouplingBlock(
-            inter_channels, hidden_channels, 5, 1, 3, gin_channels=gin_channels
-        )
+        self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
+        self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels)
         self.emb_g = torch.nn.Embedding(self.spk_embed_dim, gin_channels)
 
     def remove_weight_norm(self):
@@ -111,23 +71,14 @@ class Synthesizer(torch.nn.Module):
 
     def __prepare_scriptable__(self):
         for hook in self.dec._forward_pre_hooks.values():
-            if (
-                hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
-                and hook.__class__.__name__ == "WeightNorm"
-            ):
+            if (hook.__module__ == "torch.nn.utils.parametrizations.weight_norm" and hook.__class__.__name__ == "WeightNorm"):
                 torch.nn.utils.remove_weight_norm(self.dec)
         for hook in self.flow._forward_pre_hooks.values():
-            if (
-                hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
-                and hook.__class__.__name__ == "WeightNorm"
-            ):
+            if (hook.__module__ == "torch.nn.utils.parametrizations.weight_norm" and hook.__class__.__name__ == "WeightNorm"):
                 torch.nn.utils.remove_weight_norm(self.flow)
         if hasattr(self, "enc_q"):
             for hook in self.enc_q._forward_pre_hooks.values():
-                if (
-                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
-                    and hook.__class__.__name__ == "WeightNorm"
-                ):
+                if (hook.__module__ == "torch.nn.utils.parametrizations.weight_norm" and hook.__class__.__name__ == "WeightNorm"):
                     torch.nn.utils.remove_weight_norm(self.enc_q)
         return self
 
@@ -140,7 +91,7 @@ class Synthesizer(torch.nn.Module):
         pitchf: Optional[torch.Tensor] = None,
         y: torch.Tensor = None,
         y_lengths: torch.Tensor = None,
-        ds: Optional[torch.Tensor] = None,
+        ds: Optional[torch.Tensor] = None
     ):
         g = self.emb_g(ds).unsqueeze(-1)
         m_p, logs_p, x_mask = self.enc_p(phone, pitch, phone_lengths)
@@ -165,7 +116,7 @@ class Synthesizer(torch.nn.Module):
         pitch: Optional[torch.Tensor] = None,
         nsff0: Optional[torch.Tensor] = None,
         sid: torch.Tensor = None,
-        rate: Optional[torch.Tensor] = None,
+        rate: Optional[torch.Tensor] = None
     ):
         g = self.emb_g(sid).unsqueeze(-1)
         m_p, logs_p, x_mask = self.enc_p(phone, pitch, phone_lengths)
