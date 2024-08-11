@@ -5,7 +5,7 @@ from rvc.lib.algorithm.normalization import LayerNorm
 from rvc.lib.algorithm.commons import convert_pad_shape, fused_add_tanh_sigmoid_multiply, subsequent_mask
 
 
-class FFT(nn.Module):
+class FFT(torch.nn.Module):
   def __init__(
       self,
       hidden_channels,
