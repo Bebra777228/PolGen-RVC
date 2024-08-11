@@ -10,17 +10,7 @@ LRELU_SLOPE = 0.1
 
 
 def create_conv1d_layer(channels, kernel_size, dilation):
-    return weight_norm(
-        torch.nn.Conv1d(
-            channels,
-            channels,
-            kernel_size,
-            1,
-            dilation=dilation,
-            padding=get_padding(kernel_size, dilation),
-        )
-    )
-
+    return weight_norm(torch.nn.Conv1d(channels, channels, kernel_size, 1, dilation=dilation, padding=get_padding(kernel_size, dilation)))
 
 def apply_mask(tensor, mask):
     return tensor * mask if mask is not None else tensor
@@ -100,7 +90,7 @@ class ResidualCouplingBlock(torch.nn.Module):
         dilation_rate,
         n_layers,
         n_flows=4,
-        gin_channels=0,
+        gin_channels=0
     ):
         super(ResidualCouplingBlock, self).__init__()
         self.channels = channels
@@ -113,17 +103,7 @@ class ResidualCouplingBlock(torch.nn.Module):
 
         self.flows = torch.nn.ModuleList()
         for i in range(n_flows):
-            self.flows.append(
-                ResidualCouplingLayer(
-                    channels,
-                    hidden_channels,
-                    kernel_size,
-                    dilation_rate,
-                    n_layers,
-                    gin_channels=gin_channels,
-                    mean_only=True,
-                )
-            )
+            self.flows.append(ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
             self.flows.append(Flip())
 
     def forward(
@@ -131,7 +111,7 @@ class ResidualCouplingBlock(torch.nn.Module):
         x: torch.Tensor,
         x_mask: torch.Tensor,
         g: Optional[torch.Tensor] = None,
-        reverse: bool = False,
+        reverse: bool = False
     ):
         if not reverse:
             for flow in self.flows:
@@ -164,7 +144,7 @@ class ResidualCouplingLayer(torch.nn.Module):
         n_layers,
         p_dropout=0,
         gin_channels=0,
-        mean_only=False,
+        mean_only=False
     ):
         assert channels % 2 == 0, "channels should be divisible by 2"
         super().__init__()
@@ -177,14 +157,7 @@ class ResidualCouplingLayer(torch.nn.Module):
         self.mean_only = mean_only
 
         self.pre = torch.nn.Conv1d(self.half_channels, hidden_channels, 1)
-        self.enc = WaveNet(
-            hidden_channels,
-            kernel_size,
-            dilation_rate,
-            n_layers,
-            p_dropout=p_dropout,
-            gin_channels=gin_channels,
-        )
+        self.enc = WaveNet(hidden_channels, kernel_size, dilation_rate, n_layers, p_dropout=p_dropout, gin_channels=gin_channels)
         self.post = torch.nn.Conv1d(hidden_channels, self.half_channels * (2 - mean_only), 1)
         self.post.weight.data.zero_()
         self.post.bias.data.zero_()
