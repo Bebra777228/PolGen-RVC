@@ -119,7 +119,7 @@ class PosteriorEncoder(torch.nn.Module):
         self.gin_channels = gin_channels
 
         self.pre = torch.nn.Conv1d(in_channels, hidden_channels, 1)
-        self.enc = WaveNet(hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels,)
+        self.enc = WaveNet(hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels)
         self.proj = torch.nn.Conv1d(hidden_channels, out_channels * 2, 1)
 
     def forward(self, x: torch.Tensor, x_lengths: torch.Tensor, g: Optional[torch.Tensor] = None):
