@@ -15,7 +15,7 @@ class MultiHeadAttention(torch.nn.Module):
         heads_share=True,
         block_length=None,
         proximal_bias=False,
-        proximal_init=False,
+        proximal_init=False
     ):
         super().__init__()
         assert channels % n_heads == 0
@@ -139,7 +139,7 @@ class FFN(torch.nn.Module):
         kernel_size,
         p_dropout=0.0,
         activation=None,
-        causal=False,
+        causal=False
     ):
         super().__init__()
         self.in_channels = in_channels
