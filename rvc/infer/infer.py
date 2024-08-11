@@ -5,7 +5,7 @@ import torch
 from fairseq import checkpoint_utils
 from scipy.io import wavfile
 
-from rvc.lib.algorithm.synthesizers import Synthesizer
+from rvc.lib.algorithm.synthesizers import Synthesizer_test
 from rvc.lib.my_utils import load_audio
 from rvc.infer.pipeline import VC
 
