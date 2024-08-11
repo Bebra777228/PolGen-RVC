@@ -155,6 +155,7 @@ class VC:
         filter_radius,
         hop_length,
         f0_autotune,
+        f0_autopitch,
         inp_f0=None,
         f0_min=50,
         f0_max=1100
@@ -195,6 +196,7 @@ class VC:
 
 
         print(f"f0_autotune = {f0_autotune}")
+        print(f"f0_autopitch = {f0_autopitch}")
         if f0_autotune == True:
             f0 = Autotune.autotune_f0(self, f0)
 
@@ -309,6 +311,7 @@ class VC:
         protect,
         hop_length,
         f0_autotune,
+        f0_autopitch,
         f0_file,
         f0_min=50,
         f0_max=1100
@@ -358,6 +361,7 @@ class VC:
                 filter_radius,
                 hop_length,
                 f0_autotune,
+                f0_autopitch,
                 inp_f0,
                 f0_min,
                 f0_max

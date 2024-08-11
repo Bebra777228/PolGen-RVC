@@ -77,7 +77,7 @@ def load_hubert(device, is_half, model_path):
     hubert.eval()
     return hubert
 
-def get_vc(device, is_half, config, model_path):
+def get_vc(device, is_half, config, model_path, f0_autopitch):
     cpt = torch.load(model_path, map_location='cpu', weights_only=True)
     if "config" not in cpt or "weight" not in cpt:
         raise ValueError(f'Некорректный формат для {model_path}. Используйте голосовую модель, обученную с использованием RVC v2.')
@@ -88,7 +88,7 @@ def get_vc(device, is_half, config, model_path):
     version = cpt.get("version", "v1")
     input_dim = 768 if version == "v2" else 256
 
-    net_g = Synthesizer(*cpt["config"], use_f0=pitch_guidance, text_enc_hidden_dim=input_dim, is_half=is_half)
+    net_g = Synthesizer_test(*cpt["config"], use_f0=pitch_guidance, text_enc_hidden_dim=input_dim, is_half=is_half, use_automatic_f0_prediction=f0_autopitch)
     
     del net_g.enc_q
     print(net_g.load_state_dict(cpt["weight"], strict=False))
@@ -120,6 +120,7 @@ def rvc_infer(
     vc,
     hubert_model,
     f0_autotune,
+    f0_autopitch,
     f0_min=50,
     f0_max=1100
 ):
@@ -144,6 +145,7 @@ def rvc_infer(
         protect,
         hop_length,
         f0_autotune,
+        f0_autopitch,
         f0_file=None,
         f0_min=f0_min,
         f0_max=f0_max
