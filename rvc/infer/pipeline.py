@@ -22,6 +22,33 @@ bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAM
 
 input_audio_path2wav = {}
 
+def normalize_f0(f0, x_mask, pitch, random_scale=True):
+    pitch_sum = torch.sum(pitch, dim=1, keepdim=True)
+    pitch_sum[pitch_sum == 0] = 9999
+    means = torch.sum(f0[:, 0, :] * pitch, dim=1, keepdim=True) / pitch_sum
+
+    if random_scale:
+        factor = torch.Tensor(f0.shape[0], 1).uniform_(0.8, 1.2).to(f0.device)
+    else:
+        factor = torch.ones(f0.shape[0], 1).to(f0.device)
+
+    f0_norm = (f0 - means.unsqueeze(-1)) * factor.unsqueeze(-1)
+    if torch.isnan(f0_norm).any():
+        exit(0)
+    return f0_norm * x_mask
+
+def f0_to_coarse(f0):
+    f0_mel = 1127 * (1 + f0 / 700).log()
+    a = (f0_bin - 2) / (f0_mel_max - f0_mel_min)
+    b = f0_mel_min * a - 1.
+    f0_mel = torch.where(f0_mel > 0, f0_mel * a - b, f0_mel)
+    f0_coarse = torch.round(f0_mel).long()
+    f0_coarse = f0_coarse * (f0_coarse > 0)
+    f0_coarse = f0_coarse + ((f0_coarse < 1) * 1)
+    f0_coarse = f0_coarse * (f0_coarse < f0_bin)
+    f0_coarse = f0_coarse + ((f0_coarse >= f0_bin) * (f0_bin - 1))
+    return f0_coarse
+
 
 class AudioProcessor:
     @staticmethod
