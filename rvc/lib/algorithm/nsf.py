@@ -17,7 +17,7 @@ class SourceModuleHnNSF(torch.nn.Module):
         sine_amp=0.1,
         add_noise_std=0.003,
         voiced_threshod=0,
-        is_half=True,
+        is_half=True
     ):
         super(SourceModuleHnNSF, self).__init__()
 
@@ -47,7 +47,7 @@ class GeneratorNSF(torch.nn.Module):
         upsample_kernel_sizes,
         gin_channels,
         sr,
-        is_half=False,
+        is_half=False
     ):
         super(GeneratorNSF, self).__init__()
 
