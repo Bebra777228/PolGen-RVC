@@ -94,17 +94,7 @@ class VC:
         if audio.ndim == 2 and audio.shape[0] > 1:
             audio = torch.mean(audio, dim=0, keepdim=True)
 
-        pitch = torchcrepe.predict(
-            audio,
-            self.sample_rate,
-            hop_length,
-            f0_min,
-            f0_max,
-            model,
-            batch_size=hop_length * 2,
-            device=self.device,
-            pad=True
-        )
+        pitch = torchcrepe.predict(audio, self.sample_rate, hop_length, f0_min, f0_max, model, batch_size=hop_length * 2, device=self.device, pad=True)
 
         p_len = p_len or x.shape[0] // hop_length
         source = np.array(pitch.squeeze(0).cpu().float().numpy())
@@ -139,32 +129,18 @@ class VC:
             f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
 
         elif f0_method == "rmvpe+":
-            params = {
-                'x': x, 'p_len': p_len, 'pitch': pitch, 'f0_min': f0_min, 
-                'f0_max': f0_max, 'time_step': self.time_step, 'filter_radius': filter_radius, 
-                'crepe_hop_length': int(hop_length), 'model': "full"
-            }
+            params = {'x': x, 'p_len': p_len, 'pitch': pitch, 'f0_min': f0_min, 'f0_max': f0_max, 'time_step': self.time_step, 'filter_radius': filter_radius, 'crepe_hop_length': int(hop_length), 'model': "full"}
             f0 = self.get_pitch_dependant_rmvpe(**params)
 
         elif f0_method == "fcpe":
-            self.model_fcpe = FCPEF0Predictor(
-                FCPE_DIR,
-                f0_min=int(f0_min),
-                f0_max=int(f0_max),
-                dtype=torch.float32,
-                device=self.device,
-                sample_rate=self.sample_rate,
-                threshold=0.03
-            )
+            self.model_fcpe = FCPEF0Predictor(FCPE_DIR, f0_min=int(f0_min), f0_max=int(f0_max), dtype=torch.float32, device=self.device, sample_rate=self.sample_rate, threshold=0.03)
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
             del self.model_fcpe
             gc.collect()
 
-
         print(f"f0_autotune = {f0_autotune}")
         if f0_autotune == True:
             f0 = Autotune.autotune_f0(self, f0)
-
 
         f0 *= pow(2, pitch / 12)
         tf0 = self.sample_rate // self.window
@@ -298,10 +274,7 @@ class VC:
             for i in range(self.window):
                 audio_sum += audio_pad[i : i - self.window]
             for t in range(self.t_center, audio.shape[0], self.t_center):
-                opt_ts.append(
-                    t - self.t_query + np.where(np.abs(audio_sum[t - self.t_query : t + self.t_query])
-                    == np.abs(audio_sum[t - self.t_query : t + self.t_query]).min())[0][0]
-                )
+                opt_ts.append(t - self.t_query + np.where(np.abs(audio_sum[t - self.t_query : t + self.t_query]) == np.abs(audio_sum[t - self.t_query : t + self.t_query]).min())[0][0])
         s = 0
         audio_opt = []
         t = None
