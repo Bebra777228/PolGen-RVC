@@ -15,10 +15,7 @@ now_dir = os.getcwd()
 RMVPE_DIR = os.path.join(now_dir, 'models', 'assets', 'rmvpe.pt')
 FCPE_DIR = os.path.join(now_dir, 'models', 'assets', 'fcpe.pt')
 
-FILTER_ORDER = 5
-CUTOFF_FREQUENCY = 48
-SAMPLE_RATE = 16000
-bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE)
+bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
 input_audio_path2wav = {}
 
@@ -44,18 +41,14 @@ class Autotune:
     def generate_interpolated_frequencies(self):
         note_dict = []
         for i in range(len(self.ref_freqs) - 1):
-            freq_low = self.ref_freqs[i]
-            freq_high = self.ref_freqs[i + 1]
-            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
-            note_dict.extend(interpolated_freqs)
+            note_dict.extend(np.linspace(self.ref_freqs[i], self.ref_freqs[i + 1], num=10, endpoint=False))
         note_dict.append(self.ref_freqs[-1])
         return note_dict
 
     def autotune_f0(self, f0):
         autotuned_f0 = np.zeros_like(f0)
         for i, freq in enumerate(f0):
-            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
-            autotuned_f0[i] = closest_note
+            autotuned_f0[i] = min(self.note_dict, key=lambda x: abs(x - freq))
         return autotuned_f0
 
 
@@ -66,7 +59,7 @@ class VC:
         self.x_center = config.x_center
         self.x_max = config.x_max
         self.is_half = config.is_half
-        self.sample_rate = SAMPLE_RATE
+        self.sample_rate = 16000
         self.window = 160
         self.t_pad = self.sample_rate * self.x_pad
         self.t_pad_tgt = tgt_sr * self.x_pad
@@ -78,17 +71,18 @@ class VC:
         self.device = config.device
 
         self.ref_freqs = [
-            65.41,
-            82.41,
-            110.00,
-            146.83,
-            196.00,
-            246.94,
-            329.63,
-            440.00,
-            587.33,
-            783.99,
-            1046.50
+            65.41, 69.30, 73.42, 77.78, 82.41, 87.31,
+            92.50, 98.00, 103.83, 110.00, 116.54, 123.47,
+            130.81, 138.59, 146.83, 155.56, 164.81, 174.61,
+            185.00, 196.00, 207.65, 220.00, 233.08, 246.94,
+            261.63, 277.18, 293.66, 311.13, 329.63, 349.23,
+            369.99, 392.00, 415.30, 440.00, 466.16, 493.88,
+            523.25, 554.37, 587.33, 622.25, 659.25, 698.46,
+            739.99, 783.99, 830.61, 880.00, 932.33, 987.77,
+            1046.50, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91,
+            1479.98, 1567.98, 1661.22, 1760.00, 1864.66, 1975.53,
+            2093.00, 2217.46, 2349.32, 2489.02, 2637.02, 2793.83,
+            2959.96, 3135.96, 3322.44, 3520.00, 3729.31, 3951.07
         ]
         self.autotune = Autotune(self.ref_freqs)
         self.note_dict = self.autotune.note_dict
@@ -160,7 +154,7 @@ class VC:
                 dtype=torch.float32,
                 device=self.device,
                 sample_rate=self.sample_rate,
-                threshold=0.03,
+                threshold=0.03
             )
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
             del self.model_fcpe
@@ -219,6 +213,7 @@ class VC:
             "padding_mask": padding_mask,
             "output_layer": 9 if version == "v1" else 12
         }
+        
         with torch.no_grad():
             logits = model.extract_features(**inputs)
             feats = model.final_proj(logits[0]) if version == "v1" else logits[0]
@@ -344,50 +339,23 @@ class VC:
         for t in opt_ts:
             t = t // self.window * self.window
             if pitch_guidance:
-                audio_opt.append(
-                    self.vc(
-                        model, net_g, sid, audio_pad[s : t + self.t_pad2 + self.window],
-                        pitch[:, s // self.window : (t + self.t_pad2) // self.window],
-                        pitchf[:, s // self.window : (t + self.t_pad2) // self.window],
-                        index, big_npy, index_rate, version, protect
-                    )[self.t_pad_tgt : -self.t_pad_tgt]
-                )
+                audio_opt.append(self.vc(model, net_g, sid, audio_pad[s : t + self.t_pad2 + self.window], pitch[:, s // self.window : (t + self.t_pad2) // self.window], pitchf[:, s // self.window : (t + self.t_pad2) // self.window], index, big_npy, index_rate, version, protect)[self.t_pad_tgt : -self.t_pad_tgt])
             else:
-                audio_opt.append(
-                    self.vc(
-                        model, net_g, sid, audio_pad[s : t + self.t_pad2 + self.window],
-                        None, None, index, big_npy, index_rate, version, protect
-                    )[self.t_pad_tgt : -self.t_pad_tgt]
-                )
+                audio_opt.append(self.vc(model, net_g, sid, audio_pad[s : t + self.t_pad2 + self.window], None, None, index, big_npy, index_rate, version, protect)[self.t_pad_tgt : -self.t_pad_tgt])
             s = t
         if pitch_guidance:
-            audio_opt.append(
-                self.vc(
-                    model, net_g, sid, audio_pad[t:],
-                    pitch[:, t // self.window :] if t is not None else pitch,
-                    pitchf[:, t // self.window :] if t is not None else pitchf,
-                    index, big_npy, index_rate, version, protect
-                )[self.t_pad_tgt : -self.t_pad_tgt]
-            )
+            audio_opt.append(self.vc(model, net_g, sid, audio_pad[t:], pitch[:, t // self.window :] if t is not None else pitch, pitchf[:, t // self.window :] if t is not None else pitchf, index, big_npy, index_rate, version, protect)[self.t_pad_tgt : -self.t_pad_tgt])
         else:
-            audio_opt.append(
-                self.vc(
-                    model, net_g, sid, audio_pad[t:], None, None,
-                    index, big_npy, index_rate, version, protect
-                )[self.t_pad_tgt : -self.t_pad_tgt]
-            )
+            audio_opt.append(self.vc(model, net_g, sid, audio_pad[t:], None, None, index, big_npy, index_rate, version, protect)[self.t_pad_tgt : -self.t_pad_tgt])
+
         audio_opt = np.concatenate(audio_opt)
         if volume_envelope != 1:
             audio_opt = AudioProcessor.change_rms(audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope)
         if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
             audio_opt = librosa.resample(audio_opt, orig_sr=tgt_sr, target_sr=resample_sr)
-        audio_max = np.abs(audio_opt).max() / 0.99
-        max_int16 = 32768
-        if audio_max > 1:
-            max_int16 /= audio_max
         
         del pitch, pitchf, sid
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         
-        return (audio_opt * max_int16).astype(np.int16)
+        return (audio_opt * 32768 / np.abs(audio_opt).max() / 0.99).astype(np.int16)
