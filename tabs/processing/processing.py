@@ -111,7 +111,7 @@ def processing_tab():
 
     use_effects.change(show_effects, inputs=use_effects, outputs=effects_accordion)
     process_btn.click(process_audio,
-                    inputs=[upload_vocal_audio, upload_instrumental_audio, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
+                    inputs=[vocal_input, instrumental_input, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                     reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                     chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
