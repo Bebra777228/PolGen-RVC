@@ -37,6 +37,7 @@ def zip_upload():
       local_upload_output_message = gr.Text(label='Сообщение вывода', interactive=False)
       model_upload_button.click(upload_zip_model, inputs=[zip_file, local_model_name], outputs=local_upload_output_message)
 
+
 def files_upload():
   with gr.Tab('Загрузить файлами'):
       with gr.Group():
