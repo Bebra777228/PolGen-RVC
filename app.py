@@ -2,7 +2,7 @@ import gradio as gr
 
 from tabs.welcome import *
 from tabs.conversion.conversion import *
-from tabs.conversion.tts import *
+from tabs.conversion.edge_tts import *
 from tabs.processing.processing import *
 from tabs.install.install_models import *
 

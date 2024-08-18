@@ -54,7 +54,7 @@ def perform_voice_conversion(
     gc.collect()
     torch.cuda.empty_cache()
 
-def tts_pipeline(
+def edge_tts_pipeline(
     text, voice_model, voice, pitch, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
     hop_length=128, protect=0.33, output_format='mp3', f0_autotune=False, f0_min=50, f0_max=1100,
     progress=gr.Progress()

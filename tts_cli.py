@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from rvc.scripts.tts_conversion import tts_pipeline
+from rvc.scripts.edge_tts_conversion import edge_tts_pipeline
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
 now_dir = os.getcwd()
@@ -28,7 +28,7 @@ rvc_dirname = args.rvc_dirname
 if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
     raise Exception(f'\033[91mМодели {rvc_dirname} не существует. Возможно, вы неправильно ввели имя.\033[0m')
 
-cover_path = tts_pipeline(
+cover_path = edge_tts_pipeline(
     text = args.text_input,
     voice_model = rvc_dirname,
     voice = args.tts_voice,
