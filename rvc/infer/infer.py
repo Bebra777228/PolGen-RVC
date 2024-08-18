@@ -1,7 +1,7 @@
 import os
+import torch
 from multiprocessing import cpu_count
 from pathlib import Path
-import torch
 from fairseq import checkpoint_utils
 from scipy.io import wavfile
 
@@ -88,7 +88,12 @@ def get_vc(device, is_half, config, model_path):
     version = cpt.get("version", "v1")
     input_dim = 768 if version == "v2" else 256
 
-    net_g = Synthesizer(*cpt["config"], use_f0=pitch_guidance, text_enc_hidden_dim=input_dim, is_half=is_half)
+    net_g = Synthesizer(
+        *cpt["config"],
+        use_f0=pitch_guidance,
+        input_dim=input_dim,
+        is_half=is_half
+    )
     
     del net_g.enc_q
     print(net_g.load_state_dict(cpt["weight"], strict=False))

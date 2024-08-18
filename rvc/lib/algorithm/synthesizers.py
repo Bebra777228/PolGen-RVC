@@ -30,7 +30,7 @@ class Synthesizer(torch.nn.Module):
         gin_channels,
         sr,
         use_f0,
-        text_enc_hidden_dim=768,
+        input_dim=768,
         **kwargs
     ):
         super(Synthesizer, self).__init__()
@@ -53,7 +53,7 @@ class Synthesizer(torch.nn.Module):
         self.spk_embed_dim = spk_embed_dim
         self.use_f0 = use_f0
 
-        self.enc_p = TextEncoder(inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, float(p_dropout), text_enc_hidden_dim, f0=use_f0)
+        self.enc_p = TextEncoder(inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, float(p_dropout), input_dim, f0=use_f0)
 
         if use_f0:
             self.dec = GeneratorNSF(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels, sr=sr, is_half=kwargs["is_half"])
