@@ -3,8 +3,8 @@ from torch.nn.utils import remove_weight_norm
 from torch.nn.utils.parametrizations import weight_norm
 from typing import Optional
 
-from rvc.lib.algorithm.residuals import LRELU_SLOPE, ResBlock1, ResBlock2
-from rvc.lib.algorithm.commons import init_weights
+from .residuals import LRELU_SLOPE, ResBlock1, ResBlock2
+from .commons import init_weights
 
 
 class Generator(torch.nn.Module):

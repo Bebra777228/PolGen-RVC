@@ -7,7 +7,7 @@ from scipy.io import wavfile
 
 from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
-from rvc.infer.pipeline import VC
+from .pipeline import VC
 
 now_dir = os.getcwd()
 
