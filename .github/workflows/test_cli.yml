@@ -9,7 +9,7 @@ on:
       - PolGen-Lite-dev
 
 jobs:
-  setup:
+  rvc_cli:
     runs-on: ubuntu-latest
 
     steps:
@@ -38,42 +38,44 @@ jobs:
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: dependencies
-        path: |
-          models
+    - name: Install audio for test
+      run: |
+        mkdir -p audio
+        wget https://huggingface.co/Politrees/audio_for_test/resolve/main/test1.wav -O audio/test.wav
 
-  run_scripts:
+    - name: Run script
+      run: |
+        python rvc_cli.py -i audio/test.wav -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -tune "True" -f0min 1 -f0max 1100 -f "mp3"
+
+  tts_cli:
     runs-on: ubuntu-latest
-    needs: setup
-    strategy:
-      matrix:
-        script: [rvc_cli, tts_cli]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        name: dependencies
-        path: models
+        python-version: '3.8'
 
-    - name: Install audio for test (rvc_cli only)
-      if: matrix.script == 'rvc_cli'
+    - name: Install dependencies
       run: |
-        mkdir -p audio
-        wget https://huggingface.co/Politrees/audio_for_test/resolve/main/test1.wav -O audio/test.wav
+        python -m pip install pip==23.0
+        pip install -r requirements.txt
 
-    - name: Run rvc_cli script
-      if: matrix.script == 'rvc_cli'
+    - name: Install ffmpeg
       run: |
-        python rvc_cli.py -i audio/test.wav -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -tune "True" -f0min 1 -f0max 1100 -f "mp3"
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
 
-    - name: Run tts_cli script
-      if: matrix.script == 'tts_cli'
+    - name: Install assets and models
+      run: |
+        python download_models.py
+        mkdir -p models/rvc_models/Tsoi
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
+
+    - name: Run script
       run: |
         python tts_cli.py -i "Hi" -d Tsoi -v "en-US-GuyNeural" -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -tune "True" -f0min 1 -f0max 1100 -f "mp3"
