@@ -9,9 +9,8 @@ on:
       - PolGen-Lite-dev
 
 jobs:
-  rvc_cli:
+  setup:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -37,6 +36,13 @@ jobs:
         mkdir -p models/rvc_models/Tsoi
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
         wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
+
+  rvc_cli:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
 
     - name: Install audio for test
       run: |
@@ -48,33 +54,11 @@ jobs:
         python rvc_cli.py -i audio/test.wav -d Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -m "rmvpe+" -hop 32 -pro 0.33 -tune "True" -f0min 1 -f0max 1100 -f "mp3"
 
   tts_cli:
+    needs: setup
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install pip==23.0
-        pip install -r requirements.txt
-
-    - name: Install ffmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
-
-    - name: Install assets and models
-      run: |
-        python download_models.py
-        mkdir -p models/rvc_models/Tsoi
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
 
     - name: Run script
       run: |
