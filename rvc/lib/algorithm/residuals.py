@@ -21,7 +21,6 @@ class ResBlockBase(torch.nn.Module):
         super(ResBlockBase, self).__init__()
         self.convs1 = torch.nn.ModuleList([create_conv1d_layer(channels, kernel_size, d) for d in dilations])
         self.convs1.apply(init_weights)
-
         self.convs2 = torch.nn.ModuleList([create_conv1d_layer(channels, kernel_size, 1) for _ in dilations])
         self.convs2.apply(init_weights)
 
@@ -53,17 +52,22 @@ class ResBlock2(ResBlockBase):
 class Log(torch.nn.Module):
     def forward(self, x, x_mask, reverse=False, **kwargs):
         if not reverse:
-            return torch.log(torch.clamp_min(x, 1e-5)) * x_mask, torch.sum(-y, [1, 2])
+            y = torch.log(torch.clamp_min(x, 1e-5)) * x_mask
+            logdet = torch.sum(-y, [1, 2])
+            return y, logdet
         else:
-            return torch.exp(x) * x_mask
+            x = torch.exp(x) * x_mask
+            return x
 
 
 class Flip(torch.nn.Module):
     def forward(self, x, *args, reverse=False, **kwargs):
+        x = torch.flip(x, [1])
         if not reverse:
-            return torch.flip(x, [1]), torch.zeros(x.size(0)).to(dtype=x.dtype, device=x.device)
+            logdet = torch.zeros(x.size(0)).to(dtype=x.dtype, device=x.device)
+            return x, logdet
         else:
-            return torch.flip(x, [1])
+            return x
 
 
 class ElementwiseAffine(torch.nn.Module):
@@ -76,9 +80,12 @@ class ElementwiseAffine(torch.nn.Module):
     def forward(self, x, x_mask, reverse=False, **kwargs):
         if not reverse:
             y = self.m + torch.exp(self.logs) * x
-            return y * x_mask, torch.sum(self.logs * x_mask, [1, 2])
+            y = y * x_mask
+            logdet = torch.sum(self.logs * x_mask, [1, 2])
+            return y, logdet
         else:
-            return (x - self.m) * torch.exp(-self.logs) * x_mask
+            x = (x - self.m) * torch.exp(-self.logs) * x_mask
+            return x
 
 
 class ResidualCouplingBlock(torch.nn.Module):
@@ -90,7 +97,7 @@ class ResidualCouplingBlock(torch.nn.Module):
         dilation_rate,
         n_layers,
         n_flows=4,
-        gin_channels=0
+        gin_channels=0,
     ):
         super(ResidualCouplingBlock, self).__init__()
         self.channels = channels
@@ -100,7 +107,6 @@ class ResidualCouplingBlock(torch.nn.Module):
         self.n_layers = n_layers
         self.n_flows = n_flows
         self.gin_channels = gin_channels
-
         self.flows = torch.nn.ModuleList()
         for i in range(n_flows):
             self.flows.append(ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
@@ -111,13 +117,13 @@ class ResidualCouplingBlock(torch.nn.Module):
         x: torch.Tensor,
         x_mask: torch.Tensor,
         g: Optional[torch.Tensor] = None,
-        reverse: bool = False
+        reverse: bool = False,
     ):
         if not reverse:
             for flow in self.flows:
                 x, _ = flow(x, x_mask, g=g, reverse=reverse)
         else:
-            for flow in self.flows[::-1]:
+            for flow in reversed(self.flows):
                 x = flow.forward(x, x_mask, g=g, reverse=reverse)
         return x
 
@@ -130,7 +136,6 @@ class ResidualCouplingBlock(torch.nn.Module):
             for hook in self.flows[i * 2]._forward_pre_hooks.values():
                 if (hook.__module__ == "torch.nn.utils.parametrizations.weight_norm" and hook.__class__.__name__ == "WeightNorm"):
                     torch.nn.utils.remove_weight_norm(self.flows[i * 2])
-
         return self
 
 
@@ -144,7 +149,7 @@ class ResidualCouplingLayer(torch.nn.Module):
         n_layers,
         p_dropout=0,
         gin_channels=0,
-        mean_only=False
+        mean_only=False,
     ):
         assert channels % 2 == 0, "channels should be divisible by 2"
         super().__init__()
@@ -155,7 +160,6 @@ class ResidualCouplingLayer(torch.nn.Module):
         self.n_layers = n_layers
         self.half_channels = channels // 2
         self.mean_only = mean_only
-
         self.pre = torch.nn.Conv1d(self.half_channels, hidden_channels, 1)
         self.enc = WaveNet(hidden_channels, kernel_size, dilation_rate, n_layers, p_dropout=p_dropout, gin_channels=gin_channels)
         self.post = torch.nn.Conv1d(hidden_channels, self.half_channels * (2 - mean_only), 1)
@@ -175,10 +179,13 @@ class ResidualCouplingLayer(torch.nn.Module):
 
         if not reverse:
             x1 = m + x1 * torch.exp(logs) * x_mask
-            return torch.cat([x0, x1], 1), torch.sum(logs, [1, 2])
+            x = torch.cat([x0, x1], 1)
+            logdet = torch.sum(logs, [1, 2])
+            return x, logdet
         else:
             x1 = (x1 - m) * torch.exp(-logs) * x_mask
-            return torch.cat([x0, x1], 1)
+            x = torch.cat([x0, x1], 1)
+            return x
 
     def remove_weight_norm(self):
         self.enc.remove_weight_norm()

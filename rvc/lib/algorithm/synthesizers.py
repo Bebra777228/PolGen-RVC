@@ -3,7 +3,7 @@ from typing import Optional
 
 from .nsf import GeneratorNSF
 from .generators import Generator
-from .commons import slice_segments2, rand_slice_segments
+from .commons import slice_segments, rand_slice_segments
 from .residuals import ResidualCouplingBlock
 from .encoders import TextEncoder, PosteriorEncoder
 
@@ -52,7 +52,6 @@ class Synthesizer(torch.nn.Module):
         self.gin_channels = gin_channels
         self.spk_embed_dim = spk_embed_dim
         self.use_f0 = use_f0
-
         self.enc_p = TextEncoder(inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, float(p_dropout), input_dim, f0=use_f0)
 
         if use_f0:
@@ -91,7 +90,7 @@ class Synthesizer(torch.nn.Module):
         pitchf: Optional[torch.Tensor] = None,
         y: torch.Tensor = None,
         y_lengths: torch.Tensor = None,
-        ds: Optional[torch.Tensor] = None
+        ds: Optional[torch.Tensor] = None,
     ):
         g = self.emb_g(ds).unsqueeze(-1)
         m_p, logs_p, x_mask = self.enc_p(phone, pitch, phone_lengths)
@@ -100,7 +99,7 @@ class Synthesizer(torch.nn.Module):
             z_p = self.flow(z, y_mask, g=g)
             z_slice, ids_slice = rand_slice_segments(z, y_lengths, self.segment_size)
             if self.use_f0:
-                pitchf = slice_segments2(pitchf, ids_slice, self.segment_size)
+                pitchf = slice_segments(pitchf, ids_slice, self.segment_size, 2)
                 o = self.dec(z_slice, pitchf, g=g)
             else:
                 o = self.dec(z_slice, g=g)
@@ -116,7 +115,7 @@ class Synthesizer(torch.nn.Module):
         pitch: Optional[torch.Tensor] = None,
         nsff0: Optional[torch.Tensor] = None,
         sid: torch.Tensor = None,
-        rate: Optional[torch.Tensor] = None
+        rate: Optional[torch.Tensor] = None,
     ):
         g = self.emb_g(sid).unsqueeze(-1)
         m_p, logs_p, x_mask = self.enc_p(phone, pitch, phone_lengths)

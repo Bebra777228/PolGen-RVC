@@ -28,7 +28,6 @@ class Encoder(torch.nn.Module):
         self.kernel_size = kernel_size
         self.p_dropout = p_dropout
         self.window_size = window_size
-
         self.drop = torch.nn.Dropout(p_dropout)
         self.attn_layers = torch.nn.ModuleList()
         self.norm_layers_1 = torch.nn.ModuleList()
@@ -47,7 +46,6 @@ class Encoder(torch.nn.Module):
             y = self.attn_layers[i](x, x, attn_mask)
             y = self.drop(y)
             x = self.norm_layers_1[i](x + y)
-
             y = self.ffn_layers[i](x, x_mask)
             y = self.drop(y)
             x = self.norm_layers_2[i](x + y)
@@ -93,7 +91,6 @@ class TextEncoder(torch.nn.Module):
         x_mask = torch.unsqueeze(sequence_mask(lengths, x.size(2)), 1).to(x.dtype)
         x = self.encoder(x * x_mask, x_mask)
         stats = self.proj(x) * x_mask
-
         m, logs = torch.split(stats, self.out_channels, dim=1)
         return m, logs, x_mask
 
@@ -117,7 +114,6 @@ class PosteriorEncoder(torch.nn.Module):
         self.dilation_rate = dilation_rate
         self.n_layers = n_layers
         self.gin_channels = gin_channels
-
         self.pre = torch.nn.Conv1d(in_channels, hidden_channels, 1)
         self.enc = WaveNet(hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels)
         self.proj = torch.nn.Conv1d(hidden_channels, out_channels * 2, 1)
