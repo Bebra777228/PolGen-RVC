@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip==23.1
-        pip install -r requirements.txt
+        pip install --no-cache-dir -r requirements.txt
 
     - name: Install ffmpeg
       run: |
@@ -62,7 +62,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip==23.1
-        pip install -r requirements.txt
+        pip install --no-cache-dir -r requirements.txt
 
     - name: Install ffmpeg
       run: |
