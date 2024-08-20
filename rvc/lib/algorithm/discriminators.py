@@ -9,8 +9,6 @@ from .residuals import LRELU_SLOPE
 
 PERIODS_V1 = [2, 3, 5, 7, 11, 17]
 PERIODS_V2 = [2, 3, 5, 7, 11, 17, 23, 37]
-PERIODS_V3 = [2, 3, 5, 7, 11, 17, 23, 37, 65, 93]
-
 IN_CHANNELS = [1, 32, 128, 512, 1024]
 OUT_CHANNELS = [32, 128, 512, 1024, 1024]
 
@@ -37,24 +35,6 @@ class MultiPeriodDiscriminatorV2(nn.Module):
         super(MultiPeriodDiscriminatorV2, self).__init__()
         self.discriminators = nn.ModuleList([DiscriminatorS(use_spectral_norm=use_spectral_norm)] +
                                             [DiscriminatorP(p, use_spectral_norm=use_spectral_norm) for p in PERIODS_V2])
-
-    def forward(self, y, y_hat):
-        y_d_rs, y_d_gs, fmap_rs, fmap_gs = [], [], [], []
-        for d in self.discriminators:
-            y_d_r, fmap_r = d(y)
-            y_d_g, fmap_g = d(y_hat)
-            y_d_rs.append(y_d_r)
-            y_d_gs.append(y_d_g)
-            fmap_rs.append(fmap_r)
-            fmap_gs.append(fmap_g)
-        return y_d_rs, y_d_gs, fmap_rs, fmap_gs
-
-
-class MultiPeriodDiscriminatorV3(nn.Module):
-    def __init__(self, use_spectral_norm=False):
-        super(MultiPeriodDiscriminatorV3, self).__init__()
-        self.discriminators = nn.ModuleList([DiscriminatorS(use_spectral_norm=use_spectral_norm)] +
-                                            [DiscriminatorP(p, use_spectral_norm=use_spectral_norm) for p in PERIODS_V3])
 
     def forward(self, y, y_hat):
         y_d_rs, y_d_gs, fmap_rs, fmap_gs = [], [], [], []
