@@ -323,12 +323,18 @@ class VC:
 
         audio_opt = np.concatenate(audio_opt)
         if volume_envelope != 1:
-            audio_opt = AudioProcessor.change_rms(audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope)
-        if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
+            audio_opt = AudioProcessor.change_rms(audio, 16000, audio_opt, tgt_sr, volume_envelope)
+        if resample_sr >= 16000 and tgt_sr != resample_sr:
             audio_opt = librosa.resample(audio_opt, orig_sr=tgt_sr, target_sr=resample_sr)
+        
+        audio_max = np.abs(audio_opt).max() / 0.99
+        max_int16 = 32768
+        if audio_max > 1:
+            max_int16 /= audio_max
+        audio_opt = (audio_opt * max_int16).astype(np.int16)
         
         del pitch, pitchf, sid
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         
-        return (audio_opt * 32768 / np.abs(audio_opt).max() / 0.99).astype(np.int16)
+        return audio_opt
