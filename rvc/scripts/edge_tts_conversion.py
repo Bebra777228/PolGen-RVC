@@ -59,8 +59,12 @@ def edge_tts_pipeline(
     hop_length=128, protect=0.33, output_format='mp3', f0_autotune=False, f0_min=50, f0_max=1100,
     progress=gr.Progress()
 ):
-    if not text or not voice_model or not voice:
-        raise ValueError('Заполните все необходимые поля.')
+    if not text:
+        raise ValueError("Введите необходимый текст в поле для ввода.")
+    if not voice:
+        raise ValueError("Выберите язык и голос для синтеза речи.")
+    if not voice_model:
+        raise ValueError("Выберите модель голоса для преобразования.")
 
     display_progress(0, '[~] Запуск генерации TTS...', progress)
     tts_output_path = os.path.join(OUTPUT_DIR, 'TTS_Output.wav')
