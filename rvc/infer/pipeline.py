@@ -30,7 +30,8 @@ class AudioProcessor:
         rms2 = F.interpolate(torch.from_numpy(rms2).float().unsqueeze(0), size=target_audio.shape[0], mode="linear").squeeze()
         rms2 = torch.maximum(rms2, torch.zeros_like(rms2) + 1e-6)
 
-        return target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy()
+        adjusted_audio = (target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy())
+        return adjusted_audio
 
 
 class Autotune:
@@ -41,14 +42,18 @@ class Autotune:
     def generate_interpolated_frequencies(self):
         note_dict = []
         for i in range(len(self.ref_freqs) - 1):
-            note_dict.extend(np.linspace(self.ref_freqs[i], self.ref_freqs[i + 1], num=10, endpoint=False))
+            freq_low = self.ref_freqs[i]
+            freq_high = self.ref_freqs[i + 1]
+            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
+            note_dict.extend(interpolated_freqs)
         note_dict.append(self.ref_freqs[-1])
         return note_dict
 
     def autotune_f0(self, f0):
         autotuned_f0 = np.zeros_like(f0)
         for i, freq in enumerate(f0):
-            autotuned_f0[i] = min(self.note_dict, key=lambda x: abs(x - freq))
+            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
+            autotuned_f0[i] = closest_note
         return autotuned_f0
 
 
@@ -100,7 +105,8 @@ class VC:
         source = np.array(pitch.squeeze(0).cpu().float().numpy())
         source[source < 0.001] = np.nan
         target = np.interp(np.arange(0, len(source) * p_len, len(source)) / p_len, np.arange(0, len(source)), source)
-        return np.nan_to_num(target)
+        f0 = np.nan_to_num(target)
+        return f0
 
     def get_f0(
         self,
@@ -114,7 +120,7 @@ class VC:
         f0_autotune,
         inp_f0=None,
         f0_min=50,
-        f0_max=1100
+        f0_max=1100,
     ):
         global input_audio_path2wav
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
@@ -152,10 +158,11 @@ class VC:
 
         f0bak = f0.copy()
         f0_mel = 1127 * np.log(1 + f0 / 700)
-        f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - f0_mel_min) * 254 / (f0_mel_max - f0_mel_min) + 1
+        f0_mel[f0_mel > 0] = (f0_mel[f0_mel > 0] - self.f0_mel_min) * 254 / (self.f0_mel_max - self.f0_mel_min) + 1
         f0_mel[f0_mel <= 1] = 1
         f0_mel[f0_mel > 255] = 255
-        return np.rint(f0_mel).astype(int), f0bak
+        f0_coarse = np.rint(f0_mel).astype(np.int)
+        return f0_coarse, f0bak
 
     def get_pitch_dependant_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
         if not hasattr(self, "model_rmvpe"):
@@ -174,7 +181,7 @@ class VC:
         big_npy,
         index_rate,
         version,
-        protect
+        protect,
     ):
         feats = torch.from_numpy(audio0)
         feats = feats.half() if self.is_half else feats.float()
@@ -187,7 +194,7 @@ class VC:
         inputs = {
             "source": feats.to(self.device),
             "padding_mask": padding_mask,
-            "output_layer": 9 if version == "v1" else 12
+            "output_layer": 9 if version == "v1" else 12,
         }
         
         with torch.no_grad():
@@ -255,7 +262,7 @@ class VC:
         f0_autotune,
         f0_file,
         f0_min=50,
-        f0_max=1100
+        f0_max=1100,
     ):
         if file_index is not None and file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
@@ -301,7 +308,7 @@ class VC:
                 f0_autotune,
                 inp_f0,
                 f0_min,
-                f0_max
+                f0_max,
             )
             pitch = pitch[:p_len]
             pitchf = pitchf[:p_len]
@@ -323,8 +330,8 @@ class VC:
 
         audio_opt = np.concatenate(audio_opt)
         if volume_envelope != 1:
-            audio_opt = AudioProcessor.change_rms(audio, 16000, audio_opt, tgt_sr, volume_envelope)
-        if resample_sr >= 16000 and tgt_sr != resample_sr:
+            audio_opt = AudioProcessor.change_rms(audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope)
+        if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
             audio_opt = librosa.resample(audio_opt, orig_sr=tgt_sr, target_sr=resample_sr)
         
         audio_max = np.abs(audio_opt).max() / 0.99
