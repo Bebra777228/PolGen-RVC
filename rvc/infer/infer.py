@@ -92,7 +92,7 @@ def get_vc(device, is_half, config, model_path):
         *cpt["config"],
         use_f0=pitch_guidance,
         input_dim=input_dim,
-        is_half=is_half
+        is_half=is_half,
     )
     
     del net_g.enc_q
@@ -126,7 +126,7 @@ def rvc_infer(
     hubert_model,
     f0_autotune,
     f0_min=50,
-    f0_max=1100
+    f0_max=1100,
 ):
     audio = load_audio(input_path, 16000)
     pitch_guidance = cpt.get('f0', 1)
@@ -151,6 +151,6 @@ def rvc_infer(
         f0_autotune,
         f0_file=None,
         f0_min=f0_min,
-        f0_max=f0_max
+        f0_max=f0_max,
     )
     wavfile.write(output_path, tgt_sr, audio_opt)
