@@ -54,8 +54,10 @@ def process_audio(vocal_audio_path, instrumental_audio_path, reverb_rm_size, rev
                   low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
                   noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
                   chorus_mix, output_format, vocal_gain, instrumental_gain, use_effects, progress=gr.Progress()):
-    if not vocal_audio_path or not instrumental_audio_path:
-        raise ValueError("Оба пути к аудиофайлам должны быть заполнены.")
+    if not vocal_audio_path:
+        raise ValueError("Не удалось найти аудиофайл с вокалом. Убедитесь, что файл загрузился или проверьте правильность пути к нему.")
+    if not instrumental_audio_path:
+        raise ValueError("Не удалось найти аудиофайл с инструменталом. Убедитесь, что файл загрузился или проверьте правильность пути к нему.")
 
     display_progress(0, "Конвертация вокала в стерео...", progress)
     stereo_vocal_path = os.path.join(OUTPUT_DIR, 'Voice_Stereo.wav')
