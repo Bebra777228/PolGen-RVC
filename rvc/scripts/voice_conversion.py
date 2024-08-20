@@ -62,8 +62,10 @@ def voice_pipeline(
     hop_length=128, protect=0.33, output_format='mp3', f0_autotune=False, f0_min=50, f0_max=1100,
     progress=gr.Progress()
 ):
-    if not uploaded_file or not voice_model:
-        raise ValueError('Заполните все необходимые поля.')
+    if not uploaded_file:
+        raise ValueError("Не удалось найти аудиофайл. Убедитесь, что файл загрузился или проверьте правильность пути к нему.")
+    if not voice_model:
+        raise ValueError("Выберите модель голоса для преобразования.")
                        
     display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
 
