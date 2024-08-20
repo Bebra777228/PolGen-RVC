@@ -65,7 +65,7 @@ def edge_tts_pipeline(
     display_progress(0, '[~] Запуск генерации TTS...', progress)
     tts_output_path = os.path.join(OUTPUT_DIR, 'TTS_Output.wav')
 
-    display_progress(4, '[~] Синтез речи...', progress)
+    display_progress(0.4, '[~] Синтез речи...', progress)
     asyncio.run(synthesize_text_to_speech(text, voice, tts_output_path))
 
     display_progress(0.8, '[~] Преобразование голоса...', progress)
