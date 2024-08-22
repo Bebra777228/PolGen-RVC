@@ -11,9 +11,8 @@ from scipy import signal
 from rvc.lib.predictors.FCPE import FCPEF0Predictor
 from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
-now_dir = os.getcwd()
-RMVPE_DIR = os.path.join(now_dir, "models", "assets", "rmvpe.pt")
-FCPE_DIR = os.path.join(now_dir, "models", "assets", "fcpe.pt")
+RMVPE_DIR = os.path.join(os.getcwd(), "models", "assets", "rmvpe.pt")
+FCPE_DIR = os.path.join(os.getcwd(), "models", "assets", "fcpe.pt")
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 

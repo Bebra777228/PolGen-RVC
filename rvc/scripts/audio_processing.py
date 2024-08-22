@@ -16,8 +16,7 @@ from pedalboard import (
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
-now_dir = os.getcwd()
-OUTPUT_DIR = os.path.join(now_dir, "output")
+OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)

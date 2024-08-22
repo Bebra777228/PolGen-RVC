@@ -9,10 +9,9 @@ import gradio as gr
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
-now_dir = os.getcwd()
-RVC_MODELS_DIR = os.path.join(now_dir, "models", "rvc_models")
-HUBERT_MODEL_PATH = os.path.join(now_dir, "models", "assets", "hubert_base.pt")
-OUTPUT_DIR = os.path.join(now_dir, "output")
+RVC_MODELS_DIR = os.path.join(os.getcwd(), "models", "rvc_models")
+HUBERT_MODEL_PATH = os.path.join(os.getcwd(), "models", "assets", "hubert_base.pt")
+OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)

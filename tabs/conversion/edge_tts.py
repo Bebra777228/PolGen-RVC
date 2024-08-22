@@ -7,8 +7,7 @@ from rvc.modules.ui_updates import *
 
 from tabs.install.install_huberts import *
 
-now_dir = os.getcwd()
-rvc_models_dir = os.path.join(now_dir, "models", "rvc_models")
+rvc_models_dir = os.path.join(os.getcwd(), "models", "rvc_models")
 voice_models = get_folders(rvc_models_dir)
 
 

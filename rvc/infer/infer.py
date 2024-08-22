@@ -9,8 +9,6 @@ from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
 from .pipeline import VC
 
-now_dir = os.getcwd()
-
 
 class Config:
     def __init__(self, device, is_half):
@@ -67,9 +65,9 @@ class Config:
 
     def _update_config_files(self):
         for config_file in ["32k.json", "40k.json", "48k.json"]:
-            config_path = now_dir / "rvc" / "configs" / config_file
+            config_path = os.getcwd() / "rvc" / "configs" / config_file
             self._replace_in_file(config_path, "true", "false")
-        trainset_path = now_dir / "rvc" / "trainset_preprocess_pipeline_print.py"
+        trainset_path = os.getcwd() / "rvc" / "trainset_preprocess_pipeline_print.py"
         self._replace_in_file(trainset_path, "3.7", "3.0")
 
     @staticmethod

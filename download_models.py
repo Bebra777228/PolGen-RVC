@@ -7,8 +7,7 @@ RVC_other_DOWNLOAD_LINK = (
 )
 RVC_hubert_DOWNLOAD_LINK = "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
 
-now_dir = os.getcwd()
-assets_dir = os.path.join(now_dir, "models", "assets")
+assets_dir = os.path.join(os.getcwd(), "models", "assets")
 
 
 def dl_model(link, model_name, dir_name):
