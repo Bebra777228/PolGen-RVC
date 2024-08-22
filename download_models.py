@@ -2,7 +2,9 @@ import os
 from pathlib import Path
 import requests
 
-RVC_other_DOWNLOAD_LINK = "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/"
+RVC_other_DOWNLOAD_LINK = (
+    "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/"
+)
 RVC_hubert_DOWNLOAD_LINK = "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
 
 assets_dir = os.path.join(os.getcwd(), "models", "assets")
