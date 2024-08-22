@@ -1,4 +1,4 @@
-name: Code Formatter
+name: Форматировщик кода
 
 on:
   push:
@@ -14,38 +14,38 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout code
+      - name: Проверка кода
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Set up Python
+      - name: Настройка Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Install Black
+      - name: Установка Black
         run: pip install "black[jupyter]"
 
-      - name: Run Black
+      - name: Запуск Black
         run: black .
 
-      - name: Commit changes
+      - name: Фиксация изменений
         continue-on-error: true
         id: commitback
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add --all
-          git commit -m "chore(format): run black on ${{ github.ref_name }}"
+          git commit -m "Рутинная работа"
 
-      - name: Create Pull Request
+      - name: Создание Pull Request
         if: steps.commitback.outcome == 'success'
         continue-on-error: true
         uses: peter-evans/create-pull-request@v5
         with:
           delete-branch: true
-          body: "Automatically apply code formatter change"
-          title: "chore(format): run black on ${{ github.ref_name }}"
-          commit-message: "chore(format): run black on ${{ github.ref_name }}"
+          body: "Автоматическое применение изменений форматировщика кода"
+          title: "Рутинная работа"
+          commit-message: "Рутинная работа"
           branch: formatter-PolGen-Lite
