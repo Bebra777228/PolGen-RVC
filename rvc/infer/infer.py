@@ -42,12 +42,14 @@ class Config:
 
     def _configure_gpu(self):
         self.gpu_name = torch.cuda.get_device_name(self.device)
-        if "16" in self.gpu_name
-        and "V100" not in self.gpu_name.upper()
-        or "P40" in self.gpu_name.upper()
-        or "1060" in self.gpu_name
-        or "1070" in self.gpu_name
-        or "1080" in self.gpu_name:
+        if (
+            "16" in self.gpu_name
+            and "V100" not in self.gpu_name.upper()
+            or "P40" in self.gpu_name.upper()
+            or "1060" in self.gpu_name
+            or "1070" in self.gpu_name
+            or "1080" in self.gpu_name
+        ):
             print("16 серия/10 серия P40 принудительно используется одинарная точность")
             self.is_half = False
             self._update_config_files()
