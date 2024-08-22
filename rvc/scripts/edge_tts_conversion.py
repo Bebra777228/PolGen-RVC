@@ -101,7 +101,7 @@ def edge_tts_pipeline(
     index_rate=0.5,
     filter_radius=3,
     volume_envelope=0.25,
-    f0_method="rmvpe",
+    f0_method="rmvpe+",
     hop_length=128,
     protect=0.33,
     output_format="mp3",
