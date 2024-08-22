@@ -7,8 +7,7 @@ import requests
 import gradio as gr
 from mega import Mega
 
-now_dir = os.getcwd()
-rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
+rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 
 def get_folders(models_dir):
     return [item for item in os.listdir(models_dir) if os.path.isdir(os.path.join(models_dir, item))]

@@ -1,8 +1,7 @@
 import sys, os, multiprocessing
 from scipy import signal
 
-now_dir = os.getcwd()
-sys.path.append(now_dir)
+sys.path.append(os.getcwd())
 
 inp_root = sys.argv[1]
 sr = int(sys.argv[2])

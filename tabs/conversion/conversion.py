@@ -7,8 +7,7 @@ from rvc.modules.ui_updates import *
 
 from tabs.install.install_huberts import *
 
-now_dir = os.getcwd()
-rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
+rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 voice_models = get_folders(rvc_models_dir)
 
 def conversion_tab():
@@ -44,7 +43,9 @@ def conversion_tab():
         with gr.Row(variant='panel'):
             generate_btn = gr.Button("Генерировать", variant='primary', scale=1)
             converted_voice = gr.Audio(label='Преобразованный голос', scale=5)
-            output_format = gr.Dropdown(['wav', 'flac', 'mp3', 'ogg'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
+            with gr.Column(variant='panel'):
+                device_type = gr.Dropdown(['GPU', 'CPU'], value='GPU', label='Устройство', scale=0.1, allow_custom_value=False, filterable=False)
+                output_format = gr.Dropdown(['wav', 'flac', 'mp3', 'ogg'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
 
     with gr.Tab('Настройки преобразования'):
         with gr.Accordion('Стандартные настройки', open=False):
@@ -69,6 +70,8 @@ def conversion_tab():
 
     ref_btn.click(update_models_list, None, outputs=rvc_model)
     generate_btn.click(voice_pipeline,
-                      inputs=[song_input, rvc_model, pitch, index_rate, filter_radius, volume_envelope,
-                              f0_method, hop_length, protect, output_format, f0_min, f0_max],
+                      inputs=[
+                      song_input, rvc_model, pitch, device_type, index_rate, filter_radius,
+                      volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max
+                      ],
                       outputs=[converted_voice])

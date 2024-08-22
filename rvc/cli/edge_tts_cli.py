@@ -4,22 +4,22 @@ import os
 from rvc.scripts.edge_tts_conversion import edge_tts_pipeline
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
-now_dir = os.getcwd()
-rvc_models_dir = os.path.join(now_dir, 'models', 'rvc_models')
+rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 
 parser = argparse.ArgumentParser(description='Замена голоса в директории song_output/id.', add_help=True)
 parser.add_argument('-i', '--text_input', type=str, required=True)
-parser.add_argument('-d', '--rvc_dirname', type=str, required=True)
+parser.add_argument('-m', '--rvc_dirname', type=str, required=True)
 parser.add_argument('-v', '--tts_voice', type=str, required=True)
 parser.add_argument('-p', '--pitch', type=int, required=True)
 parser.add_argument('-ir', '--index_rate', type=float, default=0)
 parser.add_argument('-fr', '--filter_radius', type=int, default=3)
 parser.add_argument('-rms', '--volume_envelope', type=float, default=0.25)
-parser.add_argument('-m', '--method', type=str, default='rmvpe')
+parser.add_argument('-f0', '--method', type=str, default='rmvpe+')
 parser.add_argument('-hop', '--hop_length', type=int, default=128)
 parser.add_argument('-pro', '--protect', type=float, default=0.33)
 parser.add_argument('-f0min', '--f0_min', type=int, default='50')
 parser.add_argument('-f0max', '--f0_max', type=int, default='1100')
+parser.add_argument('-d', '--device', type=str, default='GPU')
 parser.add_argument('-f', '--format', type=str, default='mp3')
 args = parser.parse_args()
 
@@ -40,7 +40,8 @@ cover_path = edge_tts_pipeline(
     protect = args.protect,
     f0_min = args.f0_min,
     f0_max = args.f0_max,
-    output_format = args.format
+    device_type = args.device,
+    output_format = args.format,
 )
 
 print(f'\033[1;92m\nГолос успешно заменен!\n\033[0m')

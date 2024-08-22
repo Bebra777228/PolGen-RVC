@@ -9,7 +9,6 @@ from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
 from .pipeline import VC
 
-now_dir = os.getcwd()
 
 class Config:
     def __init__(self, device, is_half):
@@ -43,19 +42,30 @@ class Config:
 
     def _configure_gpu(self):
         self.gpu_name = torch.cuda.get_device_name(self.device)
-        if "16" in self.gpu_name and "V100" not in self.gpu_name.upper() or "P40" in self.gpu_name.upper() or "1060" in self.gpu_name or "1070" in self.gpu_name or "1080" in self.gpu_name:
+        if "16" in self.gpu_name
+        and "V100" not in self.gpu_name.upper()
+        or "P40" in self.gpu_name.upper()
+        or "1060" in self.gpu_name
+        or "1070" in self.gpu_name
+        or "1080" in self.gpu_name:
             print("16 серия/10 серия P40 принудительно используется одинарная точность")
             self.is_half = False
             self._update_config_files()
-        self.gpu_mem = int(torch.cuda.get_device_properties(self.device).total_memory / 1024 / 1024 / 1024 + 0.4)
+        self.gpu_mem = int(
+        torch.cuda.get_device_properties(self.device).total_memory
+        / 1024
+        / 1024
+        / 1024
+        + 0.4
+        )
         if self.gpu_mem <= 4:
             self._update_config_files()
 
     def _update_config_files(self):
         for config_file in ["32k.json", "40k.json", "48k.json"]:
-            config_path = now_dir / "rvc" / "configs" / config_file
+            config_path = os.getcwd() / "rvc" / "configs" / config_file
             self._replace_in_file(config_path, "true", "false")
-        trainset_path = now_dir / "rvc" / "trainset_preprocess_pipeline_print.py"
+        trainset_path = os.getcwd() / "rvc" / "trainset_preprocess_pipeline_print.py"
         self._replace_in_file(trainset_path, "3.7", "3.0")
 
     @staticmethod

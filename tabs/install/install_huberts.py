@@ -3,8 +3,7 @@ import shutil
 import urllib.request
 import gradio as gr
 
-now_dir = os.getcwd()
-assets_dir = os.path.join(now_dir, 'models', 'assets')
+assets_dir = os.path.join(os.getcwd(), 'models', 'assets')
 hubert_base_path = os.path.join(assets_dir, 'hubert_base.pt')
 
 base_url = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
