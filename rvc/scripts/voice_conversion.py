@@ -40,7 +40,7 @@ def convert_audio_to_stereo(audio_path):
     return audio_path
 
 def perform_voice_conversion(
-    voice_model, vocals_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_autotune, f0_min, f0_max
+    voice_model, vocals_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max
 ):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -50,7 +50,7 @@ def perform_voice_conversion(
 
     rvc_infer(
         rvc_index_path, index_rate, vocals_path, output_path, pitch, f0_method, cpt, version, net_g,
-        filter_radius, tgt_sr, volume_envelope, protect, hop_length, vc, hubert_model, f0_autotune, f0_min, f0_max
+        filter_radius, tgt_sr, volume_envelope, protect, hop_length, vc, hubert_model, f0_min, f0_max
     )
 
     del hubert_model, cpt, net_g, vc
@@ -59,7 +59,7 @@ def perform_voice_conversion(
 
 def voice_pipeline(
     uploaded_file, voice_model, pitch, index_rate=0.5, filter_radius=3, volume_envelope=0.25, f0_method='rmvpe',
-    hop_length=128, protect=0.33, output_format='mp3', f0_autotune=False, f0_min=50, f0_max=1100,
+    hop_length=128, protect=0.33, output_format='mp3', f0_min=50, f0_max=1100,
     progress=gr.Progress()
 ):
     if not uploaded_file:
@@ -81,7 +81,7 @@ def voice_pipeline(
     display_progress(0.5, '[~] Преобразование вокала...', progress)
     perform_voice_conversion(
         voice_model, orig_song_path, voice_convert_path, pitch, f0_method, index_rate,
-        filter_radius, volume_envelope, protect, hop_length, f0_autotune, f0_min, f0_max
+        filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max
     )
 
     return voice_convert_path

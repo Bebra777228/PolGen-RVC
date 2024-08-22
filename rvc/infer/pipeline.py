@@ -34,29 +34,6 @@ class AudioProcessor:
         return adjusted_audio
 
 
-class Autotune:
-    def __init__(self, ref_freqs):
-        self.ref_freqs = ref_freqs
-        self.note_dict = self.generate_interpolated_frequencies()
-
-    def generate_interpolated_frequencies(self):
-        note_dict = []
-        for i in range(len(self.ref_freqs) - 1):
-            freq_low = self.ref_freqs[i]
-            freq_high = self.ref_freqs[i + 1]
-            interpolated_freqs = np.linspace(freq_low, freq_high, num=10, endpoint=False)
-            note_dict.extend(interpolated_freqs)
-        note_dict.append(self.ref_freqs[-1])
-        return note_dict
-
-    def autotune_f0(self, f0):
-        autotuned_f0 = np.zeros_like(f0)
-        for i, freq in enumerate(f0):
-            closest_note = min(self.note_dict, key=lambda x: abs(x - freq))
-            autotuned_f0[i] = closest_note
-        return autotuned_f0
-
-
 class VC:
     def __init__(self, tgt_sr, config):
         self.x_pad = config.x_pad
@@ -75,23 +52,6 @@ class VC:
         self.time_step = self.window / self.sample_rate * 1000
         self.device = config.device
 
-        self.ref_freqs = [
-            65.41, 69.30, 73.42, 77.78, 82.41, 87.31,
-            92.50, 98.00, 103.83, 110.00, 116.54, 123.47,
-            130.81, 138.59, 146.83, 155.56, 164.81, 174.61,
-            185.00, 196.00, 207.65, 220.00, 233.08, 246.94,
-            261.63, 277.18, 293.66, 311.13, 329.63, 349.23,
-            369.99, 392.00, 415.30, 440.00, 466.16, 493.88,
-            523.25, 554.37, 587.33, 622.25, 659.25, 698.46,
-            739.99, 783.99, 830.61, 880.00, 932.33, 987.77,
-            1046.50, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91,
-            1479.98, 1567.98, 1661.22, 1760.00, 1864.66, 1975.53,
-            2093.00, 2217.46, 2349.32, 2489.02, 2637.02, 2793.83,
-            2959.96, 3135.96, 3322.44, 3520.00, 3729.31, 3951.07
-        ]
-        self.autotune = Autotune(self.ref_freqs)
-        self.note_dict = self.autotune.note_dict
-
     def get_f0_crepe(self, x, f0_min, f0_max, p_len, hop_length, model="full"):
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
@@ -108,6 +68,12 @@ class VC:
         f0 = np.nan_to_num(target)
         return f0
 
+    def get_f0_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
+        if not hasattr(self, "model_rmvpe"):
+            self.model_rmvpe = RMVPE0Predictor(RMVPE_DIR, is_half=self.is_half, device=self.device)
+        f0 = self.model_rmvpe.infer_from_audio_with_pitch(x, thred=0.03, f0_min=f0_min, f0_max=f0_max)
+        return f0
+
     def get_f0(
         self,
         input_audio_path,
@@ -117,7 +83,6 @@ class VC:
         f0_method,
         filter_radius,
         hop_length,
-        f0_autotune,
         inp_f0=None,
         f0_min=50,
         f0_max=1100,
@@ -129,24 +94,15 @@ class VC:
         if f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length))
 
-        elif f0_method == "rmvpe":
-            if not hasattr(self, "model_rmvpe"):
-                self.model_rmvpe = RMVPE0Predictor(RMVPE_DIR, is_half=self.is_half, device=self.device)
-            f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
-
         elif f0_method == "rmvpe+":
             params = {'x': x, 'p_len': p_len, 'pitch': pitch, 'f0_min': f0_min, 'f0_max': f0_max, 'time_step': self.time_step, 'filter_radius': filter_radius, 'crepe_hop_length': int(hop_length), 'model': "full"}
-            f0 = self.get_pitch_dependant_rmvpe(**params)
+            f0 = self.get_f0_rmvpe(**params)
 
         elif f0_method == "fcpe":
             self.model_fcpe = FCPEF0Predictor(FCPE_DIR, f0_min=int(f0_min), f0_max=int(f0_max), dtype=torch.float32, device=self.device, sample_rate=self.sample_rate, threshold=0.03)
             f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
             del self.model_fcpe
             gc.collect()
-
-        print(f"f0_autotune = {f0_autotune}")
-        if f0_autotune == True:
-            f0 = Autotune.autotune_f0(self, f0)
 
         f0 *= pow(2, pitch / 12)
         tf0 = self.sample_rate // self.window
@@ -163,11 +119,6 @@ class VC:
         f0_mel[f0_mel > 255] = 255
         f0_coarse = np.rint(f0_mel).astype(int)
         return f0_coarse, f0bak
-
-    def get_pitch_dependant_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
-        if not hasattr(self, "model_rmvpe"):
-            self.model_rmvpe = RMVPE0Predictor(RMVPE_DIR, is_half=self.is_half, device=self.device)
-        return self.model_rmvpe.infer_from_audio_with_pitch(x, thred=0.03, f0_min=f0_min, f0_max=f0_max)
 
     def vc(
         self,
@@ -259,7 +210,6 @@ class VC:
         version,
         protect,
         hop_length,
-        f0_autotune,
         f0_file,
         f0_min=50,
         f0_max=1100,
@@ -305,7 +255,6 @@ class VC:
                 f0_method,
                 filter_radius,
                 hop_length,
-                f0_autotune,
                 inp_f0,
                 f0_min,
                 f0_max,

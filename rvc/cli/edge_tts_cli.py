@@ -18,7 +18,6 @@ parser.add_argument('-rms', '--volume_envelope', type=float, default=0.25)
 parser.add_argument('-m', '--method', type=str, default='rmvpe')
 parser.add_argument('-hop', '--hop_length', type=int, default=128)
 parser.add_argument('-pro', '--protect', type=float, default=0.33)
-parser.add_argument('-tune', '--autotune', type=str, default='False')
 parser.add_argument('-f0min', '--f0_min', type=int, default='50')
 parser.add_argument('-f0max', '--f0_max', type=int, default='1100')
 parser.add_argument('-f', '--format', type=str, default='mp3')
@@ -39,7 +38,6 @@ cover_path = edge_tts_pipeline(
     f0_method = args.method,
     hop_length = args.hop_length,
     protect = args.protect,
-    f0_autotune = args.autotune,
     f0_min = args.f0_min,
     f0_max = args.f0_max,
     output_format = args.format

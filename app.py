@@ -7,7 +7,7 @@ from tabs.processing.processing import *
 from tabs.install.install_models import *
 
 if __name__ == '__main__':
-    with gr.Blocks(title='PolGen Lite - Politrees (v1.1)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
+    with gr.Blocks(title='PolGen Lite - Politrees (v1.2)', theme=gr.themes.Soft(primary_hue="green", secondary_hue="green", neutral_hue="neutral", spacing_size="sm", radius_size="lg")) as app:
         
         with gr.Tab("Велком/Контакты"):
             welcome_tab()

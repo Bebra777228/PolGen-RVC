@@ -1,7 +1,7 @@
 import gradio as gr
 
 def welcome_tab():
-    gr.HTML("<center><h1>Добро пожаловать в PolGen Lite - Politrees (v1.1)</h1></center>")
+    gr.HTML("<center><h1>Добро пожаловать в PolGen Lite - Politrees (v1.2)</h1></center>")
     with gr.Row():
         with gr.Column(variant='panel'):
             gr.HTML("<center><h2><a href='https://t.me/Politrees2'>Telegram ЛС</a></h2></center>")

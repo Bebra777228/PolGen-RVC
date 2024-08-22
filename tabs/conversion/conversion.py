@@ -50,7 +50,7 @@ def conversion_tab():
         with gr.Accordion('Стандартные настройки', open=False):
             with gr.Group():
                 with gr.Column(variant='panel'):
-                    f0_method = gr.Dropdown(['rmvpe+', 'rmvpe', 'fcpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
+                    f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона', allow_custom_value=False, filterable=False)
                     hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe')
                     f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
                 with gr.Column(variant='panel'):
@@ -60,18 +60,15 @@ def conversion_tab():
                     protect = gr.Slider(0, 0.5, value=0.33, step=0.01, label='Защита согласных', info='Контролирует степень защиты отдельных согласных и звуков дыхания от электроакустических разрывов и других артефактов. Максимальное значение 0,5 обеспечивает наибольшую защиту, но может увеличить эффект индексирования, который может негативно влиять на качество звука. Уменьшение значения может уменьшить степень защиты, но снизить эффект индексирования.')
 
         with gr.Accordion('Расширенные настройки', open=False):
-            with gr.Group():
-                with gr.Column(variant='panel'):
-                    f0_autotune = gr.Checkbox(label="Автотюн", info='Автоматически корректирует высоту тона для более гармоничного звучания вокала', value=False)
-                with gr.Column(variant='panel'):
-                    with gr.Row():
-                        f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
-                        f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
+            with gr.Column(variant='panel'):
+                with gr.Row():
+                    f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
+                    f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
     
     install_hubert_tab()
 
     ref_btn.click(update_models_list, None, outputs=rvc_model)
     generate_btn.click(voice_pipeline,
                       inputs=[song_input, rvc_model, pitch, index_rate, filter_radius, volume_envelope,
-                              f0_method, hop_length, protect, output_format, f0_autotune, f0_min, f0_max],
+                              f0_method, hop_length, protect, output_format, f0_min, f0_max],
                       outputs=[converted_voice])
