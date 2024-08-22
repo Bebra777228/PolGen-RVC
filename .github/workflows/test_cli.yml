@@ -7,8 +7,6 @@ on:
   pull_request:
     branches:
       - PolGen-Lite-dev
-  schedule:
-    - cron: '0 21 * * *'
 
 jobs:
   rvc_cli:
