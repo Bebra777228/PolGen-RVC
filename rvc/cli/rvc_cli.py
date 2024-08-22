@@ -8,7 +8,7 @@ rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 
 parser = argparse.ArgumentParser(description='Замена голоса в директории song_output/id.', add_help=True)
 parser.add_argument('-i', '--song_input', type=str, required=True)
-parser.add_argument('-m', '--rvc_dirname', type=str, required=True)
+parser.add_argument('-m', '--model_name', type=str, required=True)
 parser.add_argument('-p', '--pitch', type=int, required=True)
 parser.add_argument('-ir', '--index_rate', type=float, default=0)
 parser.add_argument('-fr', '--filter_radius', type=int, default=3)
@@ -22,13 +22,13 @@ parser.add_argument('-d', '--device', type=str, default='GPU')
 parser.add_argument('-f', '--format', type=str, default='mp3')
 args = parser.parse_args()
 
-rvc_dirname = args.rvc_dirname
-if not os.path.exists(os.path.join(rvc_models_dir, rvc_dirname)):
-    raise Exception(f'\033[91mМодели {rvc_dirname} не существует. Возможно, вы неправильно ввели имя.\033[0m')
+model_name = args.model_name
+if not os.path.exists(os.path.join(rvc_models_dir, model_name)):
+    raise Exception(f'\033[91mМодели {model_name} не существует. Возможно, вы неправильно ввели имя.\033[0m')
 
 cover_path = voice_pipeline(
     uploaded_file = args.song_input,
-    voice_model = rvc_dirname,
+    voice_model = model_name,
     pitch = args.pitch,
     index_rate = args.index_rate,
     filter_radius = args.filter_radius,
