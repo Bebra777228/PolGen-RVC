@@ -12,7 +12,7 @@ from .pipeline import VC
 
 class Config:
     def __init__(self, device, is_half):
-        self.device = device
+        self.device = torch.device(device)
         self.is_half = is_half
         self.n_cpu = cpu_count()
         self.gpu_name = None
@@ -20,14 +20,14 @@ class Config:
         self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
 
     def device_config(self):
-        if torch.cuda.is_available():
+        if self.device.type == 'cuda' and torch.cuda.is_available():
             self._configure_gpu()
-        elif torch.backends.mps.is_available():
+        elif self.device.type == 'mps' and torch.backends.mps.is_available():
             print("Не обнаружена поддерживаемая N-карта, используйте MPS для вывода")
-            self.device = "mps"
+            self.device = torch.device("mps")
         else:
             print("Не обнаружена поддерживаемая N-карта, используйте CPU для вывода")
-            self.device = "cpu"
+            self.device = torch.device("cpu")
             self.is_half = True
 
         if self.is_half:

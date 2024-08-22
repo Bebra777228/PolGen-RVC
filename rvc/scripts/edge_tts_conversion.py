@@ -39,11 +39,12 @@ def perform_voice_conversion(
     voice_model, input_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max, device_type
 ):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
-    device = torch.device('cuda' if device_type == 'GPU' and torch.cuda.is_available() else 'cpu')
+    device = torch.device(device_type)
 
-    if device_type == 'GPU' and not torch.cuda.is_available():
+    if device_type == 'cuda' and not torch.cuda.is_available():
         print("GPU недоступен. Автоматически выбран CPU.")
         gr.Error("GPU недоступен. Автоматически выбран CPU.")
+        device = torch.device('cpu')
 
     config = Config(device, True)
     hubert_model = load_hubert(device, config.is_half, HUBERT_MODEL_PATH)

@@ -50,16 +50,16 @@ def processing_tab():
 
     with gr.Group():
         with gr.Row(variant='panel'):
-            process_btn = gr.Button("Обработать", variant='primary', scale=1)
-            ai_cover = gr.Audio(label='Ai-Cover', scale=5)
-            output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', scale=0.1, allow_custom_value=False, filterable=False)
+            process_btn = gr.Button("Обработать", variant='primary', scale=2)
+            ai_cover = gr.Audio(label='Ai-Cover', scale=9)
+            output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Формат файла', allow_custom_value=False, filterable=False, scale=1)
 
     with gr.Accordion('Настройки сведения аудио', open=False):
         gr.HTML('<center><h2>Изменение громкости</h2></center>')
         with gr.Row(variant='panel'):
-            vocal_gain = gr.Slider(-10, 10, value=0, step=1, label='Вокал', scale=1)
-            instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал', scale=1)
-            clear_btn = gr.Button("Сбросить все эффекты", scale=0.1)
+            vocal_gain = gr.Slider(-10, 10, value=0, step=1, label='Вокал', scale=3)
+            instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал', scale=3)
+            clear_btn = gr.Button("Сбросить все эффекты", scale=1)
 
         use_effects = gr.Checkbox(label="Добавить эффекты на голос", value=False)
         with gr.Column(variant='panel', visible=False) as effects_accordion:
