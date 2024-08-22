@@ -1,4 +1,4 @@
-name: TEST_CLI
+name: Тест CLI скриптов
 
 on:
   push:
