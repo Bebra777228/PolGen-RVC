@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - PolGen-Lite-dev
-    paths:
-      - 'formatter.txt'
 
 jobs:
   push_format:
