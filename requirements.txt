@@ -8,7 +8,7 @@ faiss-cpu==1.7.3
 ffmpeg-python>=0.2.0
 praat-parselmouth>=0.4.2
 pyworld==0.3.4
-torchcrepe==0.0.23
+torchcrepe==0.0.20
 pedalboard
 edge-tts
 
