@@ -19,10 +19,3 @@ local-attention
 # Инструменты для работы с интерфейсами и облачными сервисами
 gradio==4.29.0
 mega.py
-
-# PyTorch с поддержкой ROCm
---index-url https://download.pytorch.org/whl/rocm5.4.2
-torch
-torchvision
-torchaudio
-
