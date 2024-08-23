@@ -22,4 +22,4 @@ mega.py
 
 # Машинное обучение
 --find-links https://download.pytorch.org/whl/torch_stable.html
-torch==2.3.1+rocm6.0
+torch==2.3.1+cu118
