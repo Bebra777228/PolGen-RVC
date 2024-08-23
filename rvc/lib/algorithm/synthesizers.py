@@ -115,20 +115,20 @@ class Synthesizer(nn.Module):
     def __prepare_scriptable__(self):
         for hook in self.dec._forward_pre_hooks.values():
             if (
-                hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
+                hook.__module__ == "weight_norm"
                 and hook.__class__.__name__ == "_WeightNorm"
             ):
                 remove_weight_norm(self.dec)
         for hook in self.flow._forward_pre_hooks.values():
             if (
-                hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
+                hook.__module__ == "weight_norm"
                 and hook.__class__.__name__ == "_WeightNorm"
             ):
                 remove_weight_norm(self.flow)
         if hasattr(self, "enc_q"):
             for hook in self.enc_q._forward_pre_hooks.values():
                 if (
-                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
+                    hook.__module__ == "weight_norm"
                     and hook.__class__.__name__ == "_WeightNorm"
                 ):
                     remove_weight_norm(self.enc_q)

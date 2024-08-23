@@ -37,7 +37,7 @@ class WaveNet(nn.Module):
             cond_layer = nn.Conv1d(
                 gin_channels, 2 * hidden_channels * n_layers, 1
             )
-            self.cond_layer = torch.nn.utils.parametrizations.weight_norm(
+            self.cond_layer = weight_norm(
                 cond_layer, name="weight"
             )
 
@@ -52,7 +52,7 @@ class WaveNet(nn.Module):
                 dilation=dilations[i],
                 padding=paddings[i],
             )
-            in_layer = torch.nn.utils.parametrizations.weight_norm(
+            in_layer = weight_norm(
                 in_layer, name="weight"
             )
             self.in_layers.append(in_layer)
@@ -62,7 +62,7 @@ class WaveNet(nn.Module):
             )
 
             res_skip_layer = nn.Conv1d(hidden_channels, res_skip_channels, 1)
-            res_skip_layer = torch.nn.utils.parametrizations.weight_norm(
+            res_skip_layer = weight_norm(
                 res_skip_layer, name="weight"
             )
             self.res_skip_layers.append(res_skip_layer)

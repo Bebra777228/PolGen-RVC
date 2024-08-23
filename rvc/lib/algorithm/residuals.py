@@ -12,7 +12,7 @@ LRELU_SLOPE = 0.1
 
 
 def create_conv1d_layer(channels, kernel_size, dilation):
-    return torch.nn.utils.parametrizations.weight_norm(
+    return weight_norm(
         nn.Conv1d(
             channels,
             channels,
@@ -163,7 +163,7 @@ class ResidualCouplingBlock(nn.Module):
         for i in range(self.n_flows):
             for hook in self.flows[i * 2]._forward_pre_hooks.values():
                 if (
-                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
+                    hook.__module__ == "weight_norm"
                     and hook.__class__.__name__ == "_WeightNorm"
                 ):
                     remove_weight_norm(self.flows[i * 2])

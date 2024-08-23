@@ -32,7 +32,7 @@ class Generator(nn.Module):
         self.ups_and_resblocks = nn.ModuleList()
         for i, (u, k) in enumerate(zip(upsample_rates, upsample_kernel_sizes)):
             self.ups_and_resblocks.append(
-                torch.nn.utils.parametrizations.weight_norm(
+                weight_norm(
                     nn.ConvTranspose1d(
                         upsample_initial_channel // (2**i),
                         upsample_initial_channel // (2 ** (i + 1)),
@@ -80,7 +80,7 @@ class Generator(nn.Module):
         for l in self.ups_and_resblocks:
             for hook in l._forward_pre_hooks.values():
                 if (
-                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
+                    hook.__module__ == "weight_norm"
                     and hook.__class__.__name__ == "_WeightNorm"
                 ):
                     remove_weight_norm(l)

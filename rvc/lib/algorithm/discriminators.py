@@ -57,7 +57,7 @@ class MultiPeriodDiscriminatorV2(nn.Module):
 class DiscriminatorS(nn.Module):
     def __init__(self, use_spectral_norm=False):
         super(DiscriminatorS, self).__init__()
-        norm_f = spectral_norm if use_spectral_norm else torch.nn.utils.parametrizations.weight_norm
+        norm_f = spectral_norm if use_spectral_norm else weight_norm
         self.convs = nn.ModuleList(
             [
                 norm_f(nn.Conv1d(1, 16, 15, 1, padding=7)),
@@ -86,7 +86,7 @@ class DiscriminatorP(nn.Module):
     def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
         super(DiscriminatorP, self).__init__()
         self.period = period
-        norm_f = spectral_norm if use_spectral_norm else torch.nn.utils.parametrizations.weight_norm
+        norm_f = spectral_norm if use_spectral_norm else weight_norm
 
         self.convs = nn.ModuleList(
             [
