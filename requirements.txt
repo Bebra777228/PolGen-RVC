@@ -8,7 +8,7 @@ faiss-cpu==1.7.3
 ffmpeg-python>=0.2.0
 praat-parselmouth>=0.4.2
 pyworld==0.3.4
-torchcrepe==0.0.20
+torchcrepe==0.0.23
 pedalboard
 edge-tts
 
@@ -21,5 +21,5 @@ gradio==4.29.0
 mega.py
 
 # Машинное обучение
---find-links https://download.pytorch.org/whl/torch_stable.html
-torch==2.3.1+cu121
+--find-links https://download.pytorch.org/whl/torch
+torch==2.4.0+cu124
