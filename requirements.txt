@@ -21,8 +21,8 @@ gradio==4.29.0
 mega.py
 
 # PyTorch с поддержкой ROCm
--f https://download.pytorch.org/whl/rocm5.2/torch_stable.html
-torch==2.0.1+rocm5.2
-torchvision==0.15.2+rocm5.2
-torchaudio==2.0.2+rocm5.2
+--index-url https://download.pytorch.org/whl/rocm5.4.2
+torch
+torchvision
+torchaudio
 
