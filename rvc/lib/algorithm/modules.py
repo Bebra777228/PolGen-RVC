@@ -1,10 +1,13 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from torch.nn.utils import remove_weight_norm
+from torch.nn.utils.weight_norm import remove_weight_norm
 from torch.nn.utils.parametrizations import weight_norm
 
-from .commons import fused_add_tanh_sigmoid_multiply
+from .commons import (
+    fused_add_tanh_sigmoid_multiply_no_jit,
+    fused_add_tanh_sigmoid_multiply,
+)
 
 
 class WaveNet(nn.Module):
@@ -25,25 +28,43 @@ class WaveNet(nn.Module):
         self.n_layers = n_layers
         self.gin_channels = gin_channels
         self.p_dropout = p_dropout
+
         self.in_layers = nn.ModuleList()
         self.res_skip_layers = nn.ModuleList()
         self.drop = nn.Dropout(p_dropout)
 
         if gin_channels != 0:
-            cond_layer = nn.Conv1d(gin_channels, 2 * hidden_channels * n_layers, 1)
-            self.cond_layer = weight_norm(cond_layer, name="weight")
+            cond_layer = nn.Conv1d(
+                gin_channels, 2 * hidden_channels * n_layers, 1
+            )
+            self.cond_layer = weight_norm(
+                cond_layer, name="weight"
+            )
 
         dilations = [dilation_rate**i for i in range(n_layers)]
         paddings = [(kernel_size * d - d) // 2 for d in dilations]
 
         for i in range(n_layers):
-            in_layer = nn.Conv1d(hidden_channels, 2 * hidden_channels, kernel_size, dilation=dilations[i], padding=paddings[i])
-            in_layer = weight_norm(in_layer, name="weight")
-            res_skip_channels = (hidden_channels if i == n_layers - 1 else 2 * hidden_channels)
-            res_skip_layer = nn.Conv1d(hidden_channels, res_skip_channels, 1)
-            res_skip_layer = weight_norm(res_skip_layer, name="weight")
-
+            in_layer = nn.Conv1d(
+                hidden_channels,
+                2 * hidden_channels,
+                kernel_size,
+                dilation=dilations[i],
+                padding=paddings[i],
+            )
+            in_layer = weight_norm(
+                in_layer, name="weight"
+            )
             self.in_layers.append(in_layer)
+
+            res_skip_channels = (
+                hidden_channels if i == n_layers - 1 else 2 * hidden_channels
+            )
+
+            res_skip_layer = nn.Conv1d(hidden_channels, res_skip_channels, 1)
+            res_skip_layer = weight_norm(
+                res_skip_layer, name="weight"
+            )
             self.res_skip_layers.append(res_skip_layer)
 
     def forward(self, x, x_mask, g=None, **kwargs):
@@ -53,6 +74,10 @@ class WaveNet(nn.Module):
         if g is not None:
             g = self.cond_layer(g)
 
+        is_zluda = x.device.type == "cuda" and torch.cuda.get_device_name().endswith(
+            "[ZLUDA]"
+        )
+
         for i in range(self.n_layers):
             x_in = self.in_layers[i](x)
             if g is not None:
@@ -61,10 +86,16 @@ class WaveNet(nn.Module):
             else:
                 g_l = torch.zeros_like(x_in)
 
-            acts = fused_add_tanh_sigmoid_multiply(x_in, g_l, n_channels_tensor)
-            acts = self.drop(acts)
-            res_skip_acts = self.res_skip_layers[i](acts)
+            if is_zluda:
+                acts = fused_add_tanh_sigmoid_multiply_no_jit(
+                    x_in, g_l, n_channels_tensor
+                )
+            else:
+                acts = fused_add_tanh_sigmoid_multiply(x_in, g_l, n_channels_tensor)
 
+            acts = self.drop(acts)
+
+            res_skip_acts = self.res_skip_layers[i](acts)
             if i < self.n_layers - 1:
                 res_acts = res_skip_acts[:, : self.hidden_channels, :]
                 x = (x + res_acts) * x_mask

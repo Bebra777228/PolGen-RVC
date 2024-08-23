@@ -1,18 +1,28 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from torch.nn.utils import remove_weight_norm
+from torch.nn.utils.weight_norm import remove_weight_norm
 from torch.nn.utils.parametrizations import weight_norm
 from typing import Optional
 
-from .modules import WaveNet
 from .commons import get_padding, init_weights
+from .modules import WaveNet
 
 LRELU_SLOPE = 0.1
 
 
 def create_conv1d_layer(channels, kernel_size, dilation):
-    return weight_norm(nn.Conv1d(channels, channels, kernel_size, 1, dilation=dilation, padding=get_padding(kernel_size, dilation)))
+    return weight_norm(
+        nn.Conv1d(
+            channels,
+            channels,
+            kernel_size,
+            1,
+            dilation=dilation,
+            padding=get_padding(kernel_size, dilation),
+        )
+    )
+
 
 def apply_mask(tensor, mask):
     return tensor * mask if mask is not None else tensor
@@ -21,9 +31,14 @@ def apply_mask(tensor, mask):
 class ResBlockBase(nn.Module):
     def __init__(self, channels, kernel_size, dilations):
         super(ResBlockBase, self).__init__()
-        self.convs1 = nn.ModuleList([create_conv1d_layer(channels, kernel_size, d) for d in dilations])
+        self.convs1 = nn.ModuleList(
+            [create_conv1d_layer(channels, kernel_size, d) for d in dilations]
+        )
         self.convs1.apply(init_weights)
-        self.convs2 = nn.ModuleList([create_conv1d_layer(channels, kernel_size, 1) for _ in dilations])
+
+        self.convs2 = nn.ModuleList(
+            [create_conv1d_layer(channels, kernel_size, 1) for _ in dilations]
+        )
         self.convs2.apply(init_weights)
 
     def forward(self, x, x_mask=None):
@@ -109,9 +124,20 @@ class ResidualCouplingBlock(nn.Module):
         self.n_layers = n_layers
         self.n_flows = n_flows
         self.gin_channels = gin_channels
+
         self.flows = nn.ModuleList()
         for i in range(n_flows):
-            self.flows.append(ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+            self.flows.append(
+                ResidualCouplingLayer(
+                    channels,
+                    hidden_channels,
+                    kernel_size,
+                    dilation_rate,
+                    n_layers,
+                    gin_channels=gin_channels,
+                    mean_only=True,
+                )
+            )
             self.flows.append(Flip())
 
     def forward(
@@ -136,8 +162,12 @@ class ResidualCouplingBlock(nn.Module):
     def __prepare_scriptable__(self):
         for i in range(self.n_flows):
             for hook in self.flows[i * 2]._forward_pre_hooks.values():
-                if (hook.__module__ == "weight_norm" and hook.__class__.__name__ == "WeightNorm"):
+                if (
+                    hook.__module__ == "weight_norm"
+                    and hook.__class__.__name__ == "_WeightNorm"
+                ):
                     remove_weight_norm(self.flows[i * 2])
+
         return self
 
 
@@ -162,9 +192,19 @@ class ResidualCouplingLayer(nn.Module):
         self.n_layers = n_layers
         self.half_channels = channels // 2
         self.mean_only = mean_only
+
         self.pre = nn.Conv1d(self.half_channels, hidden_channels, 1)
-        self.enc = WaveNet(hidden_channels, kernel_size, dilation_rate, n_layers, p_dropout=p_dropout, gin_channels=gin_channels)
-        self.post = nn.Conv1d(hidden_channels, self.half_channels * (2 - mean_only), 1)
+        self.enc = WaveNet(
+            hidden_channels,
+            kernel_size,
+            dilation_rate,
+            n_layers,
+            p_dropout=p_dropout,
+            gin_channels=gin_channels,
+        )
+        self.post = nn.Conv1d(
+            hidden_channels, self.half_channels * (2 - mean_only), 1
+        )
         self.post.weight.data.zero_()
         self.post.bias.data.zero_()
 

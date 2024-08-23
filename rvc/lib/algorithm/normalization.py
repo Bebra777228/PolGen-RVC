@@ -12,5 +12,7 @@ class LayerNorm(nn.Module):
 
     def forward(self, x):
         x = x.transpose(1, -1)
-        x = F.layer_norm(x, (x.size(-1),), self.gamma, self.beta, self.eps)
+        x = F.layer_norm(
+            x, (x.size(-1),), self.gamma, self.beta, self.eps
+        )
         return x.transpose(1, -1)

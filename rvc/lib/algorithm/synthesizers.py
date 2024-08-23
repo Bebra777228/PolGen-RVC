@@ -1,14 +1,14 @@
 import torch
 from torch import nn
-from torch.nn.utils import remove_weight_norm
+from torch.nn.utils.weight_norm import remove_weight_norm
 from torch.nn.utils.parametrizations import weight_norm
 from typing import Optional
 
-from .nsf import GeneratorNSF
-from .generators import Generator
 from .commons import slice_segments, rand_slice_segments
-from .residuals import ResidualCouplingBlock
 from .encoders import TextEncoder, PosteriorEncoder
+from .generators import Generator
+from .nsf import GeneratorNSF
+from .residuals import ResidualCouplingBlock
 
 
 class Synthesizer(nn.Module):
@@ -55,15 +55,56 @@ class Synthesizer(nn.Module):
         self.gin_channels = gin_channels
         self.spk_embed_dim = spk_embed_dim
         self.use_f0 = use_f0
-        self.enc_p = TextEncoder(inter_channels, hidden_channels, filter_channels, n_heads, n_layers, kernel_size, float(p_dropout), input_dim, f0=use_f0)
+
+        self.enc_p = TextEncoder(
+            inter_channels,
+            hidden_channels,
+            filter_channels,
+            n_heads,
+            n_layers,
+            kernel_size,
+            float(p_dropout),
+            input_dim,
+            f0=use_f0,
+        )
 
         if use_f0:
-            self.dec = GeneratorNSF(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels, sr=sr, is_half=kwargs["is_half"])
+            self.dec = GeneratorNSF(
+                inter_channels,
+                resblock,
+                resblock_kernel_sizes,
+                resblock_dilation_sizes,
+                upsample_rates,
+                upsample_initial_channel,
+                upsample_kernel_sizes,
+                gin_channels=gin_channels,
+                sr=sr,
+                is_half=kwargs["is_half"],
+            )
         else:
-            self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
+            self.dec = Generator(
+                inter_channels,
+                resblock,
+                resblock_kernel_sizes,
+                resblock_dilation_sizes,
+                upsample_rates,
+                upsample_initial_channel,
+                upsample_kernel_sizes,
+                gin_channels=gin_channels,
+            )
 
-        self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
-        self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 3, gin_channels=gin_channels)
+        self.enc_q = PosteriorEncoder(
+            spec_channels,
+            inter_channels,
+            hidden_channels,
+            5,
+            1,
+            16,
+            gin_channels=gin_channels,
+        )
+        self.flow = ResidualCouplingBlock(
+            inter_channels, hidden_channels, 5, 1, 3, gin_channels=gin_channels
+        )
         self.emb_g = nn.Embedding(self.spk_embed_dim, gin_channels)
 
     def remove_weight_norm(self):
@@ -73,14 +114,23 @@ class Synthesizer(nn.Module):
 
     def __prepare_scriptable__(self):
         for hook in self.dec._forward_pre_hooks.values():
-            if (hook.__module__ == "weight_norm" and hook.__class__.__name__ == "WeightNorm"):
+            if (
+                hook.__module__ == "weight_norm"
+                and hook.__class__.__name__ == "_WeightNorm"
+            ):
                 remove_weight_norm(self.dec)
         for hook in self.flow._forward_pre_hooks.values():
-            if (hook.__module__ == "weight_norm" and hook.__class__.__name__ == "WeightNorm"):
+            if (
+                hook.__module__ == "weight_norm"
+                and hook.__class__.__name__ == "_WeightNorm"
+            ):
                 remove_weight_norm(self.flow)
         if hasattr(self, "enc_q"):
             for hook in self.enc_q._forward_pre_hooks.values():
-                if (hook.__module__ == "weight_norm" and hook.__class__.__name__ == "WeightNorm"):
+                if (
+                    hook.__module__ == "weight_norm"
+                    and hook.__class__.__name__ == "_WeightNorm"
+                ):
                     remove_weight_norm(self.enc_q)
         return self
 
