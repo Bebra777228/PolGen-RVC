@@ -1,10 +1,10 @@
-# Основные библиотеки для работы с данными и моделями
+# Основные библиотеки
 requests
 tensorboardX
 fairseq==0.12.2
 faiss-cpu==1.7.3
 
-# Библиотеки для работы со звуком
+# Звуковые библиотеки
 ffmpeg-python>=0.2.0
 praat-parselmouth>=0.4.2
 pyworld==0.3.4
@@ -12,10 +12,14 @@ torchcrepe==0.0.23
 pedalboard
 edge-tts
 
-# Библиотеки для работы с оптимизацией
+# Оптимизация
 einops
 local-attention
 
-# Инструменты для работы с интерфейсами и облачными сервисами
+# Интерфейсы и облачные сервисы
 gradio==4.29.0
 mega.py
+
+# Машинное обучение
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==2.3.1+rocm6.0
