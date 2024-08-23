@@ -13,9 +13,9 @@ from .pipeline import VC
 class Config:
     def __init__(self):
         self.device = self._init_device()
-        self.is_half = self.device.type in ['cuda', 'rocm'] and not self._requires_full_precision_gpu()
+        self.is_half = self.device.type == 'cuda' and not self._requires_full_precision_gpu()
         self.n_cpu = cpu_count()
-        self.gpu_mem = self._get_gpu_memory() if self.device.type in ['cuda', 'rocm'] else None
+        self.gpu_mem = self._get_gpu_memory() if self.device.type == 'cuda' else None
         self.x_pad, self.x_query, self.x_center, self.x_max = self._configure_device()
 
     def _init_device(self):
@@ -25,9 +25,6 @@ class Config:
         elif torch.backends.mps.is_available():
             print("Используется MPS")
             return torch.device("mps")
-        elif torch.backends.rocm.is_available():
-            print("Используется ROCm")
-            return torch.device("cuda")
         else:
             print("Используется CPU")
             return torch.device("cpu")
