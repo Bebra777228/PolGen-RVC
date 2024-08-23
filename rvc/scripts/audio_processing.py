@@ -8,9 +8,7 @@ from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
 OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
-
-if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)

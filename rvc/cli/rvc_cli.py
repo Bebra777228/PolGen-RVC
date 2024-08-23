@@ -18,6 +18,7 @@ parser.add_argument('-hop', '--hop_length', type=int, default=128)
 parser.add_argument('-pro', '--protect', type=float, default=0.33)
 parser.add_argument('-f0min', '--f0_min', type=int, default='50')
 parser.add_argument('-f0max', '--f0_max', type=int, default='1100')
+parser.add_argument('-d', '--device', type=str, default='cuda')
 parser.add_argument('-f', '--format', type=str, default='mp3')
 args = parser.parse_args()
 
@@ -37,6 +38,7 @@ cover_path = voice_pipeline(
     protect = args.protect,
     f0_min = args.f0_min,
     f0_max = args.f0_max,
+    device_type = args.device,
     output_format = args.format,
 )
 
