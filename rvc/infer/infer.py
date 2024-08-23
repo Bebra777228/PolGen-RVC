@@ -1,9 +1,9 @@
 import os
 import torch
-from multiprocessing import cpu_count
 from pathlib import Path
 from fairseq import checkpoint_utils
 from scipy.io import wavfile
+from multiprocessing import cpu_count
 
 from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
@@ -11,86 +11,78 @@ from .pipeline import VC
 
 
 class Config:
-    def __init__(self, device, is_half):
-        self.device = torch.device(device)
-        self.is_half = is_half
+    def __init__(self):
+        self.device = self._init_device()
+        self.is_half = self.device.type in ['cuda', 'rocm'] and not self._requires_full_precision_gpu()
         self.n_cpu = cpu_count()
-        self.gpu_name = None
-        self.gpu_mem = None
-        self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
+        self.gpu_mem = self._get_gpu_memory() if self.device.type in ['cuda', 'rocm'] else None
+        self.x_pad, self.x_query, self.x_center, self.x_max = self._configure_device()
 
-    def device_config(self):
-        if self.device.type == 'cuda' and torch.cuda.is_available():
-            self._configure_gpu()
-        elif self.device.type == 'mps' and torch.backends.mps.is_available():
-            print("Не обнаружена поддерживаемая N-карта, используйте MPS для вывода")
-            self.device = torch.device("mps")
+    def _init_device(self):
+        if torch.cuda.is_available():
+            print("Используется CUDA")
+            return torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            print("Используется MPS")
+            return torch.device("mps")
+        elif torch.backends.rocm.is_available():
+            print("Используется ROCm")
+            return torch.device("cuda")
         else:
-            print("Не обнаружена поддерживаемая N-карта, используйте CPU для вывода")
-            self.device = torch.device("cpu")
-            self.is_half = True
+            print("Используется CPU")
+            return torch.device("cpu")
 
+    def _get_gpu_memory(self):
+        return int(torch.cuda.get_device_properties(self.device).total_memory / 1024**3 + 0.4)
+
+    def _requires_full_precision_gpu(self):
+        gpu_name = torch.cuda.get_device_name(self.device).lower()
+        if any(x in gpu_name for x in ["16", "1060", "1070", "1080", "p40"]):
+            print("16 серия/10 серия P40 принудительно используется одинарная точность")
+            self._update_config_files()
+            return True
+        return False
+
+    def _configure_device(self):
         if self.is_half:
             x_pad, x_query, x_center, x_max = 3, 10, 60, 65
         else:
             x_pad, x_query, x_center, x_max = 1, 6, 38, 41
 
-        if self.gpu_mem is not None and self.gpu_mem <= 4:
+        if self.gpu_mem and self.gpu_mem <= 4:
             x_pad, x_query, x_center, x_max = 1, 5, 30, 32
 
         return x_pad, x_query, x_center, x_max
 
-    def _configure_gpu(self):
-        self.gpu_name = torch.cuda.get_device_name(self.device)
-        if (
-            "16" in self.gpu_name
-            and "V100" not in self.gpu_name.upper()
-            or "P40" in self.gpu_name.upper()
-            or "1060" in self.gpu_name
-            or "1070" in self.gpu_name
-            or "1080" in self.gpu_name
-        ):
-            print("16 серия/10 серия P40 принудительно используется одинарная точность")
-            self.is_half = False
-            self._update_config_files()
-        self.gpu_mem = int(
-        torch.cuda.get_device_properties(self.device).total_memory
-        / 1024
-        / 1024
-        / 1024
-        + 0.4
-        )
-        if self.gpu_mem <= 4:
-            self._update_config_files()
-
     def _update_config_files(self):
+        config_dir = Path(os.getcwd()) / "rvc" / "configs"
         for config_file in ["32k.json", "40k.json", "48k.json"]:
-            config_path = os.getcwd() / "rvc" / "configs" / config_file
+            config_path = config_dir / config_file
             self._replace_in_file(config_path, "true", "false")
-        trainset_path = os.getcwd() / "rvc" / "trainset_preprocess_pipeline_print.py"
+        trainset_path = Path(os.getcwd()) / "rvc" / "trainset_preprocess_pipeline_print.py"
         self._replace_in_file(trainset_path, "3.7", "3.0")
 
     @staticmethod
     def _replace_in_file(file_path, old, new):
-        with open(file_path, "r") as f:
-            content = f.read().replace(old, new)
-        with open(file_path, "w") as f:
-            f.write(content)
+        try:
+            with open(file_path, "r") as f:
+                content = f.read().replace(old, new)
+            with open(file_path, "w") as f:
+                f.write(content)
+        except IOError as e:
+            print(f"Ошибка при работе с файлом {file_path}: {e}")
+
 
 def load_hubert(device, is_half, model_path):
-    models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([model_path], suffix='')
+    models, _, _ = checkpoint_utils.load_model_ensemble_and_task([model_path], suffix='')
     hubert = models[0].to(device)
-
-    if is_half:
-        hubert = hubert.half()
-    else:
-        hubert = hubert.float()
-
+    hubert = hubert.half() if is_half else hubert.float()
     hubert.eval()
     return hubert
 
+
 def get_vc(device, is_half, config, model_path):
-    cpt = torch.load(model_path, map_location='cpu', weights_only=True)
+    cpt = torch.load(model_path, map_location='cpu')
     if "config" not in cpt or "weight" not in cpt:
         raise ValueError(f'Некорректный формат для {model_path}. Используйте голосовую модель, обученную с использованием RVC v2.')
 
@@ -106,18 +98,15 @@ def get_vc(device, is_half, config, model_path):
         input_dim=input_dim,
         is_half=is_half,
     )
-    
+
     del net_g.enc_q
     print(net_g.load_state_dict(cpt["weight"], strict=False))
     net_g.eval().to(device)
-
-    if is_half:
-        net_g = net_g.half()
-    else:
-        net_g = net_g.float()
+    net_g = net_g.half() if is_half else net_g.float()
 
     vc = VC(tgt_sr, config)
     return cpt, version, net_g, tgt_sr, vc
+
 
 def rvc_infer(
     index_path,
