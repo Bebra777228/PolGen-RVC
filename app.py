@@ -43,10 +43,10 @@ def launch_gradio(port):
     PolGen.launch(
         share="--share" in sys.argv,
         inbrowser="--open" in sys.argv,
+        quiet="--quiet" in sys.argv,
         server_port=port,
         show_error=True,
-        quiet=True,
-        show_api=False
+        show_api=False,
     )
 
 if __name__ == "__main__":
