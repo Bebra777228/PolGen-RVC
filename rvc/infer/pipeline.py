@@ -11,17 +11,22 @@ from scipy import signal
 from rvc.lib.predictors.FCPE import FCPEF0Predictor
 from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
+# Константы
 RMVPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'rmvpe.pt')
 FCPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'fcpe.pt')
 
+# Фильтр Баттерворта для высоких частот
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
 input_audio_path2wav = {}
 
-
+# Класс для обработки аудио
 class AudioProcessor:
     @staticmethod
     def change_rms(source_audio, source_rate, target_audio, target_rate, rate):
+        """
+        Изменяет RMS (среднеквадратичное значение) аудио.
+        """
         rms1 = librosa.feature.rms(y=source_audio, frame_length=source_rate // 2 * 2, hop_length=source_rate // 2)
         rms2 = librosa.feature.rms(y=target_audio, frame_length=target_rate // 2 * 2, hop_length=target_rate // 2)
 
@@ -32,9 +37,12 @@ class AudioProcessor:
         adjusted_audio = (target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy())
         return adjusted_audio
 
-
+# Класс для преобразования голоса
 class VC:
     def __init__(self, tgt_sr, config):
+        """
+        Инициализация параметров для преобразования голоса.
+        """
         self.x_pad = config.x_pad
         self.x_query = config.x_query
         self.x_center = config.x_center
@@ -52,6 +60,9 @@ class VC:
         self.device = config.device
 
     def get_f0_crepe(self, x, f0_min, f0_max, p_len, hop_length, model="full"):
+        """
+        Получает F0 с использованием модели crepe.
+        """
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
         audio = torch.from_numpy(x).to(self.device, copy=True).unsqueeze(0)
@@ -68,6 +79,9 @@ class VC:
         return f0
 
     def get_f0_rmvpe(self, x, f0_min=1, f0_max=40000, *args, **kwargs):
+        """
+        Получает F0 с использованием модели rmvpe.
+        """
         if not hasattr(self, "model_rmvpe"):
             self.model_rmvpe = RMVPE0Predictor(RMVPE_DIR, is_half=self.is_half, device=self.device)
         f0 = self.model_rmvpe.infer_from_audio_with_pitch(x, thred=0.03, f0_min=f0_min, f0_max=f0_max)
@@ -86,6 +100,9 @@ class VC:
         f0_min=50,
         f0_max=1100,
     ):
+        """
+        Получает F0 с использованием выбранного метода.
+        """
         global input_audio_path2wav
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
@@ -133,6 +150,9 @@ class VC:
         version,
         protect,
     ):
+        """
+        Преобразует аудио с использованием модели.
+        """
         feats = torch.from_numpy(audio0)
         feats = feats.half() if self.is_half else feats.float()
         if feats.dim() == 2:
@@ -213,6 +233,9 @@ class VC:
         f0_min=50,
         f0_max=1100,
     ):
+        """
+        Основной конвейер для преобразования аудио.
+        """
         if file_index is not None and file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
                 index = faiss.read_index(file_index)

@@ -9,12 +9,13 @@ import gradio as gr
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
+# Константы
 RVC_MODELS_DIR = os.path.join(os.getcwd(), 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(os.getcwd(), 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-
+# Загружает модель RVC и индекс по имени модели.
 def load_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
     model_files = os.listdir(model_dir)
@@ -26,6 +27,7 @@ def load_rvc_model(voice_model):
 
     return rvc_model_path, rvc_index_path
 
+# Конвертирует аудиофайл в стерео формат, если он моно.
 def convert_audio_to_stereo(input_path, output_path):
     wave, sr = librosa.load(input_path, mono=False, sr=44100)
     if wave.ndim == 1:
@@ -33,6 +35,7 @@ def convert_audio_to_stereo(input_path, output_path):
         return output_path
     return input_path
 
+# Выполняет преобразование голоса с использованием модели RVC.
 def perform_voice_conversion(
     voice_model, vocals_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max, device_type
 ):
@@ -57,9 +60,11 @@ def perform_voice_conversion(
     gc.collect()
     torch.cuda.empty_cache()
 
+# Отображает прогресс выполнения задачи.
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
+# Основной конвейер для преобразования голоса.
 def voice_pipeline(
     uploaded_file, voice_model, pitch, device_type, index_rate=0.5, filter_radius=3, volume_envelope=0.25,
     f0_method='rmvpe+', hop_length=128, protect=0.33, output_format='mp3', f0_min=50, f0_max=1100,

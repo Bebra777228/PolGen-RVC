@@ -9,7 +9,7 @@ from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
 from .pipeline import VC
 
-
+# Конфигурация устройства и параметров
 class Config:
     def __init__(self, device, is_half):
         self.device = torch.device(device)
@@ -77,6 +77,7 @@ class Config:
         with open(file_path, "w") as f:
             f.write(content)
 
+# Загрузка модели Hubert
 def load_hubert(device, is_half, model_path):
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([model_path], suffix='')
     hubert = models[0].to(device)
@@ -89,6 +90,7 @@ def load_hubert(device, is_half, model_path):
     hubert.eval()
     return hubert
 
+# Получение голосового преобразователя
 def get_vc(device, is_half, config, model_path):
     cpt = torch.load(model_path, map_location='cpu', weights_only=True)
     if "config" not in cpt or "weight" not in cpt:
@@ -119,6 +121,7 @@ def get_vc(device, is_half, config, model_path):
     vc = VC(tgt_sr, config)
     return cpt, version, net_g, tgt_sr, vc
 
+# Выполнение инференса с использованием RVC
 def rvc_infer(
     index_path,
     index_rate,

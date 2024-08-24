@@ -7,15 +7,19 @@ import requests
 import gradio as gr
 from mega import Mega
 
+# Константы
 rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 
+# Возвращает список папок в указанной директории.
 def get_folders(models_dir):
     return [item for item in os.listdir(models_dir) if os.path.isdir(os.path.join(models_dir, item))]
 
+# Обновляет список моделей для выбора в интерфейсе Gradio.
 def update_models_list():
     models_folders = get_folders(rvc_models_dir)
     return gr.update(choices=models_folders)
 
+# Распаковывает zip-файл в указанную директорию.
 def extract_zip(extraction_folder, zip_name):
     os.makedirs(extraction_folder, exist_ok=True)
     with zipfile.ZipFile(zip_name, 'r') as zip_ref:
@@ -42,6 +46,7 @@ def extract_zip(extraction_folder, zip_name):
         if os.path.isdir(os.path.join(extraction_folder, filepath)):
             shutil.rmtree(os.path.join(extraction_folder, filepath))
 
+# Загружает файл по указанной ссылке.
 def download_file(url, zip_name, progress):
     if 'drive.google.com' in url:
         progress(0.5, desc='[~] Загрузка модели с Google Drive...')
@@ -74,6 +79,7 @@ def download_file(url, zip_name, progress):
         else:
             raise gr.Error(f"Ошибка при получении ссылки на скачивание с Яндекс Диск: {response.status_code}")
 
+# Загружает модель по ссылке и распаковывает её.
 def download_from_url(url, dir_name, progress=gr.Progress()):
     try:
         progress(0, desc=f'[~] Загрузка голосовой модели с именем {dir_name}...')
@@ -90,6 +96,7 @@ def download_from_url(url, dir_name, progress=gr.Progress()):
     except Exception as e:
         raise gr.Error(str(e))
 
+# Загружает и распаковывает zip-файл модели.
 def upload_zip_model(zip_path, dir_name, progress=gr.Progress()):
     try:
         extraction_folder = os.path.join(rvc_models_dir, dir_name)
@@ -104,6 +111,7 @@ def upload_zip_model(zip_path, dir_name, progress=gr.Progress()):
     except Exception as e:
         raise gr.Error(str(e))
 
+# Загружает отдельные файлы модели (.pth и .index).
 def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()):
     try:
         extraction_folder = os.path.join(rvc_models_dir, dir_name)

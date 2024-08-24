@@ -10,12 +10,13 @@ import asyncio
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
+# Константы
 RVC_MODELS_DIR = os.path.join(os.getcwd(), 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(os.getcwd(), 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-
+# Загружает модель RVC и индекс по имени модели.
 def load_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
     model_files = os.listdir(model_dir)
@@ -27,10 +28,12 @@ def load_rvc_model(voice_model):
 
     return rvc_model_path, rvc_index_path
 
+# Синтезирует текст в речь с использованием edge_tts.
 async def synthesize_text_to_speech(text, voice, output_path):
     communicate = edge_tts.Communicate(text=text, voice=voice)
     await communicate.save(output_path)
 
+# Выполняет преобразование голоса с использованием модели RVC.
 def perform_voice_conversion(
     voice_model, input_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max, device_type
 ):
@@ -55,9 +58,11 @@ def perform_voice_conversion(
     gc.collect()
     torch.cuda.empty_cache()
 
+# Отображает прогресс выполнения задачи.
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
+# Основной конвейер для синтеза речи и преобразования голоса.
 def edge_tts_pipeline(
     text, voice_model, voice, pitch, device_type, index_rate=0.5, filter_radius=3, volume_envelope=0.25,
     f0_method='rmvpe+', hop_length=128, protect=0.33, output_format='mp3', f0_min=50, f0_max=1100,
