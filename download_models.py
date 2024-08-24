@@ -5,12 +5,13 @@ import requests
 RVC_OTHER = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/'
 RVC_HUBERT = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
 
-assets_dir = Path(os.getcwd()) / 'models' / 'assets'
+assets_dir = os.path.join(os.getcwd(), 'models', 'assets')
+
 
 def dl_model(link, model_name, dir_name):
     r = requests.get(f'{link}{model_name}', stream=True)
     r.raise_for_status()
-    with open(dir_name / model_name, 'wb') as f:
+    with open(os.path.join(dir_name, model_name), 'wb') as f:
         for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
 

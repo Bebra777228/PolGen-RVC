@@ -7,13 +7,12 @@ import faiss
 import librosa
 import numpy as np
 from scipy import signal
-from pathlib import Path
 
 from rvc.lib.predictors.FCPE import FCPEF0Predictor
 from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
-RMVPE_DIR = Path(os.getcwd()) / 'models' / 'assets' / 'rmvpe.pt'
-FCPE_DIR = Path(os.getcwd()) / 'models' / 'assets' / 'fcpe.pt'
+RMVPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'rmvpe.pt')
+FCPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'fcpe.pt')
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
@@ -214,14 +213,15 @@ class VC:
         f0_min=50,
         f0_max=1100,
     ):
-        index = big_npy = None
-        if file_index and os.path.exists(file_index) and index_rate != 0:
+        if file_index is not None and file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
             try:
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as e:
                 print(f"Произошла ошибка при чтении индекса FAISS: {e}")
-
+                index = big_npy = None
+        else:
+            index = big_npy = None
         audio = signal.filtfilt(bh, ah, audio)
         audio_pad = np.pad(audio, (self.window // 2, self.window // 2), mode="reflect")
         opt_ts = []

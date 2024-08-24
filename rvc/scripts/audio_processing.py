@@ -6,10 +6,10 @@ import soundfile as sf
 from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
-from pathlib import Path
 
-OUTPUT_DIR = Path(os.getcwd()) / 'output'
-OUTPUT_DIR.mkdir(exist_ok=True)
+OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 
 def combine_audio_tracks(vocal_path, instrumental_path, output_path, vocal_gain, instrumental_gain, output_format):
     vocal = AudioSegment.from_file(vocal_path) + vocal_gain
@@ -57,27 +57,27 @@ def process_audio(vocal_audio_path, instrumental_audio_path, reverb_rm_size, rev
     if not instrumental_audio_path:
         raise ValueError("Не удалось найти аудиофайл с инструменталом. Убедитесь, что файл загрузился или проверьте правильность пути к нему.")
 
-    stereo_vocal_path = OUTPUT_DIR / 'Voice_Stereo.wav'
-    combined_output_path = OUTPUT_DIR / f'AiCover.{output_format}'
+    voice_stereo_path = os.path.join(OUTPUT_DIR, 'Voice_Stereo.wav')
+    aicover_path = os.path.join(OUTPUT_DIR, f'AiCover.{output_format}')
 
-    if combined_output_path.exists():
-        combined_output_path.unlink()
+    if os.path.exists(aicover_path):
+        os.remove(aicover_path)
 
     display_progress(0, '[~] Запуск конвейера генерации...', progress)
 
     display_progress(3, "Конвертация аудио в стерео...", progress)
-    convert_audio_to_stereo(vocal_audio_path, stereo_vocal_path)
+    convert_audio_to_stereo(vocal_audio_path, voice_stereo_path)
 
     if use_effects:
         display_progress(0.5, "Применение аудиоэффектов к вокалу...", progress)
         vocal_output_path = OUTPUT_DIR / 'Vocal_Effected.wav'
-        apply_audio_effects(stereo_vocal_path, vocal_output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
+        apply_audio_effects(voice_stereo_path, vocal_output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
                             low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
                             noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix)
     else:
-        vocal_output_path = stereo_vocal_path
+        vocal_output_path = voice_stereo_path
 
     display_progress(0.8, "Объединение вокала и инструментальной части...", progress)
-    combine_audio_tracks(vocal_output_path, instrumental_audio_path, combined_output_path, vocal_gain, instrumental_gain, output_format)
+    combine_audio_tracks(vocal_output_path, instrumental_audio_path, aicover_path, vocal_gain, instrumental_gain, output_format)
 
-    return combined_output_path
+    return aicover_path

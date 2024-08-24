@@ -6,20 +6,20 @@ import librosa
 import torch
 import numpy as np
 import gradio as gr
-from pathlib import Path
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
-RVC_MODELS_DIR = Path(os.getcwd()) / 'models' / 'rvc_models'
-HUBERT_MODEL_PATH = Path(os.getcwd()) / 'models' / 'assets' / 'hubert_base.pt'
-OUTPUT_DIR = Path(os.getcwd()) / 'output'
-OUTPUT_DIR.mkdir(exist_ok=True)
+RVC_MODELS_DIR = os.path.join(os.getcwd(), 'models', 'rvc_models')
+HUBERT_MODEL_PATH = os.path.join(os.getcwd(), 'models', 'assets', 'hubert_base.pt')
+OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 
 def load_rvc_model(voice_model):
-    model_dir = RVC_MODELS_DIR / voice_model
+    model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
     model_files = os.listdir(model_dir)
-    rvc_model_path = next((model_dir / f for f in model_files if f.endswith('.pth')), None)
-    rvc_index_path = next((model_dir / f for f in model_files if f.endswith('.index')), None)
+    rvc_model_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.pth')), None)
+    rvc_index_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.index')), None)
 
     if not rvc_model_path:
         raise ValueError(f'\033[91mМодели {voice_model} не существует. Возможно, вы неправильно ввели имя.\033[0m')
@@ -45,7 +45,7 @@ def perform_voice_conversion(
         device = torch.device('cpu')
 
     config = Config(device, True)
-    hubert_model = load_hubert(device, config.is_half, str(HUBERT_MODEL_PATH))
+    hubert_model = load_hubert(device, config.is_half, HUBERT_MODEL_PATH)
     cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
     rvc_infer(
@@ -72,11 +72,11 @@ def voice_pipeline(
     if not os.path.exists(uploaded_file):
         raise ValueError(f'Файл {uploaded_file} не найден.')
 
-    stereo_path = OUTPUT_DIR / 'Voice_stereo.wav'
-    voice_convert_path = OUTPUT_DIR / f'Converted_Voice.{output_format}'
+    voice_stereo_path = os.path.join(OUTPUT_DIR, 'Voice_Stereo.wav')
+    voice_convert_path = os.path.join(OUTPUT_DIR, f'Voice_Converted.{output_format}')
 
-    if voice_convert_path.exists():
-        voice_convert_path.unlink()
+    if os.path.exists(voice_convert_path):
+        os.remove(voice_convert_path)
 
     display_progress(0, '[~] Запуск конвейера генерации...', progress)
 

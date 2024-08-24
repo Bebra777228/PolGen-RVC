@@ -7,20 +7,20 @@ import numpy as np
 import gradio as gr
 import edge_tts
 import asyncio
-from pathlib import Path
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
-RVC_MODELS_DIR = Path(os.getcwd()) / 'models' / 'rvc_models'
-HUBERT_MODEL_PATH = Path(os.getcwd()) / 'models' / 'assets' / 'hubert_base.pt'
-OUTPUT_DIR = Path(os.getcwd()) / 'output'
-OUTPUT_DIR.mkdir(exist_ok=True)
+RVC_MODELS_DIR = os.path.join(os.getcwd(), 'models', 'rvc_models')
+HUBERT_MODEL_PATH = os.path.join(os.getcwd(), 'models', 'assets', 'hubert_base.pt')
+OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 
 def load_rvc_model(voice_model):
-    model_dir = RVC_MODELS_DIR / voice_model
+    model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
     model_files = os.listdir(model_dir)
-    rvc_model_path = next((model_dir / f for f in model_files if f.endswith('.pth')), None)
-    rvc_index_path = next((model_dir / f for f in model_files if f.endswith('.index')), None)
+    rvc_model_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.pth')), None)
+    rvc_index_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.index')), None)
 
     if not rvc_model_path:
         raise ValueError(f'\033[91mМодели {voice_model} не существует. Возможно, вы неправильно ввели имя.\033[0m')
@@ -43,7 +43,7 @@ def perform_voice_conversion(
         device = torch.device('cpu')
 
     config = Config(device, True)
-    hubert_model = load_hubert(device, config.is_half, str(HUBERT_MODEL_PATH))
+    hubert_model = load_hubert(device, config.is_half, HUBERT_MODEL_PATH)
     cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
     rvc_infer(
@@ -70,21 +70,21 @@ def edge_tts_pipeline(
     if not voice_model:
         raise ValueError("Выберите модель голоса для преобразования.")
 
-    tts_output_path = OUTPUT_DIR / 'TTS_Output.wav'
-    final_output_path = OUTPUT_DIR / f'Converted_TTS_Output.{output_format}'
+    tts_voice_path = os.path.join(OUTPUT_DIR, 'TTS_Voice.wav')
+    tts_voice_convert_path = os.path.join(OUTPUT_DIR, f'TTS_Voice_Converted.{output_format}')
 
-    if final_output_path.exists():
-        final_output_path.unlink()
+    if os.path.exists(tts_voice_convert_path):
+        os.remove(tts_voice_convert_path)
 
     display_progress(0, '[~] Запуск конвейера генерации...', progress)
 
     display_progress(0.4, '[~] Синтез речи...', progress)
-    asyncio.run(synthesize_text_to_speech(text, voice, tts_output_path))
+    asyncio.run(synthesize_text_to_speech(text, voice, tts_voice_path))
 
     display_progress(0.8, '[~] Преобразование голоса...', progress)
     perform_voice_conversion(
-        voice_model, tts_output_path, final_output_path, pitch, f0_method, index_rate,
+        voice_model, tts_voice_path, tts_voice_convert_path, pitch, f0_method, index_rate,
         filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max, device_type
     )
 
-    return final_output_path, tts_output_path
+    return tts_voice_convert_path, tts_voice_path

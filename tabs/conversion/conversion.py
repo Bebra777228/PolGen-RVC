@@ -1,13 +1,13 @@
 import os
 import gradio as gr
-from pathlib import Path
 
 from rvc.scripts.voice_conversion import voice_pipeline
 from rvc.modules.model_management import *
 from rvc.modules.ui_updates import *
+
 from tabs.install.install_huberts import *
 
-rvc_models_dir = Path(os.getcwd()) / 'models' / 'rvc_models'
+rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 voice_models = get_folders(rvc_models_dir)
 
 def conversion_tab():
@@ -75,4 +75,3 @@ def conversion_tab():
                       volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max
                       ],
                       outputs=[converted_voice])
-

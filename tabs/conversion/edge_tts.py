@@ -1,14 +1,15 @@
 import os
 import gradio as gr
-from pathlib import Path
 
 from rvc.scripts.edge_tts_conversion import edge_tts_pipeline
 from rvc.modules.model_management import *
 from rvc.modules.ui_updates import *
+
 from tabs.install.install_huberts import *
 
-rvc_models_dir = Path(os.getcwd()) / 'models' / 'rvc_models'
+rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 voice_models = get_folders(rvc_models_dir)
+
 
 edge_voices = {
     "Английский (Великобритания)": ["en-GB-SoniaNeural", "en-GB-RyanNeural"],
@@ -50,6 +51,7 @@ edge_voices = {
 
 def update_edge_voices(selected_language):
     return gr.update(choices=edge_voices[selected_language])
+
 
 def edge_tts_tab():
     with gr.Row(equal_height=False):
@@ -107,4 +109,3 @@ def edge_tts_tab():
                         volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max
                         ],
                       outputs=[converted_tts_voice, tts_voice])
-
