@@ -45,7 +45,7 @@ def perform_voice_conversion(
         device = torch.device('cpu')
 
     config = Config(device, True)
-    hubert_model = load_hubert(device, config.is_half, HUBERT_MODEL_PATH)
+    hubert_model = load_hubert(device, config.is_half, str(HUBERT_MODEL_PATH))
     cpt, version, net_g, tgt_sr, vc = get_vc(device, config.is_half, config, rvc_model_path)
 
     rvc_infer(
