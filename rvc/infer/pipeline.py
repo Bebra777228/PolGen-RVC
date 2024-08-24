@@ -7,12 +7,13 @@ import faiss
 import librosa
 import numpy as np
 from scipy import signal
+from pathlib import Path
 
 from rvc.lib.predictors.FCPE import FCPEF0Predictor
 from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
-RMVPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'rmvpe.pt')
-FCPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'fcpe.pt')
+RMVPE_DIR = Path(os.getcwd()) / 'models' / 'assets' / 'rmvpe.pt'
+FCPE_DIR = Path(os.getcwd()) / 'models' / 'assets' / 'fcpe.pt'
 
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
 
@@ -89,7 +90,7 @@ class VC:
         global input_audio_path2wav
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
-        
+
         if f0_method == "mangio-crepe":
             f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length))
 
@@ -146,7 +147,7 @@ class VC:
             "padding_mask": padding_mask,
             "output_layer": 9 if version == "v1" else 12,
         }
-        
+
         with torch.no_grad():
             logits = model.extract_features(**inputs)
             feats = model.final_proj(logits[0]) if version == "v1" else logits[0]
@@ -213,15 +214,14 @@ class VC:
         f0_min=50,
         f0_max=1100,
     ):
-        if file_index is not None and file_index != "" and os.path.exists(file_index) == True and index_rate != 0:
+        index = big_npy = None
+        if file_index and os.path.exists(file_index) and index_rate != 0:
             try:
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as e:
                 print(f"Произошла ошибка при чтении индекса FAISS: {e}")
-                index = big_npy = None
-        else:
-            index = big_npy = None
+
         audio = signal.filtfilt(bh, ah, audio)
         audio_pad = np.pad(audio, (self.window // 2, self.window // 2), mode="reflect")
         opt_ts = []
@@ -281,15 +281,15 @@ class VC:
             audio_opt = AudioProcessor.change_rms(audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope)
         if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
             audio_opt = librosa.resample(audio_opt, orig_sr=tgt_sr, target_sr=resample_sr)
-        
+
         audio_max = np.abs(audio_opt).max() / 0.99
         max_int16 = 32768
         if audio_max > 1:
             max_int16 /= audio_max
         audio_opt = (audio_opt * max_int16).astype(np.int16)
-        
+
         del pitch, pitchf, sid
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        
+
         return audio_opt

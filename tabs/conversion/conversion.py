@@ -1,13 +1,13 @@
 import os
 import gradio as gr
+from pathlib import Path
 
 from rvc.scripts.voice_conversion import voice_pipeline
 from rvc.modules.model_management import *
 from rvc.modules.ui_updates import *
-
 from tabs.install.install_huberts import *
 
-rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
+rvc_models_dir = Path(os.getcwd()) / 'models' / 'rvc_models'
 voice_models = get_folders(rvc_models_dir)
 
 def conversion_tab():
@@ -65,7 +65,7 @@ def conversion_tab():
                 with gr.Row():
                     f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
                     f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
-    
+
     install_hubert_tab()
 
     ref_btn.click(update_models_list, None, outputs=rvc_model)
@@ -75,3 +75,4 @@ def conversion_tab():
                       volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max
                       ],
                       outputs=[converted_voice])
+

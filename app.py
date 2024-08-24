@@ -2,7 +2,7 @@ import gradio as gr
 import sys
 import os
 
-#    from tabs.welcome import *
+from tabs.welcome import *
 from tabs.conversion.conversion import *
 from tabs.conversion.edge_tts import *
 from tabs.processing.processing import *
@@ -20,8 +20,8 @@ with gr.Blocks(
     )
 ) as PolGen:
         
-#    with gr.Tab("Велком/Контакты"):
-#        welcome_tab()
+    with gr.Tab("Велком/Контакты"):
+        welcome_tab()
 
     with gr.Tab("Преобразование и обработка голоса"):
         with gr.Tab("Замена голоса"):

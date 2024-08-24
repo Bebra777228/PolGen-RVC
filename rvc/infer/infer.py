@@ -9,7 +9,6 @@ from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
 from .pipeline import VC
 
-
 class Config:
     def __init__(self, device, is_half):
         self.device = torch.device(device)
@@ -54,20 +53,20 @@ class Config:
             self.is_half = False
             self._update_config_files()
         self.gpu_mem = int(
-        torch.cuda.get_device_properties(self.device).total_memory
-        / 1024
-        / 1024
-        / 1024
-        + 0.4
+            torch.cuda.get_device_properties(self.device).total_memory
+            / 1024
+            / 1024
+            / 1024
+            + 0.4
         )
         if self.gpu_mem <= 4:
             self._update_config_files()
 
     def _update_config_files(self):
         for config_file in ["32k.json", "40k.json", "48k.json"]:
-            config_path = os.getcwd() / "rvc" / "configs" / config_file
+            config_path = Path(os.getcwd()) / "rvc" / "configs" / config_file
             self._replace_in_file(config_path, "true", "false")
-        trainset_path = os.getcwd() / "rvc" / "trainset_preprocess_pipeline_print.py"
+        trainset_path = Path(os.getcwd()) / "rvc" / "trainset_preprocess_pipeline_print.py"
         self._replace_in_file(trainset_path, "3.7", "3.0")
 
     @staticmethod
@@ -106,7 +105,7 @@ def get_vc(device, is_half, config, model_path):
         input_dim=input_dim,
         is_half=is_half,
     )
-    
+
     del net_g.enc_q
     print(net_g.load_state_dict(cpt["weight"], strict=False))
     net_g.eval().to(device)

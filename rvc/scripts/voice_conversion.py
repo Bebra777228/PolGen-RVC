@@ -6,35 +6,32 @@ import librosa
 import torch
 import numpy as np
 import gradio as gr
+from pathlib import Path
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
-RVC_MODELS_DIR = os.path.join(os.getcwd(), 'models', 'rvc_models')
-HUBERT_MODEL_PATH = os.path.join(os.getcwd(), 'models', 'assets', 'hubert_base.pt')
-OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-def display_progress(percent, message, progress=gr.Progress()):
-    progress(percent, desc=message)
+RVC_MODELS_DIR = Path(os.getcwd()) / 'models' / 'rvc_models'
+HUBERT_MODEL_PATH = Path(os.getcwd()) / 'models' / 'assets' / 'hubert_base.pt'
+OUTPUT_DIR = Path(os.getcwd()) / 'output'
+OUTPUT_DIR.mkdir(exist_ok=True)
 
 def load_rvc_model(voice_model):
-    model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
+    model_dir = RVC_MODELS_DIR / voice_model
     model_files = os.listdir(model_dir)
-    rvc_model_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.pth')), None)
-    rvc_index_path = next((os.path.join(model_dir, f) for f in model_files if f.endswith('.index')), None)
+    rvc_model_path = next((model_dir / f for f in model_files if f.endswith('.pth')), None)
+    rvc_index_path = next((model_dir / f for f in model_files if f.endswith('.index')), None)
 
     if not rvc_model_path:
         raise ValueError(f'\033[91mМодели {voice_model} не существует. Возможно, вы неправильно ввели имя.\033[0m')
 
     return rvc_model_path, rvc_index_path
 
-def convert_audio_to_stereo(audio_path):
-    wave, sr = librosa.load(audio_path, mono=False, sr=44100)
+def convert_audio_to_stereo(input_path, output_path):
+    wave, sr = librosa.load(input_path, mono=False, sr=44100)
     if wave.ndim == 1:
-        stereo_path = os.path.join(OUTPUT_DIR, 'Voice_stereo.wav')
-        subprocess.run(shlex.split(f'ffmpeg -y -loglevel error -i "{audio_path}" -ac 2 -f wav "{stereo_path}"'))
-        return stereo_path
-    return audio_path
+        subprocess.run(shlex.split(f'ffmpeg -y -loglevel error -i "{input_path}" -ac 2 -f wav "{output_path}"'))
+        return output_path
+    return input_path
 
 def perform_voice_conversion(
     voice_model, vocals_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max, device_type
@@ -60,6 +57,9 @@ def perform_voice_conversion(
     gc.collect()
     torch.cuda.empty_cache()
 
+def display_progress(percent, message, progress=gr.Progress()):
+    progress(percent, desc=message)
+
 def voice_pipeline(
     uploaded_file, voice_model, pitch, device_type, index_rate=0.5, filter_radius=3, volume_envelope=0.25,
     f0_method='rmvpe+', hop_length=128, protect=0.33, output_format='mp3', f0_min=50, f0_max=1100,
@@ -69,19 +69,21 @@ def voice_pipeline(
         raise ValueError("Не удалось найти аудиофайл. Убедитесь, что файл загрузился или проверьте правильность пути к нему.")
     if not voice_model:
         raise ValueError("Выберите модель голоса для преобразования.")
-
-    display_progress(0, '[~] Запуск конвейера генерации AI-кавера...', progress)
-
     if not os.path.exists(uploaded_file):
         raise ValueError(f'Файл {uploaded_file} не найден.')
 
-    orig_song_path = convert_audio_to_stereo(uploaded_file)
-    voice_convert_path = os.path.join(OUTPUT_DIR, f'Converted_Voice.{output_format}')
+    stereo_path = OUTPUT_DIR / 'Voice_stereo.wav'
+    voice_convert_path = OUTPUT_DIR / f'Converted_Voice.{output_format}'
 
-    if os.path.exists(voice_convert_path):
-        os.remove(voice_convert_path)
+    if voice_convert_path.exists():
+        voice_convert_path.unlink()
 
-    display_progress(0.5, '[~] Преобразование вокала...', progress)
+    display_progress(0, '[~] Запуск конвейера генерации...', progress)
+
+    display_progress(4, "Конвертация аудио в стерео...", progress)
+    orig_song_path = convert_audio_to_stereo(uploaded_file, stereo_path)
+
+    display_progress(0.8, '[~] Преобразование вокала...', progress)
     perform_voice_conversion(
         voice_model, orig_song_path, voice_convert_path, pitch, f0_method, index_rate,
         filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max, device_type

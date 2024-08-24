@@ -1,15 +1,14 @@
 import os
 import gradio as gr
+from pathlib import Path
 
 from rvc.scripts.edge_tts_conversion import edge_tts_pipeline
 from rvc.modules.model_management import *
 from rvc.modules.ui_updates import *
-
 from tabs.install.install_huberts import *
 
-rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
+rvc_models_dir = Path(os.getcwd()) / 'models' / 'rvc_models'
 voice_models = get_folders(rvc_models_dir)
-
 
 edge_voices = {
     "Английский (Великобритания)": ["en-GB-SoniaNeural", "en-GB-RyanNeural"],
@@ -52,7 +51,6 @@ edge_voices = {
 def update_edge_voices(selected_language):
     return gr.update(choices=edge_voices[selected_language])
 
-
 def edge_tts_tab():
     with gr.Row(equal_height=False):
         with gr.Column(variant='panel', scale=2):
@@ -64,7 +62,7 @@ def edge_tts_tab():
 
         with gr.Column(variant='panel', scale=3):
             tts_voice = gr.Audio(label='TTS голос')
-        
+
         with gr.Column(variant='panel', scale=2):
             with gr.Group():
                 language = gr.Dropdown(list(edge_voices.keys()), label='Язык')
@@ -78,7 +76,7 @@ def edge_tts_tab():
             generate_btn = gr.Button("Генерировать", variant='primary', scale=2)
             converted_tts_voice = gr.Audio(label='Преобразованный голос', scale=9)
             with gr.Column(min_width=160):
-                device_type = gr.Dropdown(['cuda', 'cpu'], value='GPU', label='Устройство', allow_custom_value=False, filterable=False)
+                device_type = gr.Dropdown(['cuda', 'cpu'], value='cuda', label='Устройство', allow_custom_value=False, filterable=False)
                 output_format = gr.Dropdown(['wav', 'flac', 'mp3', 'ogg'], value='mp3', label='Формат файла', allow_custom_value=False, filterable=False)
 
     with gr.Tab('Настройки преобразования'):
@@ -99,13 +97,14 @@ def edge_tts_tab():
                 with gr.Row():
                     f0_min = gr.Slider(label="Минимальный диапазон тона", info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=1, value=50, maximum=100)
                     f0_max = gr.Slider(label="Максимальный диапазон тона", info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.", step=1, minimum=400, value=1100, maximum=16000)
-    
+
     install_hubert_tab()
 
     ref_btn.click(update_models_list, None, outputs=rvc_model)
-    generate_btn.click(edge_tts_pipeline, 
+    generate_btn.click(edge_tts_pipeline,
                       inputs=[
                         text_input, rvc_model, voice, pitch, device_type, index_rate, filter_radius,
                         volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max
                         ],
                       outputs=[converted_tts_voice, tts_voice])
+
