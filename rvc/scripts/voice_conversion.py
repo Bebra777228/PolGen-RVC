@@ -81,7 +81,7 @@ def voice_pipeline(
     display_progress(0, '[~] Запуск конвейера генерации...', progress)
 
     display_progress(4, "Конвертация аудио в стерео...", progress)
-    orig_song_path = convert_audio_to_stereo(uploaded_file, stereo_path)
+    orig_song_path = convert_audio_to_stereo(uploaded_file, voice_stereo_path)
 
     display_progress(0.8, '[~] Преобразование вокала...', progress)
     perform_voice_conversion(
