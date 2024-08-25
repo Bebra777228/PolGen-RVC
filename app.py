@@ -38,4 +38,4 @@ with gr.Blocks(
         zip_upload()
         files_upload()
 
-app.launch(share=True, show_error=True, quiet=True, show_api=False)
+PolGen.launch(share=True, show_error=True, quiet=True, show_api=False)
