@@ -11,63 +11,59 @@ from .pipeline import VC
 
 # Конфигурация устройства и параметров
 class Config:
-    def __init__(self, device, is_half):
-        self.device = torch.device(device)
-        self.is_half = is_half
+    def __init__(self):
+        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        self.is_half = self.device != "cpu"
         self.n_cpu = cpu_count()
-        self.gpu_name = None
+        self.gpu_name = (
+            torch.cuda.get_device_name(int(self.device.split(":")[-1]))
+            if self.device.startswith("cuda")
+            else None
+        )
         self.gpu_mem = None
         self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
 
     def device_config(self):
-        if self.device.type == 'cuda' and torch.cuda.is_available():
+        if self.device.startswith("cuda"):
             self._configure_gpu()
-        elif self.device.type == 'mps' and torch.backends.mps.is_available():
-            print("Не обнаружена поддерживаемая N-карта, используйте MPS для вывода")
-            self.device = torch.device("mps")
+        elif torch.backends.mps.is_available()
+            self.device = "mps"
+            self.is_half = False
         else:
-            print("Не обнаружена поддерживаемая N-карта, используйте CPU для вывода")
-            self.device = torch.device("cpu")
-            self.is_half = True
+            self.device = "cpu"
+            self.is_half = False
 
-        if self.is_half:
-            x_pad, x_query, x_center, x_max = 3, 10, 60, 65
-        else:
-            x_pad, x_query, x_center, x_max = 1, 6, 38, 41
-
+        x_pad, x_query, x_center, x_max = (3, 10, 60, 65) if self.is_half else (1, 6, 38, 41)
         if self.gpu_mem is not None and self.gpu_mem <= 4:
-            x_pad, x_query, x_center, x_max = 1, 5, 30, 32
+            x_pad, x_query, x_center, x_max = (1, 5, 30, 32)
 
         return x_pad, x_query, x_center, x_max
 
     def _configure_gpu(self):
-        self.gpu_name = torch.cuda.get_device_name(self.device)
+        i_device = int(self.device.split(":")[-1])
+        self.gpu_name = torch.cuda.get_device_name(i_device)
+        if self.gpu_name.endswith("[ZLUDA]"):
+            print('Zluda support -- experimental')
+            torch.backends.cudnn.enabled = False
+            torch.backends.cuda.enable_flash_sdp(False)
+            torch.backends.cuda.enable_math_sdp(True)
+            torch.backends.cuda.enable_mem_efficient_sdp(False)
+        low_end_gpus = ["16", "P40", "P10", "1060", "1070", "1080"]
         if (
-            "16" in self.gpu_name
+            any(gpu in self.gpu_name for gpu in low_end_gpus)
             and "V100" not in self.gpu_name.upper()
-            or "P40" in self.gpu_name.upper()
-            or "1060" in self.gpu_name
-            or "1070" in self.gpu_name
-            or "1080" in self.gpu_name
         ):
-            print("16 серия/10 серия P40 принудительно используется одинарная точность")
             self.is_half = False
             self._update_config_files()
-        self.gpu_mem = int(
-            torch.cuda.get_device_properties(self.device).total_memory
-            / 1024
-            / 1024
-            / 1024
-            + 0.4
-        )
+        self.gpu_mem = torch.cuda.get_device_properties(i_device).total_memory // (1024**3)
         if self.gpu_mem <= 4:
             self._update_config_files()
 
     def _update_config_files(self):
         for config_file in ["32k.json", "40k.json", "48k.json"]:
-            config_path = os.getcwd() / "rvc" / "configs" / config_file
+            config_path = os.path.join(os.getcwd(), "rvc", "configs", config_file)
             self._replace_in_file(config_path, "true", "false")
-        trainset_path = os.getcwd() / "rvc" / "trainset_preprocess_pipeline_print.py"
+        trainset_path = os.path.join(os.getcwd(), "rvc", "infer", "trainset_preprocess_pipeline_print.py")
         self._replace_in_file(trainset_path, "3.7", "3.0")
 
     @staticmethod

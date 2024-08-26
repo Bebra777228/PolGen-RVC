@@ -78,7 +78,6 @@ def edge_tts_tab():
             generate_btn = gr.Button("Генерировать", variant='primary', scale=2)
             converted_tts_voice = gr.Audio(label='Преобразованный голос', scale=9)
             with gr.Column(min_width=160):
-                device_type = gr.Dropdown(['cuda', 'cpu'], value='cuda', label='Устройство', allow_custom_value=False, filterable=False)
                 output_format = gr.Dropdown(['wav', 'flac', 'mp3', 'ogg'], value='mp3', label='Формат файла', allow_custom_value=False, filterable=False)
 
     with gr.Tab('Настройки преобразования'):
@@ -105,7 +104,7 @@ def edge_tts_tab():
     ref_btn.click(update_models_list, None, outputs=rvc_model)
     generate_btn.click(edge_tts_pipeline,
                       inputs=[
-                        text_input, rvc_model, voice, pitch, device_type, index_rate, filter_radius,
-                        volume_envelope, f0_method, hop_length, protect, output_format, f0_min, f0_max
+                        text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
+                        f0_method, hop_length, protect, output_format, f0_min, f0_max
                         ],
                       outputs=[converted_tts_voice, tts_voice])

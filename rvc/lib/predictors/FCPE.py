@@ -22,7 +22,6 @@ os.environ["LRU_CACHE_CAPACITY"] = "3"
 
 
 def load_wav_to_torch(full_path, target_sr=None, return_empty_on_exception=False):
-    """Loads wav file to torch tensor."""
     try:
         data, sample_rate = sf.read(full_path, always_2d=True)
     except Exception as error:
