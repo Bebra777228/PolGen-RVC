@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+
 from librosa.filters import mel
 from typing import List
 
@@ -292,11 +293,14 @@ class MelSpectrogram(torch.nn.Module):
             self.hann_window[keyshift_key] = torch.hann_window(win_length_new).to(
                 audio.device
             )
+
         source_device = audio.device
-        if audio.device.type == "cuda" and torch.cuda.get_device_name().endswith("[ZLUDA]"):
+        if audio.device.type == "cuda" and torch.cuda.get_device_name().endswith(
+            "[ZLUDA]"
+        ):
             audio = audio.to("cpu")
             self.hann_window[keyshift_key] = self.hann_window[keyshift_key].to("cpu")
-            
+
         fft = torch.stft(
             audio,
             n_fft=n_fft_new,
@@ -306,10 +310,6 @@ class MelSpectrogram(torch.nn.Module):
             center=center,
             return_complex=True,
         ).to(source_device)
-
-        if not hasattr(self, "stft"):
-            self.stft = STFT(filter_length=n_fft_new, hop_length=hop_length_new, win_length=win_length_new, window="hann").to(audio.device)
-        magnitude = self.stft.transform(audio)
 
         magnitude = torch.sqrt(fft.real.pow(2) + fft.imag.pow(2))
         if keyshift != 0:
@@ -392,16 +392,16 @@ class RMVPE0Predictor:
         starts = center - 4
         ends = center + 5
         for idx in range(salience.shape[0]):
-            todo_salience.append(salience[:, starts[idx]:ends[idx]][idx])
-            todo_cents_mapping.append(self.cents_mapping[starts[idx]:ends[idx]])
+            todo_salience.append(salience[:, starts[idx] : ends[idx]][idx])
+            todo_cents_mapping.append(self.cents_mapping[starts[idx] : ends[idx]])
         todo_salience = np.array(todo_salience)
         todo_cents_mapping = np.array(todo_cents_mapping)
         product_sum = np.sum(todo_salience * todo_cents_mapping, 1)
         weight_sum = np.sum(todo_salience, 1)
-        divided = product_sum / weight_sum
+        devided = product_sum / weight_sum
         maxx = np.max(salience, axis=1)
-        divided[maxx <= thred] = 0
-        return divided
+        devided[maxx <= thred] = 0
+        return devided
 
 
 class BiGRU(nn.Module):
