@@ -26,7 +26,7 @@ class Config:
     def device_config(self):
         if self.device.startswith("cuda"):
             self._configure_gpu()
-        elif torch.backends.mps.is_available()
+        elif torch.backends.mps.is_available():
             self.device = "mps"
             self.is_half = False
         else:
