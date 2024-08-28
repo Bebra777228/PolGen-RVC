@@ -10,11 +10,14 @@ import asyncio
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
-# Константы
 RVC_MODELS_DIR = os.path.join(os.getcwd(), 'models', 'rvc_models')
 HUBERT_MODEL_PATH = os.path.join(os.getcwd(), 'models', 'assets', 'hubert_base.pt')
 OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Отображает прогресс выполнения задачи.
+def display_progress(percent, message, progress=gr.Progress()):
+    progress(percent, desc=message)
 
 # Загружает модель RVC и индекс по имени модели.
 def load_rvc_model(voice_model):
@@ -51,10 +54,6 @@ def perform_voice_conversion(
     del hubert_model, cpt, net_g, vc
     gc.collect()
     torch.cuda.empty_cache()
-
-# Отображает прогресс выполнения задачи.
-def display_progress(percent, message, progress=gr.Progress()):
-    progress(percent, desc=message)
 
 # Основной конвейер для синтеза речи и преобразования голоса.
 def edge_tts_pipeline(

@@ -69,8 +69,8 @@ def conversion_tab():
 
     ref_btn.click(update_models_list, None, outputs=rvc_model)
     generate_btn.click(voice_pipeline,
-                      inputs=[
-                      song_input, rvc_model, pitch, index_rate, filter_radius, volume_envelope,
-                      f0_method, hop_length, protect, output_format, f0_min, f0_max
-                      ],
-                      outputs=[converted_voice])
+                       inputs=[
+                           song_input, rvc_model, pitch, index_rate, filter_radius, volume_envelope,
+                           f0_method, hop_length, protect, output_format, f0_min, f0_max
+                       ],
+                       outputs=[converted_voice])

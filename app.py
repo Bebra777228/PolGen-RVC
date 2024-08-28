@@ -1,6 +1,4 @@
 import gradio as gr
-import sys
-import os
 
 from tabs.welcome import *
 from tabs.conversion.conversion import *
@@ -16,7 +14,7 @@ with gr.Blocks(
         secondary_hue="green",
         neutral_hue="neutral",
         spacing_size="sm",
-        radius_size="lg"
+        radius_size="lg",
     )
 ) as PolGen:
         
@@ -27,15 +25,20 @@ with gr.Blocks(
         with gr.Tab("Замена голоса"):
             conversion_tab()
 
-        with gr.Tab("Объединение/Обработка"):
+        with gr.Tab('Объединение/Обработка'):
             processing_tab()
 
-    with gr.Tab("Преобразование текста в речь (TTS)"):
+    with gr.Tab('Преобразование текста в речь (TTS)'):
         edge_tts_tab()
 
-    with gr.Tab("Загрузка модели"):
+    with gr.Tab('Загрузка модели'):
         url_download()
         zip_upload()
         files_upload()
 
-PolGen.launch(share=True, show_error=True, quiet=True, show_api=False)
+PolGen.launch(
+    share=True,
+    quiet=True,
+    show_api=False,
+    show_error=True,
+)

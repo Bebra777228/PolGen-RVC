@@ -7,7 +7,6 @@ import requests
 import gradio as gr
 from mega import Mega
 
-# Константы
 rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 
 # Возвращает список папок в указанной директории.

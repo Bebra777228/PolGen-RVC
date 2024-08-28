@@ -103,8 +103,8 @@ def edge_tts_tab():
 
     ref_btn.click(update_models_list, None, outputs=rvc_model)
     generate_btn.click(edge_tts_pipeline,
-                      inputs=[
-                        text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
-                        f0_method, hop_length, protect, output_format, f0_min, f0_max
-                        ],
-                      outputs=[converted_tts_voice, tts_voice])
+                       inputs=[
+                           text_input, rvc_model, voice, pitch, index_rate, filter_radius, volume_envelope,
+                           f0_method, hop_length, protect, output_format, f0_min, f0_max
+                       ],
+                       outputs=[converted_tts_voice, tts_voice])

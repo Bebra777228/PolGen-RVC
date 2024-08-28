@@ -11,7 +11,6 @@ from scipy import signal
 from rvc.lib.predictors.FCPE import FCPEF0Predictor
 from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
-# Константы
 RMVPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'rmvpe.pt')
 FCPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'fcpe.pt')
 

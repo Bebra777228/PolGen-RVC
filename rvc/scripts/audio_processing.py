@@ -7,9 +7,12 @@ from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfF
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
-# Константы
 OUTPUT_DIR = os.path.join(os.getcwd(), 'output')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# Отображает прогресс выполнения задачи.
+def display_progress(percent, message, progress=gr.Progress()):
+    progress(percent, desc=message)
 
 # Объединяет вокальную и инструментальную дорожки с заданными параметрами усиления.
 def combine_audio_tracks(vocal_path, instrumental_path, output_path, vocal_gain, instrumental_gain, output_format):
@@ -47,10 +50,6 @@ def apply_audio_effects(vocal_path, output_path, reverb_rm_size, reverb_wet, rev
             chunk = f.read(int(f.samplerate))
             effected = board(chunk, f.samplerate, reset=False)
             o.write(effected)
-
-# Отображает прогресс выполнения задачи.
-def display_progress(percent, message, progress=gr.Progress()):
-    progress(percent, desc=message)
 
 # Основной конвейер для обработки аудио.
 def process_audio(vocal_audio_path, instrumental_audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,

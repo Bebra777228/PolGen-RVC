@@ -13,7 +13,7 @@ from .pipeline import VC
 class Config:
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.is_half = self.device != "cpu"
+        self.is_half = self.device == "cpu"
         self.n_cpu = cpu_count()
         self.gpu_name = None
         self.gpu_mem = None
@@ -24,7 +24,6 @@ class Config:
             self._configure_gpu()
         elif torch.backends.mps.is_available():
             self.device = "mps"
-            self.is_half = False
         else:
             self.device = "cpu"
             self.is_half = True
@@ -37,12 +36,6 @@ class Config:
 
     def _configure_gpu(self):
         self.gpu_name = torch.cuda.get_device_name(self.device)
-        if self.gpu_name.endswith("[ZLUDA]"):
-            print('Zluda support -- experimental')
-            torch.backends.cudnn.enabled = False
-            torch.backends.cuda.enable_flash_sdp(False)
-            torch.backends.cuda.enable_math_sdp(True)
-            torch.backends.cuda.enable_mem_efficient_sdp(False)
         low_end_gpus = ["16", "P40", "P10", "1060", "1070", "1080"]
         if (
             any(gpu in self.gpu_name for gpu in low_end_gpus)
@@ -50,7 +43,7 @@ class Config:
         ):
             self.is_half = False
             self._update_config_files()
-        self.gpu_mem = torch.cuda.get_device_properties(self.device).total_memory // (1024**3)
+        self.gpu_mem = int(torch.cuda.get_device_properties(self.device).total_memory / 1024 / 1024 / 1024 + 0.4)
         if self.gpu_mem <= 4:
             self._update_config_files()
 
@@ -70,7 +63,7 @@ class Config:
 
 # Загрузка модели Hubert
 def load_hubert(device, is_half, model_path):
-    models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([model_path], suffix='')
+    models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([model_path], suffix="")
     hubert = models[0].to(device)
 
     if is_half:
@@ -83,9 +76,9 @@ def load_hubert(device, is_half, model_path):
 
 # Получение голосового преобразователя
 def get_vc(device, is_half, config, model_path):
-    cpt = torch.load(model_path, map_location='cpu', weights_only=True)
+    cpt = torch.load(model_path, map_location="cpu", weights_only=True)
     if "config" not in cpt or "weight" not in cpt:
-        raise ValueError(f'Некорректный формат для {model_path}. Используйте голосовую модель, обученную с использованием RVC v2.')
+        raise ValueError(f"Некорректный формат для {model_path}. Используйте голосовую модель, обученную с использованием RVC v2.")
 
     tgt_sr = cpt["config"][-1]
     cpt["config"][-3] = cpt["weight"]["emb_g.weight"].shape[0]
@@ -134,7 +127,7 @@ def rvc_infer(
     f0_max=1100,
 ):
     audio = load_audio(input_path, 16000)
-    pitch_guidance = cpt.get('f0', 1)
+    pitch_guidance = cpt.get("f0", 1)
     audio_opt = vc.pipeline(
         hubert_model,
         net_g,

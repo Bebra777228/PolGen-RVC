@@ -8,6 +8,7 @@ from typing import Optional
 from .commons import get_padding, init_weights
 from .modules import WaveNet
 
+
 LRELU_SLOPE = 0.1
 
 
