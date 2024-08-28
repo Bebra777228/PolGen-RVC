@@ -23,3 +23,4 @@ mega.py
 # Машинное обучение
 --find-links https://download.pytorch.org/whl/torch
 torch==2.4.0+cu121
+torch-directml
