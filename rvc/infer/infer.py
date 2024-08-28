@@ -1,6 +1,5 @@
 import os
 import torch
-import torch_directml
 from multiprocessing import cpu_count
 from fairseq import checkpoint_utils
 from scipy.io import wavfile
@@ -22,8 +21,6 @@ class Config:
     def get_device(self):
         if torch.cuda.is_available():
             return "cuda"
-        elif torch_directml.is_available():
-            return "privateuseone"
         elif torch.backends.mps.is_available():
             return "mps"
         else:
@@ -33,9 +30,6 @@ class Config:
         if torch.cuda.is_available():
             print("Используется устройство CUDA")
             self._configure_gpu()
-        elif torch_directml.is_available():
-            print("Используется устройство DirectML")
-            self.device = "privateuseone"
         elif torch.backends.mps.is_available():
             print("Используется устройство MPS")
             self.device = "mps"
