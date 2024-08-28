@@ -1,7 +1,7 @@
 import os
 import torch
+import torch_directml
 from multiprocessing import cpu_count
-from pathlib import Path
 from fairseq import checkpoint_utils
 from scipy.io import wavfile
 
@@ -12,19 +12,35 @@ from .pipeline import VC
 # Конфигурация устройства и параметров
 class Config:
     def __init__(self):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = self.get_device()
         self.is_half = self.device == "cpu"
         self.n_cpu = cpu_count()
         self.gpu_name = None
         self.gpu_mem = None
         self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
 
+    def get_device(self):
+        if torch.cuda.is_available():
+            return "cuda"
+        elif torch_directml.is_available():
+            return "privateuseone"
+        elif torch.backends.mps.is_available():
+            return "mps"
+        else:
+            return "cpu"
+
     def device_config(self):
         if torch.cuda.is_available():
+            print("Используется устройство CUDA")
             self._configure_gpu()
+        elif torch_directml.is_available():
+            print("Используется устройство DirectML")
+            self.device = "privateuseone"
         elif torch.backends.mps.is_available():
+            print("Используется устройство MPS")
             self.device = "mps"
         else:
+            print("Используется CPU")
             self.device = "cpu"
             self.is_half = True
 
@@ -65,12 +81,7 @@ class Config:
 def load_hubert(device, is_half, model_path):
     models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([model_path], suffix="")
     hubert = models[0].to(device)
-
-    if is_half:
-        hubert = hubert.half()
-    else:
-        hubert = hubert.float()
-
+    hubert = hubert.half() if is_half else hubert.float()
     hubert.eval()
     return hubert
 
@@ -96,11 +107,7 @@ def get_vc(device, is_half, config, model_path):
     del net_g.enc_q
     print(net_g.load_state_dict(cpt["weight"], strict=False))
     net_g.eval().to(device)
-
-    if is_half:
-        net_g = net_g.half()
-    else:
-        net_g = net_g.float()
+    net_g = net_g.half() if is_half else net_g.float()
 
     vc = VC(tgt_sr, config)
     return cpt, version, net_g, tgt_sr, vc
