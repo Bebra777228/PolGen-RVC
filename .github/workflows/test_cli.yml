@@ -10,7 +10,7 @@ on:
 
 jobs:
   rvc_cli:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     strategy:
       matrix:
@@ -52,7 +52,7 @@ jobs:
         python3 -m rvc.cli.rvc_cli -i audio/test.mp3 -m Tsoi -p 0 -ir 0 -fr 3 -rms 0.25 -f0 "rmvpe+" -hop 32 -pro 0.33 -f0min 1 -f0max 1100 -f "mp3"
 
   tts_cli:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     strategy:
       matrix:
