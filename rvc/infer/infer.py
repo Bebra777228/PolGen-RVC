@@ -12,26 +12,22 @@ from .pipeline import VC
 # Конфигурация устройства и параметров
 class Config:
     def __init__(self):
-        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.is_half = self.device != "cpu"
         self.n_cpu = cpu_count()
-        self.gpu_name = (
-            torch.cuda.get_device_name(int(self.device.split(":")[-1]))
-            if self.device.startswith("cuda")
-            else None
-        )
+        self.gpu_name = None
         self.gpu_mem = None
         self.x_pad, self.x_query, self.x_center, self.x_max = self.device_config()
 
     def device_config(self):
-        if self.device.startswith("cuda"):
+        if torch.cuda.is_available():
             self._configure_gpu()
         elif torch.backends.mps.is_available():
             self.device = "mps"
             self.is_half = False
         else:
             self.device = "cpu"
-            self.is_half = False
+            self.is_half = True
 
         x_pad, x_query, x_center, x_max = (3, 10, 60, 65) if self.is_half else (1, 6, 38, 41)
         if self.gpu_mem is not None and self.gpu_mem <= 4:
@@ -40,8 +36,7 @@ class Config:
         return x_pad, x_query, x_center, x_max
 
     def _configure_gpu(self):
-        i_device = int(self.device.split(":")[-1])
-        self.gpu_name = torch.cuda.get_device_name(i_device)
+        self.gpu_name = torch.cuda.get_device_name(self.device)
         if self.gpu_name.endswith("[ZLUDA]"):
             print('Zluda support -- experimental')
             torch.backends.cudnn.enabled = False
@@ -55,7 +50,7 @@ class Config:
         ):
             self.is_half = False
             self._update_config_files()
-        self.gpu_mem = torch.cuda.get_device_properties(i_device).total_memory // (1024**3)
+        self.gpu_mem = torch.cuda.get_device_properties(self.device).total_memory // (1024**3)
         if self.gpu_mem <= 4:
             self._update_config_files()
 
