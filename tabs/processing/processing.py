@@ -59,7 +59,7 @@ def processing_tab():
         with gr.Row(variant='panel'):
             vocal_gain = gr.Slider(-10, 10, value=0, step=1, label='Вокал', scale=3)
             instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал', scale=3)
-            clear_btn = gr.Button("Сбросить все эффекты", scale=1)
+            all_clear_btn = gr.Button("Сбросить все эффекты", scale=1)
 
         use_effects = gr.Checkbox(label="Добавить эффекты на голос", value=False)
         with gr.Column(variant='panel', visible=False) as effects_accordion:
@@ -111,16 +111,29 @@ def processing_tab():
 
     use_effects.change(show_effects, inputs=use_effects, outputs=effects_accordion)
     process_btn.click(process_audio,
-                    inputs=[vocal_input, instrumental_input, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
+                    inputs=[
+                    vocal_input, instrumental_input, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
                     reverb_width, low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold,
                     noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release,
                     chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                    output_format, vocal_gain, instrumental_gain, use_effects],
+                    output_format, vocal_gain, instrumental_gain, use_effects
+                    ],
                     outputs=[ai_cover])
 
-    default_values = [0, 0, 0.1, 1.0, 0.1, 0.8, 0.9, 0, 0, 0, 0, 0, 4, -12, 0, 0, -40, 8, 10, 100]
-    clear_btn.click(lambda: default_values,
-                    outputs=[vocal_gain, instrumental_gain, reverb_rm_size, reverb_width, reverb_wet, reverb_dry, reverb_damping,
+    all_default_values = [
+                        0, 0,
+                        0.1, 1.0, 0.1, 0.8, 0.9,
+                        0, 0, 0, 0, 0,
+                        4, -12,
+                        0, 0,
+                        -40, 8, 10, 100
+                        ]
+    all_clear_btn.click(lambda: all_default_values,
+                    outputs=[
+                    vocal_gain, instrumental_gain,
+                    reverb_rm_size, reverb_width, reverb_wet, reverb_dry, reverb_damping,
                     chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
-                    compressor_ratio, compressor_threshold, low_shelf_gain, high_shelf_gain, noise_gate_threshold,
-                    noise_gate_ratio, noise_gate_attack, noise_gate_release])
+                    compressor_ratio, compressor_threshold,
+                    low_shelf_gain, high_shelf_gain,
+                    noise_gate_threshold, noise_gate_ratio, noise_gate_attack, noise_gate_release
+                    ])

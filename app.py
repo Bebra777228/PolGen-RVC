@@ -38,7 +38,6 @@ with gr.Blocks(
 
 PolGen.launch(
     share=True,
-    quiet=True,
     show_api=False,
     show_error=True,
 )
