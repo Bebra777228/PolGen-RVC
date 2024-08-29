@@ -52,24 +52,7 @@ class Config:
             and "V100" not in self.gpu_name.upper()
         ):
             self.is_half = False
-            self._update_config_files()
         self.gpu_mem = int(torch.cuda.get_device_properties(self.device).total_memory / 1024 / 1024 / 1024 + 0.4)
-        if self.gpu_mem <= 4:
-            self._update_config_files()
-
-    def _update_config_files(self):
-        for config_file in ["32k.json", "40k.json", "48k.json"]:
-            config_path = os.path.join(os.getcwd(), "rvc", "configs", config_file)
-            self._replace_in_file(config_path, "true", "false")
-        trainset_path = os.path.join(os.getcwd(), "rvc", "infer", "trainset_preprocess_pipeline_print.py")
-        self._replace_in_file(trainset_path, "3.7", "3.0")
-
-    @staticmethod
-    def _replace_in_file(file_path, old, new):
-        with open(file_path, "r") as f:
-            content = f.read().replace(old, new)
-        with open(file_path, "w") as f:
-            f.write(content)
 
 # Загрузка модели Hubert
 def load_hubert(device, is_half, model_path):
