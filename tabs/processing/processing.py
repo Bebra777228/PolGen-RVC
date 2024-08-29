@@ -59,7 +59,7 @@ def processing_tab():
         with gr.Row(variant='panel'):
             vocal_gain = gr.Slider(-10, 10, value=0, step=1, label='Вокал', scale=3)
             instrumental_gain = gr.Slider(-10, 10, value=0, step=1, label='Инструментал', scale=3)
-            all_clear_btn = gr.Button("Сбросить все эффекты", scale=1)
+            all_clear_btn = gr.Button("Сбросить все эффекты", scale=1, visible=False)
 
         use_effects = gr.Checkbox(label="Добавить эффекты на голос", value=False)
         with gr.Column(variant='panel', visible=False) as effects_accordion:
@@ -109,7 +109,7 @@ def processing_tab():
                                 noise_gate_attack = gr.Slider(0, 100, value=10, label='Время атаки (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз открывается, когда звук становится достаточно громким. Большее значение означает, что шлюз открывается медленнее.')
                                 noise_gate_release = gr.Slider(0, 1000, value=100, label='Время спада (мс)', info='Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.')
 
-    use_effects.change(show_effects, inputs=use_effects, outputs=effects_accordion)
+    use_effects.change(show_effects, inputs=use_effects, outputs=[effects_accordion, all_clear_btn])
     process_btn.click(process_audio,
                     inputs=[
                     vocal_input, instrumental_input, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping,
@@ -121,7 +121,6 @@ def processing_tab():
                     outputs=[ai_cover])
 
     all_default_values = [
-                        0, 0,
                         0.1, 1.0, 0.1, 0.8, 0.9,
                         0, 0, 0, 0, 0,
                         4, -12,
@@ -130,7 +129,6 @@ def processing_tab():
                         ]
     all_clear_btn.click(lambda: all_default_values,
                     outputs=[
-                    vocal_gain, instrumental_gain,
                     reverb_rm_size, reverb_width, reverb_wet, reverb_dry, reverb_damping,
                     chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix,
                     compressor_ratio, compressor_threshold,

@@ -29,4 +29,4 @@ def swap_buttons():
     return gr.update(visible=False), gr.update(visible=True)
 
 def show_effects(use_effects):
-    return gr.update(visible=use_effects)
+    return gr.update(visible=use_effects), gr.update(visible=use_effects)
