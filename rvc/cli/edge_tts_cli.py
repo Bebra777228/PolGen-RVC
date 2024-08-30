@@ -5,11 +5,11 @@ from rvc.scripts.edge_tts_conversion import edge_tts_pipeline
 
 rvc_models_dir = os.path.join(os.getcwd(), 'models', 'rvc_models')
 
-parser = argparse.ArgumentParser(description='Замена голоса в директории song_output/id.', add_help=True)
+parser = argparse.ArgumentParser(description='Замена голоса в директории output/', add_help=True)
 parser.add_argument('-i', '--text_input', type=str, required=True)
 parser.add_argument('-m', '--model_name', type=str, required=True)
 parser.add_argument('-v', '--tts_voice', type=str, required=True)
-parser.add_argument('-p', '--pitch', type=int, required=True)
+parser.add_argument('-p', '--pitch', type=float, required=True)
 parser.add_argument('-ir', '--index_rate', type=float, default=0)
 parser.add_argument('-fr', '--filter_radius', type=int, default=3)
 parser.add_argument('-rms', '--volume_envelope', type=float, default=0.25)
