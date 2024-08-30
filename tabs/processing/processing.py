@@ -2,7 +2,6 @@ import os
 import gradio as gr
 
 from rvc.scripts.audio_processing import process_audio
-from rvc.modules.model_management import *
 from rvc.modules.ui_updates import *
 
 

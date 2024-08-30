@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 import requests
 
-RVC_OTHER = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/'
-RVC_HUBERT = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
+PREDICTORS = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/'
+HUBERT = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
 
 assets_dir = os.path.join(os.getcwd(), 'models', 'assets')
 
@@ -20,12 +20,12 @@ if __name__ == '__main__':
         rvc_other_names = ['rmvpe.pt', 'fcpe.pt']
         for model in rvc_other_names:
             print(f'Установка {model}...')
-            dl_model(RVC_OTHER, model, assets_dir)
+            dl_model(PREDICTORS, model, assets_dir)
 
         rvc_hubert_names = ['hubert_base.pt']
         for model in rvc_hubert_names:
             print(f'Установка {model}...')
-            dl_model(RVC_HUBERT, model, assets_dir)
+            dl_model(HUBERT, model, assets_dir)
 
         print('Все модели успешно установлены!')
     except requests.exceptions.RequestException as e:

@@ -3,7 +3,11 @@ import librosa
 import numpy as np
 import gradio as gr
 import soundfile as sf
-from pedalboard import Pedalboard, Reverb, Compressor, HighpassFilter, LowShelfFilter, HighShelfFilter, NoiseGate, Chorus
+from pedalboard import (
+    Pedalboard, Reverb, Compressor,
+    HighpassFilter, LowShelfFilter,
+    HighShelfFilter, NoiseGate, Chorus,
+    )
 from pedalboard.io import AudioFile
 from pydub import AudioSegment
 
@@ -31,19 +35,23 @@ def convert_audio_to_stereo(input_path, output_path):
     sf.write(output_path, y.T, sr, format='WAV')
 
 # Применяет аудиоэффекты к вокальной дорожке.
-def apply_audio_effects(vocal_path, output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
-                        low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold,
-                        noise_gate_ratio, noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth,
-                        chorus_centre_delay_ms, chorus_feedback, chorus_mix):
-    board = Pedalboard([
-        HighpassFilter(),
-        Compressor(ratio=compressor_ratio, threshold_db=compressor_threshold),
-        NoiseGate(threshold_db=noise_gate_threshold, ratio=noise_gate_ratio, attack_ms=noise_gate_attack, release_ms=noise_gate_release),
-        Reverb(room_size=reverb_rm_size, dry_level=reverb_dry, wet_level=reverb_wet, damping=reverb_damping, width=reverb_width),
-        LowShelfFilter(gain_db=low_shelf_gain),
-        HighShelfFilter(gain_db=high_shelf_gain),
-        Chorus(rate_hz=chorus_rate_hz, depth=chorus_depth, centre_delay_ms=chorus_centre_delay_ms, feedback=chorus_feedback, mix=chorus_mix),
-    ])
+def apply_audio_effects(
+    vocal_path, output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
+    low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold,
+    noise_gate_ratio, noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth,
+    chorus_centre_delay_ms, chorus_feedback, chorus_mix
+):
+    board = Pedalboard(
+        [
+            HighpassFilter(),
+            Compressor(ratio=compressor_ratio, threshold_db=compressor_threshold),
+            NoiseGate(threshold_db=noise_gate_threshold, ratio=noise_gate_ratio, attack_ms=noise_gate_attack, release_ms=noise_gate_release),
+            Reverb(room_size=reverb_rm_size, dry_level=reverb_dry, wet_level=reverb_wet, damping=reverb_damping, width=reverb_width),
+            LowShelfFilter(gain_db=low_shelf_gain),
+            HighShelfFilter(gain_db=high_shelf_gain),
+            Chorus(rate_hz=chorus_rate_hz, depth=chorus_depth, centre_delay_ms=chorus_centre_delay_ms, feedback=chorus_feedback, mix=chorus_mix),
+        ]
+    )
 
     with AudioFile(vocal_path) as f, AudioFile(output_path, 'w', f.samplerate, 2) as o:
         while f.tell() < f.frames:
@@ -52,10 +60,12 @@ def apply_audio_effects(vocal_path, output_path, reverb_rm_size, reverb_wet, rev
             o.write(effected)
 
 # Основной конвейер для обработки аудио.
-def process_audio(vocal_audio_path, instrumental_audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
-                  low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
-                  noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
-                  chorus_mix, output_format, vocal_gain, instrumental_gain, use_effects, progress=gr.Progress()):
+def process_audio(
+    vocal_audio_path, instrumental_audio_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
+    low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
+    noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback,
+    chorus_mix, output_format, vocal_gain, instrumental_gain, use_effects, progress=gr.Progress()
+):
     if not vocal_audio_path:
         raise ValueError("Не удалось найти аудиофайл с вокалом. Убедитесь, что файл загрузился или проверьте правильность пути к нему.")
     if not instrumental_audio_path:
@@ -75,9 +85,11 @@ def process_audio(vocal_audio_path, instrumental_audio_path, reverb_rm_size, rev
     if use_effects:
         display_progress(0.5, "Применение аудиоэффектов к вокалу...", progress)
         vocal_output_path = os.path.join(OUTPUT_DIR, 'Vocal_Effected.wav')
-        apply_audio_effects(voice_stereo_path, vocal_output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
-                            low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
-                            noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix)
+        apply_audio_effects(
+            voice_stereo_path, vocal_output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
+            low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
+            noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix
+        )
     else:
         vocal_output_path = voice_stereo_path
 
