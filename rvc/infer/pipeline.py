@@ -15,7 +15,11 @@ RMVPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'rmvpe.pt')
 FCPE_DIR = os.path.join(os.getcwd(), 'models', 'assets', 'fcpe.pt')
 
 # Фильтр Баттерворта для высоких частот
-bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
+FILTER_ORDER = 5  # Порядок фильтра
+CUTOFF_FREQUENCY = 48  # Частота среза (в Гц)
+SAMPLE_RATE = 16000  # Частота дискретизации (в Гц)
+bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE)
+
 
 input_audio_path2wav = {}
 

@@ -31,7 +31,7 @@ def load_rvc_model(voice_model):
     return rvc_model_path, rvc_index_path
 
 # Конвертирует аудиофайл в стерео формат, если он моно.
-def convert_audio_to_stereo(input_path, output_path):
+def convert_to_stereo(input_path, output_path):
     wave, sr = librosa.load(input_path, mono=False, sr=44100)
     if wave.ndim == 1:
         subprocess.run(shlex.split(f'ffmpeg -y -loglevel error -i "{input_path}" -ac 2 -f wav "{output_path}"'))
@@ -39,7 +39,7 @@ def convert_audio_to_stereo(input_path, output_path):
     return input_path
 
 # Выполняет преобразование голоса с использованием модели RVC.
-def perform_voice_conversion(
+def voice_conversion(
     voice_model, vocals_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max
 ):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
@@ -78,11 +78,11 @@ def voice_pipeline(
 
     display_progress(0, '[~] Запуск конвейера генерации...', progress)
 
-    display_progress(4, "Конвертация аудио в стерео...", progress)
+    display_progress(0.4, "Конвертация аудио в стерео...", progress)
     orig_song_path = convert_audio_to_stereo(uploaded_file, voice_stereo_path)
 
     display_progress(0.8, '[~] Преобразование вокала...', progress)
-    perform_voice_conversion(
+    voice_conversion(
         voice_model, orig_song_path, voice_convert_path, pitch, f0_method, index_rate,
         filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max
     )

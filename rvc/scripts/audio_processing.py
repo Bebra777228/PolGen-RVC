@@ -19,14 +19,14 @@ def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
 # Объединяет вокальную и инструментальную дорожки с заданными параметрами усиления.
-def combine_audio_tracks(vocal_path, instrumental_path, output_path, vocal_gain, instrumental_gain, output_format):
+def combine_audio(vocal_path, instrumental_path, output_path, vocal_gain, instrumental_gain, output_format):
     vocal = AudioSegment.from_file(vocal_path) + vocal_gain
     instrumental = AudioSegment.from_file(instrumental_path) + instrumental_gain
     combined = vocal.overlay(instrumental)
     combined.export(output_path, format=output_format)
 
 # Конвертирует аудиофайл в стерео формат.
-def convert_audio_to_stereo(input_path, output_path):
+def convert_to_stereo(input_path, output_path):
     y, sr = librosa.load(input_path, sr=None, mono=False)
     if y.ndim == 1:
         y = np.vstack([y, y])
@@ -35,7 +35,7 @@ def convert_audio_to_stereo(input_path, output_path):
     sf.write(output_path, y.T, sr, format='WAV')
 
 # Применяет аудиоэффекты к вокальной дорожке.
-def apply_audio_effects(
+def add_effects(
     vocal_path, output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
     low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold,
     noise_gate_ratio, noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth,
@@ -79,13 +79,13 @@ def process_audio(
 
     display_progress(0, '[~] Запуск конвейера генерации...', progress)
 
-    display_progress(3, "Конвертация аудио в стерео...", progress)
-    convert_audio_to_stereo(vocal_audio_path, voice_stereo_path)
+    display_progress(0.3, "Конвертация аудио в стерео...", progress)
+    convert_to_stereo(vocal_audio_path, voice_stereo_path)
 
     if use_effects:
         display_progress(0.5, "Применение аудиоэффектов к вокалу...", progress)
         vocal_output_path = os.path.join(OUTPUT_DIR, 'Vocal_Effected.wav')
-        apply_audio_effects(
+        add_effects(
             voice_stereo_path, vocal_output_path, reverb_rm_size, reverb_wet, reverb_dry, reverb_damping, reverb_width,
             low_shelf_gain, high_shelf_gain, compressor_ratio, compressor_threshold, noise_gate_threshold, noise_gate_ratio,
             noise_gate_attack, noise_gate_release, chorus_rate_hz, chorus_depth, chorus_centre_delay_ms, chorus_feedback, chorus_mix
@@ -94,6 +94,6 @@ def process_audio(
         vocal_output_path = voice_stereo_path
 
     display_progress(0.8, "Объединение вокала и инструментальной части...", progress)
-    combine_audio_tracks(vocal_output_path, instrumental_audio_path, aicover_path, vocal_gain, instrumental_gain, output_format)
+    combine_audio(vocal_output_path, instrumental_audio_path, aicover_path, vocal_gain, instrumental_gain, output_format)
 
     return aicover_path

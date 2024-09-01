@@ -32,12 +32,12 @@ def load_rvc_model(voice_model):
     return rvc_model_path, rvc_index_path
 
 # Синтезирует текст в речь с использованием edge_tts.
-async def synthesize_text_to_speech(text, voice, output_path):
+async def text_to_speech(text, voice, output_path):
     communicate = edge_tts.Communicate(text=text, voice=voice)
     await communicate.save(output_path)
 
 # Выполняет преобразование голоса с использованием модели RVC.
-def perform_voice_conversion(
+def voice_conversion(
     voice_model, input_path, output_path, pitch, f0_method, index_rate, filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max
 ):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
@@ -77,10 +77,10 @@ def edge_tts_pipeline(
     display_progress(0, '[~] Запуск конвейера генерации...', progress)
 
     display_progress(0.4, '[~] Синтез речи...', progress)
-    asyncio.run(synthesize_text_to_speech(text, voice, tts_voice_path))
+    asyncio.run(text_to_speech(text, voice, tts_voice_path))
 
     display_progress(0.8, '[~] Преобразование голоса...', progress)
-    perform_voice_conversion(
+    voice_conversion(
         voice_model, tts_voice_path, tts_voice_convert_path, pitch, f0_method, index_rate,
         filter_radius, volume_envelope, protect, hop_length, f0_min, f0_max
     )
