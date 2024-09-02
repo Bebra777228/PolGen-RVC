@@ -1,9 +1,10 @@
 import gc
 import os
-import subprocess
 import librosa
 import torch
+import numpy as np
 import gradio as gr
+
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
 RVC_MODELS_DIR = os.path.join(os.getcwd(), "models", "rvc_models")
@@ -11,23 +12,13 @@ HUBERT_MODEL_PATH = os.path.join(os.getcwd(), "models", "assets", "hubert_base.p
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+
+# Отображает прогресс выполнения задачи.
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
 
-def get_conversion_params():
-    return {
-        "pitch": 0,
-        "f0_method": "rmvpe+",
-        "index_rate": 0.5,
-        "filter_radius": 3,
-        "volume_envelope": 0.25,
-        "protect": 0.33,
-        "hop_length": 128,
-        "f0_min": 50,
-        "f0_max": 1100,
-        "output_format": "mp3"
-    }
 
+# Загружает модель RVC и индекс по имени модели.
 def load_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
     model_files = os.listdir(model_dir)
@@ -45,6 +36,8 @@ def load_rvc_model(voice_model):
 
     return rvc_model_path, rvc_index_path
 
+
+# Конвертирует аудиофайл в стерео формат.
 def convert_to_stereo(input_path, output_path):
     y, sr = librosa.load(input_path, sr=None, mono=False)
     if y.ndim == 1:
@@ -53,7 +46,22 @@ def convert_to_stereo(input_path, output_path):
         y = y[:2, :]
     sf.write(output_path, y.T, sr, format="WAV")
 
-def voice_conversion(voice_model, vocals_path, output_path, params):
+
+# Выполняет преобразование голоса с использованием модели RVC.
+def voice_conversion(
+    voice_model,
+    vocals_path,
+    output_path,
+    pitch,
+    f0_method,
+    index_rate,
+    filter_radius,
+    volume_envelope,
+    protect,
+    hop_length,
+    f0_min,
+    f0_max,
+):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
 
     config = Config()
@@ -64,30 +72,46 @@ def voice_conversion(voice_model, vocals_path, output_path, params):
 
     rvc_infer(
         rvc_index_path,
-        params["index_rate"],
-        input_path,
+        index_rate,
+        vocals_path,
         output_path,
-        params["pitch"],
-        params["f0_method"],
+        pitch,
+        f0_method,
         cpt,
         version,
         net_g,
-        params["filter_radius"],
+        filter_radius,
         tgt_sr,
-        params["volume_envelope"],
-        params["protect"],
-        params["hop_length"],
+        volume_envelope,
+        protect,
+        hop_length,
         vc,
         hubert_model,
-        params["f0_min"],
-        params["f0_max"],
+        f0_min,
+        f0_max,
     )
 
     del hubert_model, cpt, net_g, vc
     gc.collect()
     torch.cuda.empty_cache()
 
-def voice_pipeline(uploaded_file, voice_model, params, progress=gr.Progress()):
+
+# Основной конвейер для преобразования голоса.
+def voice_pipeline(
+    uploaded_file,
+    voice_model,
+    pitch,
+    index_rate=0.5,
+    filter_radius=3,
+    volume_envelope=0.25,
+    f0_method="rmvpe+",
+    hop_length=128,
+    protect=0.33,
+    output_format="mp3",
+    f0_min=50,
+    f0_max=1100,
+    progress=gr.Progress(),
+):
     if not uploaded_file:
         raise ValueError(
             "Не удалось найти аудиофайл. Убедитесь, что файл загрузился или проверьте правильность пути к нему."
@@ -98,18 +122,30 @@ def voice_pipeline(uploaded_file, voice_model, params, progress=gr.Progress()):
         raise ValueError(f"Файл {uploaded_file} не найден.")
 
     voice_stereo_path = os.path.join(OUTPUT_DIR, "Voice_Stereo.wav")
-    voice_convert_path = os.path.join(
-        OUTPUT_DIR, f"Voice_Converted.{params['output_format']}"
-    )
+    voice_convert_path = os.path.join(OUTPUT_DIR, f"Voice_Converted.{output_format}")
 
     if os.path.exists(voice_convert_path):
         os.remove(voice_convert_path)
 
     display_progress(0, "[~] Запуск конвейера генерации...", progress)
+
     display_progress(0.4, "Конвертация аудио в стерео...", progress)
     orig_song_path = convert_to_stereo(uploaded_file, voice_stereo_path)
 
     display_progress(0.8, "[~] Преобразование вокала...", progress)
-    voice_conversion(voice_model, orig_song_path, voice_convert_path, params)
+    voice_conversion(
+        voice_model,
+        orig_song_path,
+        voice_convert_path,
+        pitch,
+        f0_method,
+        index_rate,
+        filter_radius,
+        volume_envelope,
+        protect,
+        hop_length,
+        f0_min,
+        f0_max,
+    )
 
     return voice_convert_path
