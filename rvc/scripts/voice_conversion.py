@@ -31,17 +31,17 @@ def convert_to_stereo(input_path, output_path):
         y = y[:2, :]
     sf.write(output_path, y.T, sr, format="WAV")
 
-def voice_conversion(voice_model, vocals_path, output_path, **conversion_params):
+def voice_conversion(voice_model, vocals_path, output_path, pitch, **conversion_params):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
     config = Config()
     hubert_model = load_hubert(config.device, config.is_half, HUBERT_MODEL_PATH)
     cpt, version, net_g, tgt_sr, vc = get_vc(config.device, config.is_half, config, rvc_model_path)
-    rvc_infer(rvc_index_path, vocals_path, output_path, cpt, version, net_g, tgt_sr, vc, hubert_model, **conversion_params)
+    rvc_infer(rvc_index_path, vocals_path, output_path, cpt, version, net_g, tgt_sr, vc, hubert_model, pitch, **conversion_params)
     del hubert_model, cpt, net_g, vc
     gc.collect()
     torch.cuda.empty_cache()
 
-def voice_pipeline(uploaded_file, voice_model, output_format, progress=gr.Progress(), **conversion_params):
+def voice_pipeline(uploaded_file, voice_model, pitch, output_format, progress=gr.Progress(), **conversion_params):
     if not uploaded_file or not voice_model:
         raise ValueError("Проверьте введенные данные.")
 
@@ -57,6 +57,6 @@ def voice_pipeline(uploaded_file, voice_model, output_format, progress=gr.Progre
     convert_to_stereo(uploaded_file, voice_stereo_path)
 
     display_progress(0.8, "[~] Преобразование вокала...", progress)
-    voice_conversion(voice_model, voice_stereo_path, voice_convert_path, **conversion_params)
+    voice_conversion(voice_model, voice_stereo_path, voice_convert_path, pitch, **conversion_params)
 
     return voice_convert_path
