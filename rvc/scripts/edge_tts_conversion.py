@@ -46,6 +46,16 @@ async def text_to_speech(text, voice, output_path):
     await communicate.save(output_path)
 
 
+# Конвертирует аудиофайл в стерео формат.
+def convert_to_stereo(input_path, output_path):
+    y, sr = librosa.load(input_path, sr=None, mono=False)
+    if y.ndim == 1:
+        y = np.vstack([y, y])
+    elif y.ndim > 2:
+        y = y[:2, :]
+    sf.write(output_path, y.T, sr, format="WAV")
+
+
 # Выполняет преобразование голоса с использованием модели RVC.
 def voice_conversion(
     voice_model,
@@ -120,6 +130,7 @@ def edge_tts_pipeline(
         raise ValueError("Выберите модель голоса для преобразования.")
 
     tts_voice_path = os.path.join(OUTPUT_DIR, "TTS_Voice.wav")
+    tts_voice_stereo_path = os.path.join(OUTPUT_DIR, "TTS_Voice_Stereo.wav")
     tts_voice_convert_path = os.path.join(
         OUTPUT_DIR, f"TTS_Voice_Converted.{output_format}"
     )
@@ -129,13 +140,16 @@ def edge_tts_pipeline(
 
     display_progress(0, "[~] Запуск конвейера генерации...", progress)
 
-    display_progress(0.4, "[~] Синтез речи...", progress)
+    display_progress(0.2, "[~] Синтез речи...", progress)
     asyncio.run(text_to_speech(text, voice, tts_voice_path))
+
+    display_progress(0.4, "Конвертация аудио в стерео...", progress)
+    convert_to_stereo(tts_voice_path, tts_voice_stereo_path)
 
     display_progress(0.8, "[~] Преобразование голоса...", progress)
     voice_conversion(
         voice_model,
-        tts_voice_path,
+        tts_voice_stereo_path,
         tts_voice_convert_path,
         pitch,
         f0_method,
@@ -148,4 +162,4 @@ def edge_tts_pipeline(
         f0_max,
     )
 
-    return tts_voice_convert_path, tts_voice_path
+    return tts_voice_convert_path, tts_voice_stereo_path

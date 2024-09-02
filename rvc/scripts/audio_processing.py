@@ -154,11 +154,11 @@ def process_audio(
 
     display_progress(0, "[~] Запуск конвейера генерации...", progress)
 
-    display_progress(0.3, "Конвертация аудио в стерео...", progress)
+    display_progress(0.2, "Конвертация аудио в стерео...", progress)
     convert_to_stereo(vocal_audio_path, voice_stereo_path)
 
     if use_effects:
-        display_progress(0.5, "Применение аудиоэффектов к вокалу...", progress)
+        display_progress(0.4, "Применение аудиоэффектов к вокалу...", progress)
         vocal_output_path = os.path.join(OUTPUT_DIR, "Vocal_Effected.wav")
         add_effects(
             voice_stereo_path,
