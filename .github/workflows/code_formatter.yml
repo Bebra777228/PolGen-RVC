@@ -25,7 +25,7 @@ jobs:
           python-version: '3.x'
 
       - name: Установка Black
-        run: pip install "black[jupyter]"
+        run: pip install black
 
       - name: Запуск Black
         run: black .
