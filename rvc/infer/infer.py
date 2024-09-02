@@ -8,6 +8,7 @@ from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
 from .pipeline import VC
 
+
 # Конфигурация устройства и параметров
 class Config:
     def __init__(self):
@@ -38,7 +39,9 @@ class Config:
             self.device = "cpu"
             self.is_half = True
 
-        x_pad, x_query, x_center, x_max = (3, 10, 60, 65) if self.is_half else (1, 6, 38, 41)
+        x_pad, x_query, x_center, x_max = (
+            (3, 10, 60, 65) if self.is_half else (1, 6, 38, 41)
+        )
         if self.gpu_mem is not None and self.gpu_mem <= 4:
             x_pad, x_query, x_center, x_max = (1, 5, 30, 32)
 
@@ -52,21 +55,33 @@ class Config:
             and "V100" not in self.gpu_name.upper()
         ):
             self.is_half = False
-        self.gpu_mem = int(torch.cuda.get_device_properties(self.device).total_memory / 1024 / 1024 / 1024 + 0.4)
+        self.gpu_mem = int(
+            torch.cuda.get_device_properties(self.device).total_memory
+            / 1024
+            / 1024
+            / 1024
+            + 0.4
+        )
+
 
 # Загрузка модели Hubert
 def load_hubert(device, is_half, model_path):
-    models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task([model_path], suffix="")
+    models, saved_cfg, task = checkpoint_utils.load_model_ensemble_and_task(
+        [model_path], suffix=""
+    )
     hubert = models[0].to(device)
     hubert = hubert.half() if is_half else hubert.float()
     hubert.eval()
     return hubert
 
+
 # Получение голосового преобразователя
 def get_vc(device, is_half, config, model_path):
     cpt = torch.load(model_path, map_location="cpu", weights_only=True)
     if "config" not in cpt or "weight" not in cpt:
-        raise ValueError(f"Некорректный формат для {model_path}. Используйте голосовую модель, обученную с использованием RVC v2.")
+        raise ValueError(
+            f"Некорректный формат для {model_path}. Используйте голосовую модель, обученную с использованием RVC v2."
+        )
 
     tgt_sr = cpt["config"][-1]
     cpt["config"][-3] = cpt["weight"]["emb_g.weight"].shape[0]
@@ -88,6 +103,7 @@ def get_vc(device, is_half, config, model_path):
 
     vc = VC(tgt_sr, config)
     return cpt, version, net_g, tgt_sr, vc
+
 
 # Выполнение инференса с использованием RVC
 def rvc_infer(

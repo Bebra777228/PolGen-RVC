@@ -8,16 +8,16 @@ from tabs.install.install_models import *
 
 
 with gr.Blocks(
-    title='PolGen Lite - Politrees (v1.2)',
+    title="PolGen Lite - Politrees (v1.2)",
     theme=gr.themes.Soft(
         primary_hue="green",
         secondary_hue="green",
         neutral_hue="neutral",
         spacing_size="sm",
         radius_size="lg",
-    )
+    ),
 ) as PolGen:
-        
+
     with gr.Tab("Велком/Контакты"):
         welcome_tab()
 
@@ -25,13 +25,13 @@ with gr.Blocks(
         with gr.Tab("Замена голоса"):
             conversion_tab()
 
-        with gr.Tab('Объединение/Обработка'):
+        with gr.Tab("Объединение/Обработка"):
             processing_tab()
 
-    with gr.Tab('Преобразование текста в речь (TTS)'):
+    with gr.Tab("Преобразование текста в речь (TTS)"):
         edge_tts_tab()
 
-    with gr.Tab('Загрузка модели'):
+    with gr.Tab("Загрузка модели"):
         url_download()
         zip_upload()
         files_upload()
