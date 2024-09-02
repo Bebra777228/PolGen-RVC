@@ -26,8 +26,8 @@ def download_file(url, destination):
 def download_and_replace_model(model_desc, custom_url, progress=gr.Progress()):
     try:
         if custom_url:
-            if not re.search(r'\.pt(\?.*)?$', custom_url):
-                return 'Ошибка: URL должен указывать на файл в формате .pt'
+            if not re.search(r"\.pt(\?.*)?$", custom_url):
+                return "Ошибка: URL должен указывать на файл в формате .pt"
             model_url = custom_url
             model_name = "hubert_base.pt"
         else:
@@ -47,6 +47,7 @@ def download_and_replace_model(model_desc, custom_url, progress=gr.Progress()):
         return f'Модель "{model_desc}" успешно установлена.'
     except Exception as e:
         return f'Ошибка при установке модели "{model_desc}": {str(e)}'
+
 
 def toggle_custom_url(checkbox_value):
     return gr.update(visible=checkbox_value), gr.update(visible=not checkbox_value)
