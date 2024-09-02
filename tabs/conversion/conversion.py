@@ -24,7 +24,7 @@ def conversion_tab():
                     value=0,
                     step=0.5,
                     label="Регулировка тона",
-                    info="-24 - мужской голос || 24 - женский голос"
+                    info="-24 - мужской голос || 24 - женский голос",
                 )
 
         with gr.Column(scale=2, variant="panel"):
