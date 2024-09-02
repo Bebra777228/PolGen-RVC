@@ -35,7 +35,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ffmpeg
 
-    - name: Установка активов и моделей
+    - name: Установка необходимых моделей
       run: |
         python download_models.py
         mkdir -p models/rvc_models/Tsoi
@@ -77,7 +77,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ffmpeg
 
-    - name: Установка активов и моделей
+    - name: Установка необходимых моделей
       run: |
         python download_models.py
         mkdir -p models/rvc_models/Tsoi
