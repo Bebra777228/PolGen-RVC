@@ -11,8 +11,10 @@ HUBERT_MODEL_PATH = os.path.join(os.getcwd(), "models", "assets", "hubert_base.p
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
+
 
 def get_conversion_params():
     return {
@@ -25,8 +27,9 @@ def get_conversion_params():
         "hop_length": 128,
         "f0_min": 50,
         "f0_max": 1100,
-        "output_format": "mp3"
+        "output_format": "mp3",
     }
+
 
 def load_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
@@ -45,6 +48,7 @@ def load_rvc_model(voice_model):
 
     return rvc_model_path, rvc_index_path
 
+
 def convert_to_stereo(input_path, output_path):
     y, sr = librosa.load(input_path, sr=None, mono=False)
     if y.ndim == 1:
@@ -52,6 +56,7 @@ def convert_to_stereo(input_path, output_path):
     elif y.ndim > 2:
         y = y[:2, :]
     sf.write(output_path, y.T, sr, format="WAV")
+
 
 def voice_conversion(voice_model, vocals_path, output_path, params):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
@@ -86,6 +91,7 @@ def voice_conversion(voice_model, vocals_path, output_path, params):
     del hubert_model, cpt, net_g, vc
     gc.collect()
     torch.cuda.empty_cache()
+
 
 def voice_pipeline(uploaded_file, voice_model, params, progress=gr.Progress()):
     if not uploaded_file:

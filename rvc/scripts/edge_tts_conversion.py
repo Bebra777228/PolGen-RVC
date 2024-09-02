@@ -11,8 +11,10 @@ HUBERT_MODEL_PATH = os.path.join(os.getcwd(), "models", "assets", "hubert_base.p
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
+
 
 def get_conversion_params():
     return {
@@ -25,8 +27,9 @@ def get_conversion_params():
         "hop_length": 128,
         "f0_min": 50,
         "f0_max": 1100,
-        "output_format": "mp3"
+        "output_format": "mp3",
     }
+
 
 def load_rvc_model(voice_model):
     model_dir = os.path.join(RVC_MODELS_DIR, voice_model)
@@ -45,9 +48,11 @@ def load_rvc_model(voice_model):
 
     return rvc_model_path, rvc_index_path
 
+
 async def text_to_speech(text, voice, output_path):
     communicate = edge_tts.Communicate(text=text, voice=voice)
     await communicate.save(output_path)
+
 
 def voice_conversion(voice_model, input_path, output_path, params):
     rvc_model_path, rvc_index_path = load_rvc_model(voice_model)
@@ -82,6 +87,7 @@ def voice_conversion(voice_model, input_path, output_path, params):
     del hubert_model, cpt, net_g, vc
     gc.collect()
     torch.cuda.empty_cache()
+
 
 def edge_tts_pipeline(text, voice_model, voice, params, progress=gr.Progress()):
     if not text:

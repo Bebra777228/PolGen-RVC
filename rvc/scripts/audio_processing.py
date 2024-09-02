@@ -19,8 +19,10 @@ from pydub import AudioSegment
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+
 def display_progress(percent, message, progress=gr.Progress()):
     progress(percent, desc=message)
+
 
 def get_audio_params():
     return {
@@ -45,8 +47,9 @@ def get_audio_params():
         "output_format": "mp3",
         "vocal_gain": 0.0,
         "instrumental_gain": 0.0,
-        "use_effects": True
+        "use_effects": True,
     }
+
 
 def combine_audio(
     vocal_path,
@@ -61,6 +64,7 @@ def combine_audio(
     combined = vocal.overlay(instrumental)
     combined.export(output_path, format=output_format)
 
+
 def convert_to_stereo(input_path, output_path):
     y, sr = librosa.load(input_path, sr=None, mono=False)
     if y.ndim == 1:
@@ -69,33 +73,30 @@ def convert_to_stereo(input_path, output_path):
         y = y[:2, :]
     sf.write(output_path, y.T, sr, format="WAV")
 
+
 def add_effects(vocal_path, output_path, params):
     board = Pedalboard(
         [
             HighpassFilter(),
             Compressor(
                 ratio=params["compressor_ratio"],
-                threshold_db=params["compressor_threshold"]
+                threshold_db=params["compressor_threshold"],
             ),
             NoiseGate(
                 threshold_db=params["noise_gate_threshold"],
                 ratio=params["noise_gate_ratio"],
                 attack_ms=params["noise_gate_attack"],
-                release_ms=params["noise_gate_release"]
+                release_ms=params["noise_gate_release"],
             ),
             Reverb(
                 room_size=params["reverb_rm_size"],
                 dry_level=params["reverb_dry"],
                 wet_level=params["reverb_wet"],
                 damping=params["reverb_damping"],
-                width=params["reverb_width"]
+                width=params["reverb_width"],
             ),
-            LowShelfFilter(
-                gain_db=params["low_shelf_gain"]
-            ),
-            HighShelfFilter(
-                gain_db=params["high_shelf_gain"]
-            ),
+            LowShelfFilter(gain_db=params["low_shelf_gain"]),
+            HighShelfFilter(gain_db=params["high_shelf_gain"]),
             Chorus(
                 rate_hz=params["chorus_rate_hz"],
                 depth=params["chorus_depth"],
@@ -112,7 +113,10 @@ def add_effects(vocal_path, output_path, params):
             effected = board(chunk, f.samplerate, reset=False)
             o.write(effected)
 
-def process_audio(vocal_audio_path, instrumental_audio_path, params, progress=gr.Progress()):
+
+def process_audio(
+    vocal_audio_path, instrumental_audio_path, params, progress=gr.Progress()
+):
     if not vocal_audio_path:
         raise ValueError(
             "Не удалось найти аудиофайл с вокалом. Убедитесь, что файл загрузился или проверьте правильность пути к нему."
