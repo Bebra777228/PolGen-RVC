@@ -32,7 +32,8 @@ def load_rvc_model(voice_model):
 
     if not rvc_model_path:
         raise ValueError(
-            f"\033[91mМодели {voice_model} не существует. Возможно, вы неправильно ввели имя.\033[0m"
+            f"\033[91mМодели {voice_model} не существует. "
+            "Возможно, вы неправильно ввели имя.\033[0m"
         )
 
     return rvc_model_path, rvc_index_path
@@ -115,7 +116,8 @@ def voice_pipeline(
 ):
     if not uploaded_file:
         raise ValueError(
-            "Не удалось найти аудиофайл. Убедитесь, что файл загрузился или проверьте правильность пути к нему."
+            "Не удалось найти аудиофайл. "
+            "Убедитесь, что файл загрузился или проверьте правильность пути к нему."
         )
     if not voice_model:
         raise ValueError("Выберите модель голоса для преобразования.")

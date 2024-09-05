@@ -34,7 +34,8 @@ def load_rvc_model(voice_model):
 
     if not rvc_model_path:
         raise ValueError(
-            f"\033[91mМодели {voice_model} не существует. Возможно, вы неправильно ввели имя.\033[0m"
+            f"\033[91mМодели {voice_model} не существует. "
+            "Возможно, вы неправильно ввели имя.\033[0m"
         )
 
     return rvc_model_path, rvc_index_path

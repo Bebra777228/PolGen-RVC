@@ -314,7 +314,7 @@ class VC:
         if (
             file_index is not None
             and file_index != ""
-            and os.path.exists(file_index) == True
+            and os.path.exists(file_index)
             and index_rate != 0
         ):
             try:
