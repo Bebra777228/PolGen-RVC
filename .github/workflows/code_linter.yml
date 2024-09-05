@@ -34,6 +34,7 @@ jobs:
       - name: Запуск flake8
         id: flake8
         run: flake8 .
+        continue-on-error: true
 
       - name: Проверка наличия ошибок
         id: errors
