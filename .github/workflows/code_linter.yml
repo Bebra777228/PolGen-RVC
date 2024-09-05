@@ -1,0 +1,62 @@
+name: Линтер кода
+
+on:
+  push:
+    branches:
+      - dev/PolGen-Lite
+  pull_request:
+    branches:
+      - dev/PolGen-Lite
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Проверка кода
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Настройка Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Установка flake8
+        run: pip install flake8
+
+      - name: Запуск flake8
+        id: flake8
+        run: flake8 .
+
+      - name: Проверка наличия ошибок
+        id: errors
+        run: |
+          if [ -n "$(echo ${{ steps.flake8.outputs.stdout }} | grep -i 'error')" ]; then
+            echo "::set-output name=has_errors::true"
+          else
+            echo "::set-output name=has_errors::false"
+          fi
+
+      - name: Фиксация изменений
+        if: steps.errors.outputs.has_errors == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add --all
+          git commit -m "Автоматическое исправление ошибок линтера flake8"
+
+      - name: Создание Pull Request
+        if: steps.errors.outputs.has_errors == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          delete-branch: true
+          body: "Автоматическое исправление ошибок линтера flake8"
+          title: "Автоматическое исправление ошибок линтера flake8"
+          commit-message: "Автоматическое исправление ошибок линтера flake8"
+          branch: flake8-fixes/PolGen-Lite
