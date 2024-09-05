@@ -39,7 +39,7 @@ def welcome_tab():
         )
         gr.HTML(
             "<center><h2>"
-            "<a href='https://github.com/Bebra777228/Pol-Litres-RVC'>"  # Ссылка
+            "<a href='https://github.com/Bebra777228/PolGen-RVC'>"  # Ссылка
             "GitHub"  # Имя ссылки
             "</a></h2></center>"
         )
