@@ -27,8 +27,9 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Установка flake8
-        run: pip install flake8
+      - name: Установка flake8 и autopep8
+        run: |
+          pip install flake8 autopep8
 
       - name: Запуск flake8
         id: flake8
@@ -42,6 +43,10 @@ jobs:
           else
             echo "::set-output name=has_errors::false"
           fi
+
+      - name: Автоматическое исправление ошибок с помощью autopep8
+        if: steps.errors.outputs.has_errors == 'true'
+        run: autopep8 --in-place --aggressive --aggressive .
 
       - name: Фиксация изменений
         if: steps.errors.outputs.has_errors == 'true'
@@ -59,4 +64,4 @@ jobs:
           body: "Автоматическое исправление ошибок линтера flake8"
           title: "Автоматическое исправление ошибок линтера flake8"
           commit-message: "Автоматическое исправление ошибок линтера flake8"
-          branch: flake8-fixes/PolGen-Lite
+          branch: auto-fixes/PolGen-Lite
