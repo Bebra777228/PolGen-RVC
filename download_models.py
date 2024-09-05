@@ -5,7 +5,9 @@ import requests
 PREDICTORS = (
     "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/"
 )
-HUBERT = "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
+HUBERT = (
+    "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
+)
 
 assets_dir = os.path.join(os.getcwd(), "models", "assets")
 

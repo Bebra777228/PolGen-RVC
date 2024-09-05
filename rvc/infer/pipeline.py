@@ -18,9 +18,7 @@ FCPE_DIR = os.path.join(os.getcwd(), "models", "assets", "fcpe.pt")
 FILTER_ORDER = 5  # Порядок фильтра
 CUTOFF_FREQUENCY = 48  # Частота среза (в Гц)
 SAMPLE_RATE = 16000  # Частота дискретизации (в Гц)
-bh, ah = signal.butter(
-    N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE
-)
+bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE)
 
 
 input_audio_path2wav = {}
@@ -57,8 +55,7 @@ class AudioProcessor:
         rms2 = torch.maximum(rms2, torch.zeros_like(rms2) + 1e-6)
 
         adjusted_audio = (
-            target_audio
-            * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy()
+            target_audio * (torch.pow(rms1, 1 - rate) * torch.pow(rms2, rate - 1)).numpy()
         )
         return adjusted_audio
 
@@ -188,13 +185,9 @@ class VC:
             delta_t = np.round(
                 (inp_f0[:, 0].max() - inp_f0[:, 0].min()) * tf0 + 1
             ).astype("int16")
-            replace_f0 = np.interp(
-                list(range(delta_t)), inp_f0[:, 0] * 100, inp_f0[:, 1]
-            )
+            replace_f0 = np.interp(list(range(delta_t)), inp_f0[:, 0] * 100, inp_f0[:, 1])
             shape = f0[self.x_pad * tf0 : self.x_pad * tf0 + len(replace_f0)].shape[0]
-            f0[self.x_pad * tf0 : self.x_pad * tf0 + len(replace_f0)] = replace_f0[
-                :shape
-            ]
+            f0[self.x_pad * tf0 : self.x_pad * tf0 + len(replace_f0)] = replace_f0[:shape]
 
         f0bak = f0.copy()
         f0_mel = 1127 * np.log(1 + f0 / 700)
@@ -458,9 +451,7 @@ class VC:
                 audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope
             )
         if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
-            audio_opt = librosa.resample(
-                audio_opt, orig_sr=tgt_sr, target_sr=resample_sr
-            )
+            audio_opt = librosa.resample(audio_opt, orig_sr=tgt_sr, target_sr=resample_sr)
 
         audio_max = np.abs(audio_opt).max() / 0.99
         max_int16 = 32768
