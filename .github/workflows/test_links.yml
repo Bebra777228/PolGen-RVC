@@ -3,10 +3,10 @@ name: Check Links
 on:
   push:
     branches:
-      - main
+      - dev/PolGen-Lite
   pull_request:
     branches:
-      - main
+      - dev/PolGen-Lite
 
 jobs:
   check-links:
