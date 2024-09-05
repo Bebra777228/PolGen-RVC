@@ -7,7 +7,9 @@ import gradio as gr
 assets_dir = os.path.join(os.getcwd(), "models", "assets")
 hubert_base_path = os.path.join(assets_dir, "hubert_base.pt")
 
-base_url = "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
+base_url = (
+    "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
+)
 
 models = {
     "Стандартный hubert": "hubert_base.pt",
