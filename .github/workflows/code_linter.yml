@@ -36,20 +36,14 @@ jobs:
         run: flake8 .
         continue-on-error: true
 
-      - name: Вывод результатов flake8
-        run: echo "Flake8 output: ${{ steps.flake8.outputs.stdout }}"
-
       - name: Проверка наличия ошибок
         id: errors
         run: |
-          if [ -n "$(echo ${{ steps.flake8.outputs.stdout }} | grep -i 'error')" ]; then
+          if [ -n "$(flake8 . | grep -i 'error')" ]; then
             echo "has_errors=true" >> $GITHUB_OUTPUT
           else
             echo "has_errors=false" >> $GITHUB_OUTPUT
           fi
-
-      - name: Вывод результатов проверки наличия ошибок
-        run: echo "Has errors: ${{ steps.errors.outputs.has_errors }}"
 
       - name: Автоматическое исправление ошибок с помощью autopep8
         if: ${{ steps.errors.outputs.has_errors == 'true' }}
@@ -63,9 +57,6 @@ jobs:
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
-
-      - name: Вывод результатов проверки наличия изменений
-        run: echo "Has changes: ${{ steps.changes.outputs.has_changes }}"
 
       - name: Фиксация изменений
         if: ${{ steps.changes.outputs.has_changes == 'true' }}
