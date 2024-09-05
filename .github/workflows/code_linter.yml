@@ -39,7 +39,7 @@ jobs:
       - name: Проверка наличия ошибок
         id: errors
         run: |
-          if [ -n "$(flake8 . | grep -i 'error')" ]; then
+          if flake8 . | grep -q -i 'error'; then
             echo "has_errors=true" >> $GITHUB_OUTPUT
           else
             echo "has_errors=false" >> $GITHUB_OUTPUT
