@@ -186,8 +186,8 @@ class VC:
                 (inp_f0[:, 0].max() - inp_f0[:, 0].min()) * tf0 + 1
             ).astype("int16")
             replace_f0 = np.interp(list(range(delta_t)), inp_f0[:, 0] * 100, inp_f0[:, 1])
-            shape = f0[self.x_pad * tf0 : self.x_pad * tf0 + len(replace_f0)].shape[0]
-            f0[self.x_pad * tf0 : self.x_pad * tf0 + len(replace_f0)] = replace_f0[:shape]
+            shape = f0[self.x_pad * tf0: self.x_pad * tf0 + len(replace_f0)].shape[0]
+            f0[self.x_pad * tf0: self.x_pad * tf0 + len(replace_f0)] = replace_f0[:shape]
 
         f0bak = f0.copy()
         f0_mel = 1127 * np.log(1 + f0 / 700)
@@ -331,14 +331,14 @@ class VC:
         if audio_pad.shape[0] > self.t_max:
             audio_sum = np.zeros_like(audio)
             for i in range(self.window):
-                audio_sum += audio_pad[i : i - self.window]
+                audio_sum += audio_pad[i: i - self.window]
             for t in range(self.t_center, audio.shape[0], self.t_center):
                 opt_ts.append(
                     t
                     - self.t_query
                     + np.where(
-                        np.abs(audio_sum[t - self.t_query : t + self.t_query])
-                        == np.abs(audio_sum[t - self.t_query : t + self.t_query]).min()
+                        np.abs(audio_sum[t - self.t_query: t + self.t_query])
+                        == np.abs(audio_sum[t - self.t_query: t + self.t_query]).min()
                     )[0][0]
                 )
         s = 0
@@ -385,15 +385,15 @@ class VC:
                         model,
                         net_g,
                         sid,
-                        audio_pad[s : t + self.t_pad2 + self.window],
-                        pitch[:, s // self.window : (t + self.t_pad2) // self.window],
-                        pitchf[:, s // self.window : (t + self.t_pad2) // self.window],
+                        audio_pad[s: t + self.t_pad2 + self.window],
+                        pitch[:, s // self.window: (t + self.t_pad2) // self.window],
+                        pitchf[:, s // self.window: (t + self.t_pad2) // self.window],
                         index,
                         big_npy,
                         index_rate,
                         version,
                         protect,
-                    )[self.t_pad_tgt : -self.t_pad_tgt]
+                    )[self.t_pad_tgt: -self.t_pad_tgt]
                 )
             else:
                 audio_opt.append(
@@ -401,7 +401,7 @@ class VC:
                         model,
                         net_g,
                         sid,
-                        audio_pad[s : t + self.t_pad2 + self.window],
+                        audio_pad[s: t + self.t_pad2 + self.window],
                         None,
                         None,
                         index,
@@ -409,7 +409,7 @@ class VC:
                         index_rate,
                         version,
                         protect,
-                    )[self.t_pad_tgt : -self.t_pad_tgt]
+                    )[self.t_pad_tgt: -self.t_pad_tgt]
                 )
             s = t
         if pitch_guidance:
@@ -419,14 +419,14 @@ class VC:
                     net_g,
                     sid,
                     audio_pad[t:],
-                    pitch[:, t // self.window :] if t is not None else pitch,
-                    pitchf[:, t // self.window :] if t is not None else pitchf,
+                    pitch[:, t // self.window:] if t is not None else pitch,
+                    pitchf[:, t // self.window:] if t is not None else pitchf,
                     index,
                     big_npy,
                     index_rate,
                     version,
                     protect,
-                )[self.t_pad_tgt : -self.t_pad_tgt]
+                )[self.t_pad_tgt: -self.t_pad_tgt]
             )
         else:
             audio_opt.append(
@@ -442,7 +442,7 @@ class VC:
                     index_rate,
                     version,
                     protect,
-                )[self.t_pad_tgt : -self.t_pad_tgt]
+                )[self.t_pad_tgt: -self.t_pad_tgt]
             )
 
         audio_opt = np.concatenate(audio_opt)

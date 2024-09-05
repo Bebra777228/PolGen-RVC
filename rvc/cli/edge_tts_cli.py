@@ -26,7 +26,8 @@ args = parser.parse_args()
 model_name = args.model_name
 if not os.path.exists(os.path.join(rvc_models_dir, model_name)):
     raise Exception(
-        f"\033[91mМодели {model_name} не существует. Возможно, вы неправильно ввели имя.\033[0m"
+        f"\033[91mМодели {model_name} не существует. "
+        "Возможно, вы неправильно ввели имя.\033[0m"
     )
 
 cover_path = edge_tts_pipeline(
@@ -45,4 +46,4 @@ cover_path = edge_tts_pipeline(
     output_format=args.format,
 )
 
-print(f"\033[1;92m\nГолос успешно заменен!\n\033[0m")
+print("\033[1;92m\nГолос успешно заменен!\n\033[0m")

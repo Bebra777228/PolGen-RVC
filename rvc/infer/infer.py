@@ -1,4 +1,3 @@
-import os
 import torch
 from multiprocessing import cpu_count
 from fairseq import checkpoint_utils
@@ -80,7 +79,8 @@ def get_vc(device, is_half, config, model_path):
     cpt = torch.load(model_path, map_location="cpu", weights_only=True)
     if "config" not in cpt or "weight" not in cpt:
         raise ValueError(
-            f"Некорректный формат для {model_path}. Используйте голосовую модель, обученную с использованием RVC v2."
+            f"Некорректный формат для {model_path}. "
+            "Используйте голосовую модель, обученную с использованием RVC v2."
         )
 
     tgt_sr = cpt["config"][-1]
