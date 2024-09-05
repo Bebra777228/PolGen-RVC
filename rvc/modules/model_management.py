@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import shutil
 import urllib.request
 import zipfile
@@ -210,3 +211,23 @@ def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()
         return f"[+] Модель {dir_name} успешно загружена!"
     except Exception as e:
         raise gr.Error(str(e))
+
+
+# Функция для вызова из командной строки
+def main():
+    if len(sys.argv) != 3:
+        print("Использование: python model_management.py <url> <dir_name>")
+        sys.exit(1)
+
+    url = sys.argv[1]
+    dir_name = sys.argv[2]
+
+    try:
+        result = download_from_url(url, dir_name)
+        print(result)
+    except gr.Error as e:
+        print(f"Error: {str(e)}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
