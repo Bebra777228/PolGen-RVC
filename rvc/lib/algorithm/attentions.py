@@ -78,9 +78,7 @@ class MultiHeadAttention(nn.Module):
 
         scores = torch.matmul(query / math.sqrt(self.k_channels), key.transpose(-2, -1))
         if self.window_size is not None:
-            assert (
-                t_s == t_t
-            ), "Relative attention is only available for self-attention."
+            assert t_s == t_t, "Relative attention is only available for self-attention."
             key_relative_embeddings = self._get_relative_embeddings(self.emb_rel_k, t_s)
             rel_logits = self._matmul_with_relative_keys(
                 query / math.sqrt(self.k_channels), key_relative_embeddings
@@ -95,9 +93,7 @@ class MultiHeadAttention(nn.Module):
         if mask is not None:
             scores = scores.masked_fill(mask == 0, -1e4)
             if self.block_length is not None:
-                assert (
-                    t_s == t_t
-                ), "Local attention is only available for self-attention."
+                assert t_s == t_t, "Local attention is only available for self-attention."
                 block_mask = (
                     torch.ones_like(scores)
                     .triu(-self.block_length)
@@ -109,15 +105,11 @@ class MultiHeadAttention(nn.Module):
         output = torch.matmul(p_attn, value)
         if self.window_size is not None:
             relative_weights = self._absolute_position_to_relative_position(p_attn)
-            value_relative_embeddings = self._get_relative_embeddings(
-                self.emb_rel_v, t_s
-            )
+            value_relative_embeddings = self._get_relative_embeddings(self.emb_rel_v, t_s)
             output = output + self._matmul_with_relative_values(
                 relative_weights, value_relative_embeddings
             )
-        output = (
-            output.transpose(2, 3).contiguous().view(b, d, t_t)
-        )
+        output = output.transpose(2, 3).contiguous().view(b, d, t_t)
         return output, p_attn
 
     def _matmul_with_relative_values(self, x, y):
@@ -147,14 +139,10 @@ class MultiHeadAttention(nn.Module):
     def _relative_position_to_absolute_position(self, x):
         batch, heads, length, _ = x.size()
 
-        x = F.pad(
-            x, convert_pad_shape([[0, 0], [0, 0], [0, 0], [0, 1]])
-        )
+        x = F.pad(x, convert_pad_shape([[0, 0], [0, 0], [0, 0], [0, 1]]))
 
         x_flat = x.view([batch, heads, length * 2 * length])
-        x_flat = F.pad(
-            x_flat, convert_pad_shape([[0, 0], [0, 0], [0, length - 1]])
-        )
+        x_flat = F.pad(x_flat, convert_pad_shape([[0, 0], [0, 0], [0, length - 1]]))
 
         x_final = x_flat.view([batch, heads, length + 1, 2 * length - 1])[
             :, :, :length, length - 1 :
@@ -163,13 +151,9 @@ class MultiHeadAttention(nn.Module):
 
     def _absolute_position_to_relative_position(self, x):
         batch, heads, length, _ = x.size()
-        x = F.pad(
-            x, convert_pad_shape([[0, 0], [0, 0], [0, 0], [0, length - 1]])
-        )
+        x = F.pad(x, convert_pad_shape([[0, 0], [0, 0], [0, 0], [0, length - 1]]))
         x_flat = x.view([batch, heads, length**2 + length * (length - 1)])
-        x_flat = F.pad(
-            x_flat, convert_pad_shape([[0, 0], [0, 0], [length, 0]])
-        )
+        x_flat = F.pad(x_flat, convert_pad_shape([[0, 0], [0, 0], [length, 0]]))
         x_final = x_flat.view([batch, heads, length, 2 * length])[:, :, :, 1:]
         return x_final
 

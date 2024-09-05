@@ -47,9 +47,7 @@ def load_wav_to_torch(full_path, target_sr=None, return_empty_on_exception=False
         return [], sample_rate or target_sr or 48000
     if target_sr is not None and sample_rate != target_sr:
         data = torch.from_numpy(
-            librosa.core.resample(
-                data.numpy(), orig_sr=sample_rate, target_sr=target_sr
-            )
+            librosa.core.resample(data.numpy(), orig_sr=sample_rate, target_sr=target_sr)
         )
         sample_rate = target_sr
 
@@ -189,9 +187,7 @@ def softmax_kernel(
     if is_query:
         data_dash = ratio * (
             torch.exp(
-                data_dash
-                - diag_data
-                - torch.max(data_dash, dim=-1, keepdim=True).values
+                data_dash - diag_data - torch.max(data_dash, dim=-1, keepdim=True).values
             )
             + eps
         )
@@ -359,16 +355,12 @@ def gaussian_orthogonal_random_matrix(
     block_list = []
 
     for _ in range(nb_full_blocks):
-        q = orthogonal_matrix_chunk(
-            nb_columns, qr_uniform_q=qr_uniform_q, device=device
-        )
+        q = orthogonal_matrix_chunk(nb_columns, qr_uniform_q=qr_uniform_q, device=device)
         block_list.append(q)
 
     remaining_rows = nb_rows - nb_full_blocks * nb_columns
     if remaining_rows > 0:
-        q = orthogonal_matrix_chunk(
-            nb_columns, qr_uniform_q=qr_uniform_q, device=device
-        )
+        q = orthogonal_matrix_chunk(nb_columns, qr_uniform_q=qr_uniform_q, device=device)
         block_list.append(q[:remaining_rows])
 
     final_matrix = torch.cat(block_list)
@@ -669,9 +661,7 @@ class FCPE(nn.Module):
     def cents_decoder(self, y, mask=True):
         B, N, _ = y.size()
         ci = self.cent_table[None, None, :].expand(B, N, -1)
-        rtn = torch.sum(ci * y, dim=-1, keepdim=True) / torch.sum(
-            y, dim=-1, keepdim=True
-        )
+        rtn = torch.sum(ci * y, dim=-1, keepdim=True) / torch.sum(y, dim=-1, keepdim=True)
         if mask:
             confident = torch.max(y, dim=-1, keepdim=True)[0]
             confident_mask = torch.ones_like(confident)
@@ -786,13 +776,9 @@ class Wav2Mel:
             )
             audio_res = self.resample_kernel[key_str](audio)
 
-        mel = self.extract_nvstft(
-            audio_res, keyshift=keyshift, train=train
-        )
+        mel = self.extract_nvstft(audio_res, keyshift=keyshift, train=train)
         n_frames = int(audio.shape[1] // self.hop_size) + 1
-        mel = (
-            torch.cat((mel, mel[:, -1:, :]), 1) if n_frames > int(mel.shape[1]) else mel
-        )
+        mel = torch.cat((mel, mel[:, -1:, :]), 1) if n_frames > int(mel.shape[1]) else mel
         mel = mel[:, :n_frames, :] if n_frames < int(mel.shape[1]) else mel
         return mel
 
@@ -847,9 +833,7 @@ class FCPEF0Predictor(F0Predictor):
     ):
         ndim = content.ndim
         content = (
-            content[None, None]
-            if ndim == 1
-            else content[None] if ndim == 2 else content
+            content[None, None] if ndim == 1 else content[None] if ndim == 2 else content
         )
         assert content.ndim == 3
         is_np = isinstance(content, np.ndarray)
