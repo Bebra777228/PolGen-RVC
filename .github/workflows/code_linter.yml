@@ -36,6 +36,9 @@ jobs:
         run: flake8 .
         continue-on-error: true
 
+      - name: Вывод результатов flake8
+        run: echo "Flake8 output: ${{ steps.flake8.outputs.stdout }}"
+
       - name: Проверка наличия ошибок
         id: errors
         run: |
@@ -45,12 +48,27 @@ jobs:
             echo "has_errors=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Вывод результатов проверки наличия ошибок
+        run: echo "Has errors: ${{ steps.errors.outputs.has_errors }}"
+
       - name: Автоматическое исправление ошибок с помощью autopep8
         if: ${{ steps.errors.outputs.has_errors == 'true' }}
         run: autopep8 --in-place --aggressive --aggressive .
 
+      - name: Проверка наличия изменений после autopep8
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Вывод результатов проверки наличия изменений
+        run: echo "Has changes: ${{ steps.changes.outputs.has_changes }}"
+
       - name: Фиксация изменений
-        if: ${{ steps.errors.outputs.has_errors == 'true' }}
+        if: ${{ steps.changes.outputs.has_changes == 'true' }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -58,7 +76,7 @@ jobs:
           git commit -m "Автоматическое исправление ошибок линтера flake8"
 
       - name: Создание Pull Request
-        if: ${{ steps.errors.outputs.has_errors == 'true' }}
+        if: ${{ steps.changes.outputs.has_changes == 'true' }}
         uses: peter-evans/create-pull-request@v5
         with:
           delete-branch: true
