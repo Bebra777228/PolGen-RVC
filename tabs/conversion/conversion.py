@@ -2,8 +2,8 @@ import os
 import gradio as gr
 
 from rvc.scripts.voice_conversion import voice_pipeline
-from rvc.modules.model_management import *
-from rvc.modules.ui_updates import *
+from rvc.modules.model_management import get_folders, update_models_list
+from rvc.modules.ui_updates import process_file_upload, show_hop_slider, update_button_text, swap_visibility, swap_buttons
 
 from tabs.install.install_huberts import *
 

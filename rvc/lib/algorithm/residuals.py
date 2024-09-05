@@ -164,7 +164,7 @@ class ResidualCouplingBlock(nn.Module):
         for i in range(self.n_flows):
             for hook in self.flows[i * 2]._forward_pre_hooks.values():
                 if (
-                    hook.__module__ == "weight_norm"
+                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
                     and hook.__class__.__name__ == "_WeightNorm"
                 ):
                     remove_weight_norm(self.flows[i * 2])

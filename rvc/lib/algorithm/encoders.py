@@ -2,7 +2,6 @@ import math
 import torch
 from torch import nn
 from torch.nn.utils.weight_norm import remove_weight_norm
-from torch.nn.utils.parametrizations import weight_norm
 from typing import Optional
 
 from .attentions import FFN, MultiHeadAttention
@@ -174,7 +173,7 @@ class PosteriorEncoder(nn.Module):
     def __prepare_scriptable__(self):
         for hook in self.enc._forward_pre_hooks.values():
             if (
-                hook.__module__ == "weight_norm"
+                hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
                 and hook.__class__.__name__ == "_WeightNorm"
             ):
                 remove_weight_norm(self.enc)

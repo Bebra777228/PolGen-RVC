@@ -88,10 +88,6 @@ def fused_add_tanh_sigmoid_multiply(input_a, input_b, n_channels):
     return acts
 
 
-def convert_pad_shape(pad_shape: List[List[int]]) -> List[int]:
-    return torch.tensor(pad_shape).flip(0).reshape(-1).int().tolist()
-
-
 def sequence_mask(length: torch.Tensor, max_length: Optional[int] = None):
     if max_length is None:
         max_length = length.max()

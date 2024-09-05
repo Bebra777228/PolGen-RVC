@@ -1,7 +1,7 @@
 import os
 import gradio as gr
 
-from rvc.modules.model_management import *
+from rvc.modules.model_management import download_from_url, upload_zip_model, upload_separate_files
 
 
 def url_download():

@@ -16,7 +16,6 @@ from functools import partial
 
 from einops import rearrange, repeat
 from local_attention import LocalAttention
-from torch import nn
 
 os.environ["LRU_CACHE_CAPACITY"] = "3"
 

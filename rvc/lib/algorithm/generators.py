@@ -80,7 +80,7 @@ class Generator(nn.Module):
         for l in self.ups_and_resblocks:
             for hook in l._forward_pre_hooks.values():
                 if (
-                    hook.__module__ == "weight_norm"
+                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
                     and hook.__class__.__name__ == "_WeightNorm"
                 ):
                     remove_weight_norm(l)

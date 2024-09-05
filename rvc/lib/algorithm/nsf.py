@@ -156,14 +156,14 @@ class GeneratorNSF(nn.Module):
         for l in self.ups:
             for hook in l._forward_pre_hooks.values():
                 if (
-                    hook.__module__ == "weight_norm"
+                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
                     and hook.__class__.__name__ == "_WeightNorm"
                 ):
                     remove_weight_norm(l)
         for l in self.resblocks:
             for hook in l._forward_pre_hooks.values():
                 if (
-                    hook.__module__ == "weight_norm"
+                    hook.__module__ == "torch.nn.utils.parametrizations.weight_norm"
                     and hook.__class__.__name__ == "_WeightNorm"
                 ):
                     remove_weight_norm(l)
