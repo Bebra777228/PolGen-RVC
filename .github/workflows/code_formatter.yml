@@ -30,22 +30,29 @@ jobs:
       - name: Запуск Black
         run: black .
 
+      - name: Проверка наличия изменений
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::set-output name=has_changes::true"
+          else
+            echo "::set-output name=has_changes::false"
+          fi
+
       - name: Фиксация изменений
-        continue-on-error: true
-        id: commitback
+        if: steps.changes.outputs.has_changes == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add --all
-          git commit -m "Рутинная работа"
+          git commit -m "Автоматическое форматирование кода с помощью black"
 
       - name: Создание Pull Request
-        if: steps.commitback.outcome == 'success'
-        continue-on-error: true
+        if: steps.changes.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           delete-branch: true
-          body: "Автоматическое применение изменений форматировщика кода"
-          title: "Рутинная работа"
-          commit-message: "Рутинная работа"
+          body: "Автоматическое форматирование кода с помощью black"
+          title: "Автоматическое форматирование кода"
+          commit-message: "Автоматическое форматирование кода с помощью black"
           branch: formatter/PolGen-Lite
