@@ -58,7 +58,8 @@ def toggle_custom_url(checkbox_value):
 def install_hubert_tab():
     with gr.Tab("Установка HuBERT моделей"):
         gr.HTML(
-            "<center><h2>Если вы не меняли HuBERT при тренировке модели, то не трогайте этот блок.</h2></center>"
+            "<center><h2>Если вы не меняли HuBERT при тренировке модели, "
+            "то не трогайте этот блок.</h2></center>"
         )
         with gr.Row(variant="panel"):
             with gr.Column(variant="panel"):
