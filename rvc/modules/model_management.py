@@ -94,7 +94,7 @@ def download_file(url, zip_name, progress):
         yandex_public_key = f"download?public_key={url}"
         yandex_api_url = (
             f"https://cloud-api.yandex.net/v1/disk/public/resources/{yandex_public_key}"
-            )
+        )
         response = requests.get(yandex_api_url)
         if response.status_code == 200:
             download_link = response.json().get("href")
