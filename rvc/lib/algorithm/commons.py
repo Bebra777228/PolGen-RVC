@@ -98,7 +98,7 @@ def sequence_mask(length: torch.Tensor, max_length: Optional[int] = None):
 def clip_grad_value(parameters, clip_value, norm_type=2):
     if isinstance(parameters, torch.Tensor):
         parameters = [parameters]
-    parameters = list(filter(lambda p: p.grad is not None, parameters))
+    parameters = List(filter(lambda p: p.grad is not None, parameters))
     norm_type = float(norm_type)
     if clip_value is not None:
         clip_value = float(clip_value)

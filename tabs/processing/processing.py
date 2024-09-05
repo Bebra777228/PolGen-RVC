@@ -1,4 +1,3 @@
-import os
 import gradio as gr
 
 from rvc.scripts.audio_processing import process_audio

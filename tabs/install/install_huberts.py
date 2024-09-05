@@ -41,7 +41,7 @@ def download_and_replace_model(model_desc, custom_url, progress=gr.Progress()):
         progress(0.4, desc=f'[~] Установка модели "{model_desc}"...')
         download_file(model_url, tmp_model_path)
 
-        progress(0.8, desc=f"[~] Удаление старой HuBERT модели...")
+        progress(0.8, desc="[~] Удаление старой HuBERT модели...")
         if os.path.exists(hubert_base_path):
             os.remove(hubert_base_path)
 

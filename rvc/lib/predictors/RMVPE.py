@@ -6,6 +6,7 @@ from librosa.filters import mel
 from scipy.signal import get_window
 from librosa.util import pad_center, tiny, normalize
 
+
 def window_sumsquare(window, n_frames, hop_length=200, win_length=800, n_fft=800, dtype=np.float32, norm=None):
     if win_length is None:
         win_length = n_fft
@@ -312,7 +313,7 @@ class RMVPE0Predictor:
         if self.is_half:
             hidden = hidden.astype("float32")
         f0 = self.decode(hidden, thred=thred)
-        f0[(f0 < f0_min) | (f0 > f0_max)] = 0  
+        f0[(f0 < f0_min) | (f0 > f0_max)] = 0
         return f0
 
     def to_local_average_cents(self, salience, thred=0.05):
