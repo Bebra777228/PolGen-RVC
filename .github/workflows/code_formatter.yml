@@ -28,7 +28,7 @@ jobs:
         run: pip install black
 
       - name: Запуск Black
-        run: black . --line-length 79
+        run: black . --line-length 100
 
       - name: Проверка наличия изменений
         id: changes
