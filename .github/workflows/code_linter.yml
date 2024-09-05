@@ -40,17 +40,17 @@ jobs:
         id: errors
         run: |
           if [ -n "$(echo ${{ steps.flake8.outputs.stdout }} | grep -i 'error')" ]; then
-            echo "::set-output name=has_errors::true"
+            echo "has_errors=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=has_errors::false"
+            echo "has_errors=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Автоматическое исправление ошибок с помощью autopep8
-        if: steps.errors.outputs.has_errors == 'true'
+        if: ${{ steps.errors.outputs.has_errors == 'true' }}
         run: autopep8 --in-place --aggressive --aggressive .
 
       - name: Фиксация изменений
-        if: steps.errors.outputs.has_errors == 'true'
+        if: ${{ steps.errors.outputs.has_errors == 'true' }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -58,7 +58,7 @@ jobs:
           git commit -m "Автоматическое исправление ошибок линтера flake8"
 
       - name: Создание Pull Request
-        if: steps.errors.outputs.has_errors == 'true'
+        if: ${{ steps.errors.outputs.has_errors == 'true' }}
         uses: peter-evans/create-pull-request@v5
         with:
           delete-branch: true
