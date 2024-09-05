@@ -3,7 +3,7 @@ name: Форматировщик кода
 on:
   push:
     branches:
-      - PolGen-Lite-dev
+      - dev/PolGen-Lite
 
 jobs:
   push_format:
@@ -48,4 +48,4 @@ jobs:
           body: "Автоматическое применение изменений форматировщика кода"
           title: "Рутинная работа"
           commit-message: "Рутинная работа"
-          branch: formatter-PolGen-Lite
+          branch: formatter/PolGen-Lite
