@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import urllib.request
 import zipfile
@@ -64,46 +65,84 @@ def extract_zip(extraction_folder, zip_name):
 
 # Загружает файл по указанной ссылке.
 def download_file(url, zip_name, progress):
-    if "drive.google.com" in url:
-        progress(0.5, desc="[~] Загрузка модели с Google Drive...")
-        file_id = (
-            url.split("file/d/")[1].split("/")[0]
-            if "file/d/" in url
-            else url.split("id=")[1].split("&")[0]
-        )
-        gdown.download(id=file_id, output=str(zip_name), quiet=False)
-
-    elif "huggingface.co" in url:
-        progress(0.5, desc="[~] Загрузка модели с HuggingFace...")
-        urllib.request.urlretrieve(url, zip_name)
-
-    elif "pixeldrain.com" in url:
-        progress(0.5, desc="[~] Загрузка модели с Pixeldrain...")
-        file_id = url.split("pixeldrain.com/u/")[1]
-        response = requests.get(f"https://pixeldrain.com/api/file/{file_id}")
-        with open(zip_name, "wb") as f:
-            f.write(response.content)
-
-    elif "mega.nz" in url:
-        progress(0.5, desc="[~] Загрузка модели с Mega...")
-        m = Mega()
-        m.download_url(url, dest_filename=str(zip_name))
-
-    elif "yadi.sk" in url or "disk.yandex.ru" in url:
-        progress(0.5, desc="[~] Загрузка модели с Яндекс Диска...")
-        yandex_public_key = f"download?public_key={url}"
-        yandex_api_url = (
-            f"https://cloud-api.yandex.net/v1/disk/public/resources/{yandex_public_key}"
-        )
-        response = requests.get(yandex_api_url)
-        if response.status_code == 200:
-            download_link = response.json().get("href")
-            urllib.request.urlretrieve(download_link, zip_name)
-        else:
-            raise gr.Error(
-                "Ошибка при получении ссылки на скачивание с Яндекс Диск: "
-                f"{response.status_code}"
+    try:
+        if "drive.google.com" in url:
+            progress(0.5, desc="[~] Загрузка модели с Google Drive...")
+            file_id = (
+                url.split("file/d/")[1].split("/")[0]
+                if "file/d/" in url
+                else url.split("id=")[1].split("&")[0]
             )
+            gdown.download(id=file_id, output=str(zip_name), quiet=False)
+
+        elif "huggingface.co" in url:
+            progress(0.5, desc="[~] Загрузка модели с HuggingFace...")
+            urllib.request.urlretrieve(url, zip_name)
+
+        elif "pixeldrain.com" in url:
+            progress(0.5, desc="[~] Загрузка модели с Pixeldrain...")
+            file_id = url.split("pixeldrain.com/u/")[1]
+            response = requests.get(f"https://pixeldrain.com/api/file/{file_id}")
+            with open(zip_name, "wb") as f:
+                f.write(response.content)
+
+        elif "mega.nz" in url:
+            progress(0.5, desc="[~] Загрузка модели с Mega...")
+            m = Mega()
+            m.download_url(url, dest_filename=str(zip_name))
+
+        elif "yadi.sk" in url or "disk.yandex.ru" in url:
+            progress(0.5, desc="[~] Загрузка модели с Яндекс Диска...")
+            yandex_public_key = f"download?public_key={url}"
+            yandex_api_url = (
+                f"https://cloud-api.yandex.net/v1/disk/public/resources/{yandex_public_key}"
+            )
+            response = requests.get(yandex_api_url)
+            if response.status_code == 200:
+                download_link = response.json().get("href")
+                urllib.request.urlretrieve(download_link, zip_name)
+            else:
+                raise gr.Error(
+                    "Ошибка при получении ссылки на скачивание с Яндекс Диск: "
+                    f"{response.status_code}"
+                )
+
+        elif "onedrive.live.com" in url:
+            progress(0.5, desc="[~] Загрузка модели с OneDrive...")
+            direct_url = url.replace("?download=1", "?download=0")
+            response = requests.get(direct_url, stream=True)
+            with open(zip_name, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+        elif "dropbox.com" in url:
+            progress(0.5, desc="[~] Загрузка модели с Dropbox...")
+            direct_url = url.split("?")[0]
+            response = requests.get(direct_url, stream=True)
+            with open(zip_name, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+        elif "box.com" in url:
+            progress(0.5, desc="[~] Загрузка модели с Box...")
+            response = requests.get(url)
+            direct_url = re.search(r'href="([^"]+)"\s+class="download-btn"', response.text).group(1)
+            urllib.request.urlretrieve(direct_url, zip_name)
+
+        elif "mediafire.com" in url:
+            progress(0.5, desc="[~] Загрузка модели с MediaFire...")
+            response = requests.get(url)
+            direct_url = re.search(r'href="([^"]+)"\s+class="download_link"', response.text).group(1)
+            urllib.request.urlretrieve(direct_url, zip_name)
+
+        elif "pcloud.com" in url:
+            progress(0.5, desc="[~] Загрузка модели с pCloud...")
+            response = requests.get(url)
+            direct_url = re.search(r'href="([^"]+)"\s+class="download-button"', response.text).group(1)
+            urllib.request.urlretrieve(direct_url, zip_name)
+
+    except Exception as e:
+        raise gr.Error(f"Ошибка при загрузке файла: {str(e)}")
 
 
 # Загружает модель по ссылке и распаковывает её.
