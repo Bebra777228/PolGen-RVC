@@ -15,7 +15,7 @@ with gr.Blocks(
         neutral_hue="neutral",
         spacing_size="sm",
         radius_size="lg",
-    )
+    ),
 ) as PolGen:
 
     with gr.Tab("Велком/Контакты"):
