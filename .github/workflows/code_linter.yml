@@ -12,10 +12,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-      pull-requests: write
-
     steps:
       - name: Проверка кода
         uses: actions/checkout@v4
@@ -27,60 +23,10 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Установка flake8 и autopep8
+      - name: Установка flake8
         run: |
-          pip install flake8 autopep8
+          pip install flake8
 
       - name: Запуск flake8
-        id: flake8
-        run: flake8 . 2>&1 | tee flake8_output.txt
+        run: flake8 .
         continue-on-error: true
-
-      - name: Вывод содержимого файла flake8_output.txt
-        run: cat flake8_output.txt
-
-      - name: Проверка наличия ошибок
-        id: errors
-        run: |
-          if grep -q -i 'error' flake8_output.txt; then
-            echo "has_errors=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_errors=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Вывод результатов проверки наличия ошибок
-        run: echo "Has errors: ${{ steps.errors.outputs.has_errors }}"
-
-      - name: Автоматическое исправление ошибок с помощью autopep8
-        if: ${{ steps.errors.outputs.has_errors == 'true' }}
-        run: autopep8 --in-place --aggressive --aggressive .
-
-      - name: Проверка наличия изменений после autopep8
-        id: changes
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Вывод результатов проверки наличия изменений
-        run: echo "Has changes: ${{ steps.changes.outputs.has_changes }}"
-
-      - name: Фиксация изменений
-        if: ${{ steps.changes.outputs.has_changes == 'true' }}
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add --all
-          git commit -m "Автоматическое исправление ошибок линтера flake8"
-
-      - name: Создание Pull Request
-        if: ${{ steps.changes.outputs.has_changes == 'true' }}
-        uses: peter-evans/create-pull-request@v5
-        with:
-          delete-branch: true
-          body: "Автоматическое исправление ошибок линтера flake8"
-          title: "Автоматическое исправление ошибок линтера flake8"
-          commit-message: "Автоматическое исправление ошибок линтера flake8"
-          branch: auto-fixes/PolGen-Lite
