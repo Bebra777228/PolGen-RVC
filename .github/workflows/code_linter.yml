@@ -33,13 +33,13 @@ jobs:
 
       - name: Запуск flake8
         id: flake8
-        run: flake8 .
+        run: flake8 . 2>&1 | tee flake8_output.txt
         continue-on-error: true
 
       - name: Проверка наличия ошибок
         id: errors
         run: |
-          if flake8 . | grep -q -i 'error'; then
+          if grep -q -i 'error' flake8_output.txt; then
             echo "has_errors=true" >> $GITHUB_OUTPUT
           else
             echo "has_errors=false" >> $GITHUB_OUTPUT
