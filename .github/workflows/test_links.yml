@@ -28,20 +28,20 @@ jobs:
 
     - name: Google Drive
       run: |
-        python rvc/modules/model_manager.py "https://drive.google.com/file/d/1lVQuCq5sQXRnAb_Z6m0nKb9305aePowy/view?usp=sharing" "test1"
+        python3 -m rvc.modules.model_manager "https://drive.google.com/file/d/1lVQuCq5sQXRnAb_Z6m0nKb9305aePowy/view?usp=sharing" "test1"
         
     - name: HuggingFace
       run: |
-        python rvc/modules/model_manager.py "https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/Victor_Tsoi.zip?download=true" "test2"
+        python3 -m rvc.modules.model_manager "https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/Victor_Tsoi.zip?download=true" "test2"
 
 #    - name: Pixeldrain
 #      run: |
-#        python rvc/modules/model_manager.py "" "test3"
+#        python3 -m rvc.modules.model_manager "" "test3"
 
 #    - name: Mega
 #      run: |
-#        python rvc/modules/model_manager.py "" "test4"
+#        python3 -m rvc.modules.model_manager "" "test4"
 
 #    - name: Яндекс Диск
 #      run: |
-#        python rvc/modules/model_manager.py "" "test5"
+#        python3 -m rvc.modules.model_manager "" "test5"
