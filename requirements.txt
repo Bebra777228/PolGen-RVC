@@ -17,3 +17,4 @@ tensorboardX
 einops
 local-attention
 mega.py
+pydantic==2.8.2
