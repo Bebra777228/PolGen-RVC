@@ -19,7 +19,9 @@ def download_file(url, zip_name, progress):
         elif "disk.yandex.ru" in url or "yadi.sk" in url:
             download_from_yandex(url, zip_name, progress)
         else:
-            raise ValueError(f"Неподдерживаемый источник: {url}")  # Обработка неподдерживаемых ссылок
+            raise ValueError(
+                f"Неподдерживаемый источник: {url}"
+            )  # Обработка неподдерживаемых ссылок
     except Exception as e:
         # Обрабатываем любые ошибки, возникшие при скачивании
         raise gr.Error(f"Ошибка при скачивании: {str(e)}")
@@ -62,7 +64,9 @@ def download_from_mega(url, zip_name, progress):
 def download_from_yandex(url, zip_name, progress):
     progress(0.5, desc="[~] Загрузка модели с Яндекс Диска...")
     yandex_public_key = f"download?public_key={url}"  # Формируем публичный ключ
-    yandex_api_url = f"https://cloud-api.yandex.net/v1/disk/public/resources/{yandex_public_key}"
+    yandex_api_url = (
+        f"https://cloud-api.yandex.net/v1/disk/public/resources/{yandex_public_key}"
+    )
     response = requests.get(yandex_api_url)
     if response.status_code == 200:
         download_link = response.json().get("href")  # Получаем ссылку на скачивание
