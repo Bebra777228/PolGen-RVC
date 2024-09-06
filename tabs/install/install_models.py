@@ -31,12 +31,7 @@ def url_download():
             "<a href='https://pixeldrain.com/' target='_blank'>Pixeldrain</a>, "
             "<a href='https://drive.google.com/' target='_blank'>Google Drive</a>, "
             "<a href='https://mega.nz/' target='_blank'>Mega</a>, "
-            "<a href='https://disk.yandex.ru/' target='_blank'>Яндекс Диск</a>, "
-            "<a href='https://onedrive.live.com/' target='_blank'>OneDrive</a>, "
-            "<a href='https://www.dropbox.com/' target='_blank'>Dropbox</a>, "
-            "<a href='https://app.box.com/' target='_blank'>Box</a>, "
-            "<a href='https://app.mediafire.com/' target='_blank'>MediaFire</a>, "
-            "<a href='https://my.pcloud.com/' target='_blank'>pCloud</a>"
+            "<a href='https://disk.yandex.ru/' target='_blank'>Яндекс Диск</a>"
             "</h3>"
         )
 
