@@ -50,9 +50,9 @@ jobs:
 #      run: |
 #        python rvc/modules/model_management.py "" "test_model"
 
-    - name: Dropbox
-      run: |
-        python rvc/modules/model_management.py "https://www.dropbox.com/scl/fi/qgwb61xk365uoaled6s7b/Model.zip?rlkey=lljqcjqn8appak3jns5b6rc1r&st=vyq4ioi4&dl=1" "test6"
+#    - name: Dropbox
+#      run: |
+#        python rvc/modules/model_management.py "https://www.dropbox.com/scl/fi/qgwb61xk365uoaled6s7b/Model.zip?rlkey=lljqcjqn8appak3jns5b6rc1r&st=vyq4ioi4&dl=1" "test6"
 
     - name: Box
       run: |
