@@ -38,10 +38,10 @@ jobs:
 #      run: |
 #        python3 -m rvc.modules.model_manager "" "test3"
 
-#    - name: Mega
-#      run: |
-#        python3 -m rvc.modules.model_manager "" "test4"
+    - name: Mega
+      run: |
+        python3 -m rvc.modules.model_manager "https://mega.nz/file/vgMBFB5I#-ZUtYEvV-OImhRjs9b1UpFyE2lm-BuEbODD3N9b3sg4" "test4"
 
-#    - name: Яндекс Диск
-#      run: |
-#        python3 -m rvc.modules.model_manager "" "test5"
+    - name: Яндекс Диск
+      run: |
+        python3 -m rvc.modules.model_manager "https://disk.yandex.ru/d/njvq8NEQgS2OhQ" "test5"
