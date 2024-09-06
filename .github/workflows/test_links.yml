@@ -24,7 +24,7 @@ jobs:
     - name: Установка зависимостей
       run: |
         pip install --upgrade pip==23.1
-        pip install requests gdown mega.py gradio
+        pip install requests gdown mega.py gradio tenacity
 
     - name: Google Drive
       run: |
