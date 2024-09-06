@@ -60,7 +60,7 @@ jobs:
 
     - name: MediaFire
       run: |
-        python rvc/modules/model_management.py "https://www.mediafire.com/file/0cjw4ho9m2ap7z0/Model.zip/file" "test8"
+        python rvc/modules/model_management.py "https://download944.mediafire.com/4y5zfyqx18zgu8DG-MHJXr3BxtcxVjopXqEo_8pyYMIL67IFvWTgloAOvsefjzkTQ-QeUDJUXcdWfAPvIy2_5W24yf_5WtIU8R7OFsVpczW7WKV1Te1Nt24UwQFRZhn0MPfZ4-L8aL-RIhk0U298jjR3a25Gw74Nk-4-z7GxAX1Z/0cjw4ho9m2ap7z0/Model.zip" "test8"
 
     - name: pCloud
       run: |
