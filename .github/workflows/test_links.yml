@@ -5,12 +5,14 @@ on:
     branches:
       - dev/PolGen-Lite
     paths:
+      - '.github/workflows/test_links.yml'
       - 'rvc/modules/download_source.py'
       - 'rvc/modules/model_manager.py'
   pull_request:
     branches:
       - dev/PolGen-Lite
     paths:
+      - '.github/workflows/test_links.yml'
       - 'rvc/modules/download_source.py'
       - 'rvc/modules/model_manager.py'
 
@@ -40,9 +42,9 @@ jobs:
       run: |
         python3 -m rvc.modules.model_manager "https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/Victor_Tsoi.zip?download=true" "test2"
 
-#    - name: Pixeldrain
-#      run: |
-#        python3 -m rvc.modules.model_manager "" "test3"
+    - name: Pixeldrain
+      run: |
+        python3 -m rvc.modules.model_manager "https://pixeldrain.com/u/mN7BsdZb" "test3"
 
     - name: Mega
       run: |
