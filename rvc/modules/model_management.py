@@ -115,13 +115,29 @@ def download_file(url, zip_name, progress):
                 download_url = re.search(r'href="([^"]+)"', response.text)
                 if download_url:
                     urllib.request.urlretrieve(download_url.group(1), zip_name)
+                else:
+                    raise gr.Error("Не удалось найти ссылку для скачивания с OneDrive.")
             else:
                 raise gr.Error("Ошибка загрузки с OneDrive.")
 
         elif "dropbox.com" in url:
             progress(0.5, desc="[~] Загрузка модели с Dropbox...")
-            direct_url = url.split("?")[0] + "?dl=1"
-            urllib.request.urlretrieve(direct_url, zip_name)
+            # Преобразуем ссылку для прямого скачивания
+            if "?dl=0" in url or "?dl=1" in url:
+                direct_url = re.sub(r'\?dl=0', '?dl=1', url)
+                direct_url = re.sub(r'\?dl=1.*', '?dl=1', direct_url)
+            else:
+                direct_url = url + "?dl=1"
+
+            # Используем requests для скачивания
+            response = requests.get(direct_url, stream=True)
+            if response.status_code == 200:
+                with open(zip_name, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+            else:
+                raise gr.Error(f"Ошибка загрузки с Dropbox: {response.status_code}")
 
         elif "box.com" in url:
             progress(0.5, desc="[~] Загрузка модели с Box...")
@@ -168,9 +184,15 @@ def download_from_url(url, dir_name, progress=gr.Progress()):
 
         download_file(url, zip_name, progress)
 
+        # Проверим, что файл действительно является zip-архивом
+        if not zipfile.is_zipfile(zip_name):
+            raise gr.Error("Скачанный файл не является корректным zip-архивом.")
+
         progress(0.8, desc="[~] Распаковка zip-файла...")
         extract_zip(extraction_folder, zip_name)
         return f"[+] Модель {dir_name} успешно загружена!"
+    except gr.Error as e:
+        raise e
     except Exception as e:
         raise gr.Error(str(e))
 
@@ -186,6 +208,7 @@ def upload_zip_model(zip_path, dir_name, progress=gr.Progress()):
             )
 
         zip_name = zip_path.name
+        shutil.copy(zip_path.name, zip_name)  # Копируем загруженный файл
         progress(0.8, desc="[~] Распаковка zip-файла...")
         extract_zip(extraction_folder, zip_name)
         return f"[+] Модель {dir_name} успешно загружена!"
