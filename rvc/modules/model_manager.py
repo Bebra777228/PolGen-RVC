@@ -1,17 +1,15 @@
 import os
 import sys
 import shutil
-import urllib.request
 import zipfile
-import gdown
-import requests
-import gradio as gr
-from mega import Mega
 
+from .download_source import download_file
+
+# Путь к директории, где будут храниться модели RVC
 rvc_models_dir = os.path.join(os.getcwd(), "models", "rvc_models")
 
 
-# Возвращает список папок в указанной директории.
+# Возвращает список папок, находящихся в директории моделей
 def get_folders(models_dir):
     return [
         item
@@ -20,34 +18,42 @@ def get_folders(models_dir):
     ]
 
 
-# Обновляет список моделей для выбора в интерфейсе Gradio.
+# Обновляет список моделей для отображения в интерфейсе Gradio
 def update_models_list():
     models_folders = get_folders(rvc_models_dir)
     return gr.update(choices=models_folders)
 
 
-# Распаковывает zip-файл в указанную директорию.
+# Распаковывает zip-файл в указанную директорию и находит файлы модели (.pth и .index)
 def extract_zip(extraction_folder, zip_name):
-    os.makedirs(extraction_folder, exist_ok=True)
+    os.makedirs(extraction_folder, exist_ok=True)  # Создаем директорию для распаковки, если она не существует
     with zipfile.ZipFile(zip_name, "r") as zip_ref:
-        zip_ref.extractall(extraction_folder)
-    os.remove(zip_name)
+        zip_ref.extractall(extraction_folder)  # Распаковываем zip-файл
+    os.remove(zip_name)  # Удаляем zip-файл после распаковки
 
     index_filepath, model_filepath = None, None
+    # Проходим по всем файлам в распакованной директории для поиска .pth и .index
     for root, _, files in os.walk(extraction_folder):
         for name in files:
             file_path = os.path.join(root, name)
-            if name.endswith(".index") and os.stat(file_path).st_size > 1024 * 100:
+            if name.endswith(".index") and os.stat(file_path).st_size > 1024 * 100:  # Минимальный размер файла index
                 index_filepath = file_path
-            if name.endswith(".pth") and os.stat(file_path).st_size > 1024 * 1024 * 40:
+            if name.endswith(".pth") and os.stat(file_path).st_size > 1024 * 1024 * 40:  # Минимальный размер файла pth
                 model_filepath = file_path
 
     if not model_filepath:
+        # Если файл модели не найден, вызываем ошибку
         raise gr.Error(
             "Не найден файл модели .pth в распакованном zip-файле. "
-            f"Пожалуйста, проверьте {extraction_folder}."
+            f"Проверьте содержимое в {extraction_folder}."
         )
 
+    # Переименовываем и удаляем ненужные папки
+    rename_and_cleanup(extraction_folder, model_filepath, index_filepath)
+
+
+# Функция для переименования файлов и удаления пустых папок
+def rename_and_cleanup(extraction_folder, model_filepath, index_filepath):
     os.rename(
         model_filepath,
         os.path.join(extraction_folder, os.path.basename(model_filepath)),
@@ -58,78 +64,37 @@ def extract_zip(extraction_folder, zip_name):
             os.path.join(extraction_folder, os.path.basename(index_filepath)),
         )
 
+    # Удаляем оставшиеся пустые директории после распаковки
     for filepath in os.listdir(extraction_folder):
-        if os.path.isdir(os.path.join(extraction_folder, filepath)):
-            shutil.rmtree(os.path.join(extraction_folder, filepath))
+        full_path = os.path.join(extraction_folder, filepath)
+        if os.path.isdir(full_path):
+            shutil.rmtree(full_path)
 
 
-# Загружает файл по указанной ссылке.
-def download_file(url, zip_name, progress):
-    if "drive.google.com" in url:
-        progress(0.5, desc="[~] Загрузка модели с Google Drive...")
-        file_id = (
-            url.split("file/d/")[1].split("/")[0]
-            if "file/d/" in url
-            else url.split("id=")[1].split("&")[0]
-        )
-        gdown.download(id=file_id, output=str(zip_name), quiet=False)
-
-    elif "huggingface.co" in url:
-        progress(0.5, desc="[~] Загрузка модели с HuggingFace...")
-        urllib.request.urlretrieve(url, zip_name)
-
-    elif "pixeldrain.com" in url:
-        progress(0.5, desc="[~] Загрузка модели с Pixeldrain...")
-        file_id = url.split("pixeldrain.com/u/")[1]
-        response = requests.get(f"https://pixeldrain.com/api/file/{file_id}")
-        with open(zip_name, "wb") as f:
-            f.write(response.content)
-
-    elif "mega.nz" in url:
-        progress(0.5, desc="[~] Загрузка модели с Mega...")
-        m = Mega()
-        m.download_url(url, dest_filename=str(zip_name))
-
-    elif "yadi.sk" in url or "disk.yandex.ru" in url:
-        progress(0.5, desc="[~] Загрузка модели с Яндекс Диска...")
-        yandex_public_key = f"download?public_key={url}"
-        yandex_api_url = (
-            f"https://cloud-api.yandex.net/v1/disk/public/resources/{yandex_public_key}"
-        )
-        response = requests.get(yandex_api_url)
-        if response.status_code == 200:
-            download_link = response.json().get("href")
-            urllib.request.urlretrieve(download_link, zip_name)
-        else:
-            raise gr.Error(
-                "Ошибка при получении ссылки на скачивание с Яндекс Диск: "
-                f"{response.status_code}"
-            )
-
-
-# Загружает модель по ссылке и распаковывает её.
+# Основная функция для скачивания модели по ссылке и распаковки zip-файла
 def download_from_url(url, dir_name, progress=gr.Progress()):
     try:
-        progress(0, desc=f"[~] Загрузка голосовой модели с именем {dir_name}...")
+        progress(0, desc=f"[~] Загрузка голосовой модели {dir_name}...")
         zip_name = os.path.join(rvc_models_dir, dir_name + ".zip")
         extraction_folder = os.path.join(rvc_models_dir, dir_name)
         if os.path.exists(extraction_folder):
+            # Проверка на наличие директории с таким именем
             raise gr.Error(
                 f"Директория голосовой модели {dir_name} уже существует! "
                 "Выберите другое имя для вашей голосовой модели."
             )
 
-        download_file(url, zip_name, progress)
-
+        download_file(url, zip_name, progress)  # Скачивание файла
         progress(0.8, desc="[~] Распаковка zip-файла...")
-        extract_zip(extraction_folder, zip_name)
+        extract_zip(extraction_folder, zip_name)  # Распаковка zip-файла
         return f"[+] Модель {dir_name} успешно загружена!"
     except Exception as e:
-        raise gr.Error(str(e))
+        # Обработка ошибок при загрузке модели
+        raise gr.Error(f"Ошибка при загрузке модели: {str(e)}")
 
 
-# Загружает и распаковывает zip-файл модели.
-def upload_zip_model(zip_path, dir_name, progress=gr.Progress()):
+# Функция для загрузки и распаковки zip-файла модели через интерфейс
+def upload_zip_file(zip_path, dir_name, progress=gr.Progress()):
     try:
         extraction_folder = os.path.join(rvc_models_dir, dir_name)
         if os.path.exists(extraction_folder):
@@ -140,13 +105,14 @@ def upload_zip_model(zip_path, dir_name, progress=gr.Progress()):
 
         zip_name = zip_path.name
         progress(0.8, desc="[~] Распаковка zip-файла...")
-        extract_zip(extraction_folder, zip_name)
+        extract_zip(extraction_folder, zip_name)  # Распаковка zip-файла
         return f"[+] Модель {dir_name} успешно загружена!"
     except Exception as e:
-        raise gr.Error(str(e))
+        # Обработка ошибок при загрузке и распаковке
+        raise gr.Error(f"Ошибка при загрузке модели: {str(e)}")
 
 
-# Загружает отдельные файлы модели (.pth и .index).
+# Функция для загрузки отдельных файлов модели (.pth и .index)
 def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()):
     try:
         extraction_folder = os.path.join(rvc_models_dir, dir_name)
@@ -158,10 +124,12 @@ def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()
 
         os.makedirs(extraction_folder, exist_ok=True)
 
+        # Копируем файл .pth
         if pth_file:
             pth_path = os.path.join(extraction_folder, os.path.basename(pth_file.name))
             shutil.copyfile(pth_file.name, pth_path)
 
+        # Копируем файл .index
         if index_file:
             index_path = os.path.join(
                 extraction_folder, os.path.basename(index_file.name)
@@ -169,10 +137,11 @@ def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()
             shutil.copyfile(index_file.name, index_path)
         return f"[+] Модель {dir_name} успешно загружена!"
     except Exception as e:
-        raise gr.Error(str(e))
+        # Обработка ошибок при загрузке файлов
+        raise gr.Error(f"Ошибка при загрузке модели: {str(e)}")
 
 
-# Функция для вызова из командной строки
+# Основная функция для вызова из командной строки
 def main():
     if len(sys.argv) != 3:
         print("Использование: python model_management.py <url> <dir_name>")
@@ -182,11 +151,13 @@ def main():
     dir_name = sys.argv[2]
 
     try:
+        # Скачивание и загрузка модели через командную строку
         result = download_from_url(url, dir_name)
         print(result)
     except gr.Error as e:
         print(f"Error: {str(e)}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

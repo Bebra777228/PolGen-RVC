@@ -1,8 +1,8 @@
 import gradio as gr
 
-from rvc.modules.model_management import (
+from rvc.modules.model_manager import (
     download_from_url,
-    upload_zip_model,
+    upload_zip_file,
     upload_separate_files,
 )
 
@@ -75,7 +75,7 @@ def zip_upload():
 
         local_upload_output_message = gr.Text(label="Сообщение вывода", interactive=False)
         model_upload_button.click(
-            upload_zip_model,
+            upload_zip_file,
             inputs=[zip_file, local_model_name],
             outputs=local_upload_output_message,
         )
