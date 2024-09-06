@@ -110,37 +110,45 @@ def download_file(url, zip_name, progress):
 
         elif "onedrive.live.com" in url:
             progress(0.5, desc="[~] Загрузка модели с OneDrive...")
-            direct_url = url.replace("?download=1", "?download=0")
-            response = requests.get(direct_url, stream=True)
-            with open(zip_name, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
+            response = requests.get(url, allow_redirects=True)
+            if response.status_code == 200:
+                download_url = re.search(r'href="([^"]+)"', response.text)
+                if download_url:
+                    urllib.request.urlretrieve(download_url.group(1), zip_name)
+            else:
+                raise gr.Error("Ошибка загрузки с OneDrive.")
 
         elif "dropbox.com" in url:
             progress(0.5, desc="[~] Загрузка модели с Dropbox...")
-            direct_url = url.split("?")[0]
-            response = requests.get(direct_url, stream=True)
-            with open(zip_name, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
+            direct_url = url.split("?")[0] + "?dl=1"
+            urllib.request.urlretrieve(direct_url, zip_name)
 
         elif "box.com" in url:
             progress(0.5, desc="[~] Загрузка модели с Box...")
             response = requests.get(url)
-            direct_url = re.search(r'href="([^"]+)"\s+class="download-btn"', response.text).group(1)
-            urllib.request.urlretrieve(direct_url, zip_name)
+            direct_url = re.search(r'href="([^"]+)"\s+class="download-btn"', response.text)
+            if direct_url:
+                urllib.request.urlretrieve(direct_url.group(1), zip_name)
+            else:
+                raise gr.Error("Не удалось найти ссылку для скачивания с Box.")
 
         elif "mediafire.com" in url:
             progress(0.5, desc="[~] Загрузка модели с MediaFire...")
             response = requests.get(url)
-            direct_url = re.search(r'href="([^"]+)"\s+class="download_link"', response.text).group(1)
-            urllib.request.urlretrieve(direct_url, zip_name)
+            direct_url = re.search(r'href="([^"]+)"\s+class="download_link"', response.text)
+            if direct_url:
+                urllib.request.urlretrieve(direct_url.group(1), zip_name)
+            else:
+                raise gr.Error("Не удалось найти ссылку для скачивания с MediaFire.")
 
         elif "pcloud.com" in url:
             progress(0.5, desc="[~] Загрузка модели с pCloud...")
             response = requests.get(url)
-            direct_url = re.search(r'href="([^"]+)"\s+class="download-button"', response.text).group(1)
-            urllib.request.urlretrieve(direct_url, zip_name)
+            direct_url = re.search(r'href="([^"]+)"\s+class="download-button"', response.text)
+            if direct_url:
+                urllib.request.urlretrieve(direct_url.group(1), zip_name)
+            else:
+                raise gr.Error("Не удалось найти ссылку для скачивания с pCloud.")
 
     except Exception as e:
         raise gr.Error(f"Ошибка при загрузке файла: {str(e)}")
