@@ -27,7 +27,9 @@ def update_models_list():
 
 # Распаковывает zip-файл в указанную директорию и находит файлы модели (.pth и .index)
 def extract_zip(extraction_folder, zip_name):
-    os.makedirs(extraction_folder, exist_ok=True)  # Создаем директорию для распаковки, если она не существует
+    os.makedirs(
+        extraction_folder, exist_ok=True
+    )  # Создаем директорию для распаковки, если она не существует
     with zipfile.ZipFile(zip_name, "r") as zip_ref:
         zip_ref.extractall(extraction_folder)  # Распаковываем zip-файл
     os.remove(zip_name)  # Удаляем zip-файл после распаковки
@@ -37,9 +39,13 @@ def extract_zip(extraction_folder, zip_name):
     for root, _, files in os.walk(extraction_folder):
         for name in files:
             file_path = os.path.join(root, name)
-            if name.endswith(".index") and os.stat(file_path).st_size > 1024 * 100:  # Минимальный размер файла index
+            if (
+                name.endswith(".index") and os.stat(file_path).st_size > 1024 * 100
+            ):  # Минимальный размер файла index
                 index_filepath = file_path
-            if name.endswith(".pth") and os.stat(file_path).st_size > 1024 * 1024 * 40:  # Минимальный размер файла pth
+            if (
+                name.endswith(".pth") and os.stat(file_path).st_size > 1024 * 1024 * 40
+            ):  # Минимальный размер файла pth
                 model_filepath = file_path
 
     if not model_filepath:
