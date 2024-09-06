@@ -1,4 +1,4 @@
-name: Check Links
+name: Тест ссылок
 
 on:
   push:
