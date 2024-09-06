@@ -17,6 +17,6 @@ einops
 local-attention
 
 # Интерфейсы и облачные сервисы
-gradio==4.29.0
+gradio==4.43.0
 mega.py
 wget
