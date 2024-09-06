@@ -122,22 +122,11 @@ def download_file(url, zip_name, progress):
 
         elif "dropbox.com" in url:
             progress(0.5, desc="[~] Загрузка модели с Dropbox...")
-            # Преобразуем ссылку для прямого скачивания
-            if "?dl=0" in url or "?dl=1" in url:
-                direct_url = re.sub(r'\?dl=0', '?dl=1', url)
-                direct_url = re.sub(r'\?dl=1.*', '?dl=1', direct_url)
+            direct_url = url.split("?")[0] + "?dl=1"
+            if direct_url:
+                urllib.request.urlretrieve(direct_url, zip_name)
             else:
-                direct_url = url + "?dl=1"
-
-            # Используем requests для скачивания
-            response = requests.get(direct_url, stream=True)
-            if response.status_code == 200:
-                with open(zip_name, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-            else:
-                raise gr.Error(f"Ошибка загрузки с Dropbox: {response.status_code}")
+                raise gr.Error("Не удалось найти ссылку для скачивания с Dropbox.")
 
         elif "box.com" in url:
             progress(0.5, desc="[~] Загрузка модели с Box...")
