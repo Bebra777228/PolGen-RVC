@@ -3,7 +3,7 @@ import sys
 import shutil
 import zipfile
 
-from .download_source import download_file
+from rvc.modules.download_source import download_file
 
 # Путь к директории, где будут храниться модели RVC
 rvc_models_dir = os.path.join(os.getcwd(), "models", "rvc_models")
