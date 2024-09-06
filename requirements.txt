@@ -3,6 +3,7 @@ requests
 tensorboardX
 fairseq==0.12.2
 faiss-cpu==1.7.3
+numpy==1.23.5
 
 # Звуковые библиотеки
 ffmpeg-python>=0.2.0
