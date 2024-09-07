@@ -10,7 +10,9 @@ from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
 
 RVC_MODELS_DIR = os.path.join(os.getcwd(), "models")
-HUBERT_MODEL_PATH = os.path.join(os.getcwd(), "rvc", "models", "embedders", "hubert_base.pt")
+HUBERT_MODEL_PATH = os.path.join(
+    os.getcwd(), "rvc", "models", "embedders", "hubert_base.pt"
+)
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 
 
