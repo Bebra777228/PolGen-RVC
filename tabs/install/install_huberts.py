@@ -7,9 +7,7 @@ import gradio as gr
 embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
 hubert_base_path = os.path.join(embedders_dir, "hubert_base.pt")
 
-base_url = (
-    "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
-)
+base_url = "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 
 models = {
     "Стандартный hubert": "hubert_base.pt",

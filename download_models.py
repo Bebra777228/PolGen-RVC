@@ -1,15 +1,12 @@
 import os
 import requests
 
-PREDICTORS = (
-    "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/"
-)
-EMBEDDERS = (
-    "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
-)
+PREDICTORS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/"
+EMBEDDERS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 
 predictors_dir = os.path.join(os.getcwd(), "rvc", "models", "predictors")
 embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
+
 
 def dl_model(link, model_name, dir_name):
     r = requests.get(f"{link}{model_name}", stream=True)
