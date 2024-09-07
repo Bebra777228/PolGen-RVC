@@ -9,6 +9,10 @@ embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
 
 
 def dl_model(link, model_name, dir_name):
+    if os.path.exists(os.path.join(dir_name, model_name)):
+        print(f"{model_name} уже существует. Пропускаем установку.")
+        return
+
     r = requests.get(f"{link}{model_name}", stream=True)
     r.raise_for_status()
     with open(os.path.join(dir_name, model_name), "wb") as f:

@@ -87,7 +87,7 @@ def conversion_tab():
             converted_voice = gr.Audio(label="Преобразованный голос", scale=9)
             with gr.Column(min_width=160):
                 output_format = gr.Dropdown(
-                    ["wav", "flac", "mp3", "ogg"],
+                    ["wav", "flac", "mp3"],
                     value="mp3",
                     label="Формат файла",
                     allow_custom_value=False,

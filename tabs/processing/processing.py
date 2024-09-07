@@ -124,7 +124,7 @@ def processing_tab():
             process_btn = gr.Button("Обработать", variant="primary", scale=2)
             ai_cover = gr.Audio(label="Ai-Cover", scale=9)
             output_format = gr.Dropdown(
-                ["mp3", "flac", "wav"],
+                ["wav", "flac", "mp3"],
                 value="mp3",
                 label="Формат файла",
                 allow_custom_value=False,

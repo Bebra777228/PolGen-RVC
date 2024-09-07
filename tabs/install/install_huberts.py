@@ -9,14 +9,14 @@ hubert_base_path = os.path.join(embedders_dir, "hubert_base.pt")
 
 base_url = "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 
-models = {
-    "Стандартный hubert": "hubert_base.pt",
-    "СontentVec": "contentvec_base.pt",
-    "Корейский hubert_base": "korean_hubert_base.pt",
-    "Китайский hubert_base": "chinese_hubert_base.pt",
-    "Португальский hubert_base": "portuguese_hubert_base.pt",
-    "Японский hubert_base": "japanese_hubert_base.pt",
-}
+models = [
+    "hubert_base.pt",
+    "contentvec_base.pt",
+    "korean_hubert_base.pt",
+    "chinese_hubert_base.pt",
+    "portuguese_hubert_base.pt",
+    "japanese_hubert_base.pt",
+]
 
 
 def download_file(url, destination):
@@ -24,15 +24,13 @@ def download_file(url, destination):
         shutil.copyfileobj(response, out_file)
 
 
-def download_and_replace_model(model_desc, custom_url, progress=gr.Progress()):
+def download_and_replace_model(model_name, custom_url, progress=gr.Progress()):
     try:
         if custom_url:
             if not re.search(r"\.pt(\?.*)?$", custom_url):
                 return "Ошибка: URL должен указывать на файл в формате .pt"
             model_url = custom_url
-            model_name = "hubert_base.pt"
         else:
-            model_name = models[model_desc]
             model_url = base_url + model_name
 
         tmp_model_path = os.path.join(embedders_dir, "tmp_model.pt")
@@ -65,7 +63,7 @@ def install_hubert_tab():
                 custom_url_checkbox = gr.Checkbox(label="Другой HuBERT", value=False)
                 custom_url_textbox = gr.Textbox(label="URL модели", visible=False)
                 hubert_model_dropdown = gr.Dropdown(
-                    list(models.keys()), label="HuBERT модели:", visible=True
+                    models, label="HuBERT модели:", visible=True
                 )
             hubert_download_btn = gr.Button("Скачать", variant="primary")
         hubert_output_message = gr.Text(label="Сообщение вывода", interactive=False)
