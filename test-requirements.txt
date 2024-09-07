@@ -35,3 +35,4 @@ urllib3==2.2.2
 wget==3.2
 idna==3.8
 certifi==2023.7.22
+torch==2.1.1
