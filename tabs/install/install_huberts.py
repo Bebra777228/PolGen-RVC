@@ -8,7 +8,7 @@ embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
 hubert_base_path = os.path.join(embedders_dir, "hubert_base.pt")
 
 base_url = (
-    "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
+    "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 )
 
 models = {
@@ -16,6 +16,7 @@ models = {
     "СontentVec": "contentvec_base.pt",
     "Корейский hubert_base": "korean_hubert_base.pt",
     "Китайский hubert_base": "chinese_hubert_base.pt",
+    "Португальский hubert_base": "portuguese_hubert_base.pt",
     "Японский hubert_base": "japanese_hubert_base.pt",
 }
 
