@@ -10,10 +10,10 @@ import asyncio
 
 from rvc.infer.infer import Config, load_hubert, get_vc, rvc_infer
 
-RVC_MODELS_DIR = os.path.join(os.getcwd(), "models", "rvc_models")
-HUBERT_MODEL_PATH = os.path.join(os.getcwd(), "models", "assets", "hubert_base.pt")
+
+RVC_MODELS_DIR = os.path.join(os.getcwd(), "models")
+HUBERT_MODEL_PATH = os.path.join(os.getcwd(), "rvc", "models", "embedders", "hubert_base.pt")
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 # Отображает прогресс выполнения задачи.

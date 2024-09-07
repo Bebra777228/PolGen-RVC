@@ -11,8 +11,9 @@ from scipy import signal
 from rvc.lib.predictors.FCPE import FCPEF0Predictor
 from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
-RMVPE_DIR = os.path.join(os.getcwd(), "models", "assets", "rmvpe.pt")
-FCPE_DIR = os.path.join(os.getcwd(), "models", "assets", "fcpe.pt")
+PREDICTORS_DIR = os.path.join(os.getcwd(), "rvc", "models", "predictors")
+RMVPE_DIR = os.path.join(PREDICTORS_DIR, "rmvpe.pt")
+FCPE_DIR = os.path.join(PREDICTORS_DIR, "fcpe.pt")
 
 # Фильтр Баттерворта для высоких частот
 FILTER_ORDER = 5  # Порядок фильтра

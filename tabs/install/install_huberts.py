@@ -4,8 +4,8 @@ import shutil
 import urllib.request
 import gradio as gr
 
-assets_dir = os.path.join(os.getcwd(), "models", "assets")
-hubert_base_path = os.path.join(assets_dir, "hubert_base.pt")
+embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
+hubert_base_path = os.path.join(embedders_dir, "hubert_base.pt")
 
 base_url = (
     "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
@@ -36,7 +36,7 @@ def download_and_replace_model(model_desc, custom_url, progress=gr.Progress()):
             model_name = models[model_desc]
             model_url = base_url + model_name
 
-        tmp_model_path = os.path.join(assets_dir, "tmp_model.pt")
+        tmp_model_path = os.path.join(embedders_dir, "tmp_model.pt")
 
         progress(0.4, desc=f'[~] Установка модели "{model_desc}"...')
         download_file(model_url, tmp_model_path)

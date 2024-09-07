@@ -8,7 +8,7 @@ from tabs.install.install_models import url_download, zip_upload, files_upload
 
 
 with gr.Blocks(
-    title="PolGen Lite - Politrees (v1.2)",
+    title="PolGen Lite - Politrees",
     theme=gr.themes.Soft(
         primary_hue="green",
         secondary_hue="green",
@@ -16,7 +16,7 @@ with gr.Blocks(
         spacing_size="sm",
         radius_size="lg",
     ),
-) as PolGen:
+) as PolGen_Lite:
 
     with gr.Tab("Велком/Контакты"):
         welcome_tab()
@@ -36,7 +36,7 @@ with gr.Blocks(
         zip_upload()
         files_upload()
 
-PolGen.launch(
+PolGen_Lite.launch(
     share=True,
     show_api=False,
     show_error=True,

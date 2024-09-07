@@ -7,7 +7,7 @@ import gradio as gr
 from rvc.modules.download_source import download_file
 
 # Путь к директории, где будут храниться модели RVC
-rvc_models_dir = os.path.join(os.getcwd(), "models", "rvc_models")
+rvc_models_dir = os.path.join(os.getcwd(), "models")
 
 
 # Возвращает список папок, находящихся в директории моделей
@@ -151,7 +151,9 @@ def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()
 # Основная функция для вызова из командной строки
 def main():
     if len(sys.argv) != 3:
-        print("Использование: python model_management.py <url> <dir_name>")
+        print(
+            '\nИспользование:\npython3 -m rvc.modules.model_manager "url" "dir_name"\n'
+        )
         sys.exit(1)
 
     url = sys.argv[1]

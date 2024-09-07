@@ -13,7 +13,7 @@ from rvc.modules.ui_updates import (
 
 from tabs.install.install_huberts import install_hubert_tab
 
-rvc_models_dir = os.path.join(os.getcwd(), "models", "rvc_models")
+rvc_models_dir = os.path.join(os.getcwd(), "models")
 voice_models = get_folders(rvc_models_dir)
 
 

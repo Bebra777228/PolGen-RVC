@@ -2,14 +2,14 @@ import os
 import requests
 
 PREDICTORS = (
-    "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/other/"
+    "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/"
 )
-HUBERT = (
-    "https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/"
+EMBEDDERS = (
+    "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 )
 
-assets_dir = os.path.join(os.getcwd(), "models", "assets")
-
+predictors_dir = os.path.join(os.getcwd(), "rvc", "models", "predictors")
+embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
 
 def dl_model(link, model_name, dir_name):
     r = requests.get(f"{link}{model_name}", stream=True)
@@ -21,15 +21,15 @@ def dl_model(link, model_name, dir_name):
 
 if __name__ == "__main__":
     try:
-        rvc_other_names = ["rmvpe.pt", "fcpe.pt"]
-        for model in rvc_other_names:
+        predictors_names = ["rmvpe.pt", "fcpe.pt"]
+        for model in predictors_names:
             print(f"Установка {model}...")
-            dl_model(PREDICTORS, model, assets_dir)
+            dl_model(PREDICTORS, model, predictors_dir)
 
-        rvc_hubert_names = ["hubert_base.pt"]
-        for model in rvc_hubert_names:
+        embedder_names = ["hubert_base.pt"]
+        for model in embedder_names:
             print(f"Установка {model}...")
-            dl_model(HUBERT, model, assets_dir)
+            dl_model(EMBEDDERS, model, embedders_dir)
 
         print("Все модели успешно установлены!")
     except requests.exceptions.RequestException as e:

@@ -38,9 +38,9 @@ jobs:
     - name: Установка необходимых моделей
       run: |
         python download_models.py
-        mkdir -p models/rvc_models/Tsoi
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
+        mkdir -p models/Tsoi
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/Tsoi/model.index
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/Tsoi/model.pth
 
     - name: Установка аудио для теста
       run: |
@@ -80,9 +80,9 @@ jobs:
     - name: Установка необходимых моделей
       run: |
         python download_models.py
-        mkdir -p models/rvc_models/Tsoi
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/rvc_models/Tsoi/model.index
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/rvc_models/Tsoi/model.pth
+        mkdir -p models/Tsoi
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/Tsoi/model.index
+        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/Tsoi/model.pth
 
     - name: Запуск скрипта tts_cli
       run: |

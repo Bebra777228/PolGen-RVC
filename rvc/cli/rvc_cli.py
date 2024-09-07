@@ -3,7 +3,7 @@ import os
 
 from rvc.scripts.voice_conversion import voice_pipeline
 
-rvc_models_dir = os.path.join(os.getcwd(), "models", "rvc_models")
+rvc_models_dir = os.path.join(os.getcwd(), "models")
 
 parser = argparse.ArgumentParser(
     description="Замена голоса в директории output/", add_help=True
