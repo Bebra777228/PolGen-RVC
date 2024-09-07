@@ -28,12 +28,12 @@ jobs:
     - name: Установка зависимостей
       run: |
         pip install --upgrade pip==23.1
-        pip install --no-deps --no-cache-dir -r test-requirements.txt
+        pip install --no-cache-dir -r requirements.txt
 
-#    - name: Установка ffmpeg
-#      run: |
-#        sudo apt-get update
-#        sudo apt-get install -y ffmpeg
+    - name: Установка ffmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
 
     - name: Установка необходимых моделей
       run: |
@@ -70,12 +70,12 @@ jobs:
     - name: Установка зависимостей
       run: |
         pip install --upgrade pip==23.1
-        pip install --no-deps --no-cache-dir -r test-requirements.txt
+        pip install --no-cache-dir -r requirements.txt
 
-#    - name: Установка ffmpeg
-#      run: |
-#        sudo apt-get update
-#        sudo apt-get install -y ffmpeg
+    - name: Установка ffmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
 
     - name: Установка необходимых моделей
       run: |
