@@ -30,3 +30,4 @@ pycryptodome>=3.9.6
 edge-tts==6.1.9
 pedalboard==0.8.9
 uvicorn==0.30.6
+requests==2.32.0
