@@ -7,16 +7,15 @@ now_dir = os.getcwd()
 assets_dir = os.path.join(now_dir, 'models', 'assets')
 hubert_base_path = os.path.join(assets_dir, 'hubert_base.pt')
 
-base_url = 'https://huggingface.co/Politrees/all_RVC-pretrained_and_other/resolve/main/HuBERTs/'
+base_url = "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 
 models = {
-    'Стандартный hubert': 'hubert_base.pt',
-    'СontentVec': 'contentvec_base.pt',
-    'Корейский hubert_base': 'korean_hubert_base.pt',
-    'Китайский hubert_base': 'chinese_hubert_base.pt',
-    'Китайский hubert_large': 'chinese_hubert_large.pt',
-    'Японский hubert_base': 'japanese_hubert_base.pt',
-    'Японский hubert_large': 'japanese_hubert_large.pt'
+    "Стандартный hubert": "hubert_base.pt",
+    "СontentVec": "contentvec_base.pt",
+    "Корейский hubert_base": "korean_hubert_base.pt",
+    "Китайский hubert_base": "chinese_hubert_base.pt",
+    "Португальский hubert_base": "portuguese_hubert_base.pt",
+    "Японский hubert_base": "japanese_hubert_base.pt",
 }
 
 def download_and_replace_model(model_desc, progress=gr.Progress()):
