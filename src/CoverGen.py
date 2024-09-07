@@ -246,11 +246,11 @@ if __name__ == '__main__':
                         clipping_threshold = gr.Slider(-20, 0, value=0, label='Порог клиппинга', info='Этот параметр устанавливает пороговое значение в децибелах, при котором начинает действовать клиппинг. Клиппинг используется для предотвращения перегрузки и искажения аудиосигнала. Если значение порога слишком низкое, то звук может стать перегруженным и искаженным.')
 
             with gr.Row():
-                with gr.Column(scale=2, min_width=100, min_height=100):
-                    generate_btn = gr.Button("Генерировать", variant='primary', scale=1, min_width=100, min_height=100)
+                with gr.Column(scale=2, min_width=100):
+                    generate_btn = gr.Button("Генерировать", variant='primary', scale=1, min_width=100)
 
                 with gr.Column(scale=5):
-                    with gr.Box():
+                    with gr.Group():
                         ai_cover = gr.Audio(label='AI-кавер', show_share_button=False)
                         with gr.Accordion("Промежуточные аудиофайлы", open=False):
                             ai_vocals = gr.Audio(label='Преобразованный Вокал', show_share_button=False)
@@ -258,9 +258,9 @@ if __name__ == '__main__':
                             backup_vocals = gr.Audio(label='Бэк вокал', show_share_button=False)
                             instrumentals = gr.Audio(label='Инструментал', show_share_button=False)
 
-                with gr.Column(scale=1, min_width=100, min_height=100):
+                with gr.Column(scale=1, min_width=100):
                     output_format = gr.Dropdown(['mp3', 'flac', 'wav'], value='mp3', label='Тип выходного файла', scale=0.5)
-                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[keep_files, use_hybrid_methods], min_width=100, min_height=100)
+                    clear_btn = gr.ClearButton(value='Сброс всех параметров', components=[keep_files, use_hybrid_methods], min_width=100)
 
 
             ref_btn.click(update_models_list, None, outputs=rvc_model)
@@ -324,7 +324,6 @@ if __name__ == '__main__':
 
     app.launch(
         share=True,
-        enable_queue=True,
         server_name=None if not args.listen else (args.listen_host or '0.0.0.0'),
         server_port=args.listen_port,
     )
