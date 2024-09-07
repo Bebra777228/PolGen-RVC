@@ -31,3 +31,4 @@ edge-tts==6.1.9
 pedalboard==0.8.9
 uvicorn==0.30.6
 requests==2.32.0
+urllib3==2.2.2
