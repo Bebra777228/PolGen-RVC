@@ -34,3 +34,4 @@ requests==2.32.0
 urllib3==2.2.2
 wget==3.2
 idna==3.8
+certifi==2023.7.22
