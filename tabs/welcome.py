@@ -43,3 +43,10 @@ def welcome_tab():
             "GitHub"  # Имя ссылки
             "</a></h2></center>"
         )
+    with gr.Column(variant='panel'):
+        gr.HTML(
+            "<center><h3>"
+            "Спасибо <a href='https://t.me/Player1444'>Player1444</a> за помощь в развитии проекта."
+            "</h3></center>"
+        )
+
