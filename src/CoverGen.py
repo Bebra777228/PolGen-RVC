@@ -25,7 +25,7 @@ def get_current_models(models_dir):
 
 def update_models_list():
     models_l = get_current_models(rvc_models_dir)
-    return gr.Dropdown.update(choices=models_l)
+    return gr.update(choices=models_l)
 
 def extract_zip(extraction_folder, zip_name):
     os.makedirs(extraction_folder)
@@ -93,7 +93,7 @@ def upload_local_model(zip_path, dir_name, progress=gr.Progress()):
         raise gr.Error(str(e))
 
 def pub_dl_autofill(pub_models, event: gr.SelectData):
-    return gr.Text.update(value=pub_models.loc[event.index[0], 'URL']), gr.Text.update(value=pub_models.loc[event.index[0], 'Model Name'])
+    return gr.update(value=pub_models.loc[event.index[0], 'URL']), gr.update(value=pub_models.loc[event.index[0], 'Model Name'])
 
 def swap_visibility():
     return gr.update(visible=True), gr.update(visible=False), gr.update(value=''), gr.update(value=None)
@@ -102,7 +102,7 @@ def process_file_upload(file):
     return file.name, gr.update(value=file.name)
 
 def show_hop_slider(pitch_detection_algo):
-    if pitch_detection_algo in ['mangio-crepe', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]']:
+    if pitch_detection_algo in ['rmvpe+', 'mangio-crepe', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]']:
         return gr.update(visible=True)
     else:
         return gr.update(visible=False)
@@ -115,9 +115,9 @@ def show_pitch_slider(pitch_detection_algo):
 
 def update_f0_method(use_hybrid_methods):
     if use_hybrid_methods:
-        return gr.Dropdown.update(choices=['hybrid[rmvpe+fcpe]', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]'], value='hybrid[rmvpe+fcpe]')
+        return gr.update(choices=['hybrid[rmvpe+fcpe]', 'hybrid[rmvpe+mangio-crepe]', 'hybrid[mangio-crepe+rmvpe]', 'hybrid[mangio-crepe+fcpe]', 'hybrid[mangio-crepe+rmvpe+fcpe]'], value='hybrid[rmvpe+fcpe]')
     else:
-        return gr.Dropdown.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+')
+        return gr.update(choices=['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+')
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Создать AI-кавер песни в директории song_output/id.', add_help=True)
@@ -179,7 +179,7 @@ if __name__ == '__main__':
                         use_hybrid_methods = gr.Checkbox(label="Использовать гибридные методы", value=False)
                         f0_method = gr.Dropdown(['rmvpe+', 'fcpe', 'rmvpe', 'mangio-crepe'], value='rmvpe+', label='Метод выделения тона')
                         use_hybrid_methods.change(update_f0_method, inputs=use_hybrid_methods, outputs=f0_method)
-                    crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=False, label='Длина шага Crepe', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
+                    crepe_hop_length = gr.Slider(8, 512, value=128, step=8, visible=True, label='Длина шага', info='Меньшие значения ведут к более длительным преобразованиям и большему риску трещин в голосе, но лучшей точности тона')
                     f0_method.change(show_hop_slider, inputs=f0_method, outputs=crepe_hop_length)
                     f0_min = gr.Slider(label="Минимальный диапазон тона:", info="Укажите минимальный диапазон тона для инференса (предсказания) в герцах. Этот параметр определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале. (ГОЛОС БУДЕТ БОЛЕЕ МЯГКИМ)", step=1, minimum=1, value=50, maximum=16000, visible=True)
                     f0_method.change(show_pitch_slider, inputs=f0_method, outputs=f0_min)
