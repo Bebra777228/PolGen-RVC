@@ -1,23 +1,17 @@
-# Основные библиотеки
 requests
 tensorboardX
 fairseq==0.12.2
 faiss-cpu==1.7.3
 numpy==1.23.5
-
-# Звуковые библиотеки
 ffmpeg-python>=0.2.0
 praat-parselmouth>=0.4.2
 pyworld==0.3.4
 torchcrepe==0.0.23
 pedalboard
 edge-tts
-
-# Оптимизация
 einops
 local-attention
-
-# Интерфейсы и облачные сервисы
 gradio==4.43.0
 mega.py
 wget
+gdown

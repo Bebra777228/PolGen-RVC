@@ -1,16 +1,16 @@
-import ffmpeg
-import numpy as np
+import librosa
+import soundfile as sf
 
 
-def load_audio(file, sr):
+def load_audio(file, sample_rate):
     try:
         file = file.strip(" ").strip('"').strip("\n").strip('"').strip(" ")
-        out, _ = (
-            ffmpeg.input(file, threads=0)
-            .output("-", format="f32le", acodec="pcm_f32le", ac=1, ar=sr)
-            .run(cmd=["ffmpeg", "-nostdin"], capture_stdout=True, capture_stderr=True)
-        )
-    except Exception as e:
-        raise RuntimeError(f"Failed to load audio: {e}")
+        audio, sr = sf.read(file)
+        if len(audio.shape) > 1:
+            audio = librosa.to_mono(audio.T)
+        if sr != sample_rate:
+            audio = librosa.resample(audio, orig_sr=sr, target_sr=sample_rate)
+    except Exception as error:
+        raise RuntimeError(f"An error occurred loading the audio: {error}")
 
-    return np.frombuffer(out, np.float32).flatten()
+    return audio.flatten()
