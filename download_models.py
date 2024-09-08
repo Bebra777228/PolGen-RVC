@@ -1,30 +1,39 @@
 import os
-from pathlib import Path
 import requests
 
-RVC_other_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/'
-RVC_hubert_DOWNLOAD_LINK = 'https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/'
+PREDICTORS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/"
+EMBEDDERS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 
-now_dir = os.getcwd()
-assets_dir = os.path.join(now_dir, 'models', 'assets')
+predictors_dir = os.path.join(os.getcwd(), "rvc", "models", "predictors")
+embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
 
 
 def dl_model(link, model_name, dir_name):
-    r = requests.get(f'{link}{model_name}', stream=True)
+    if os.path.exists(os.path.join(dir_name, model_name)):
+        print(f"{model_name} уже существует. Пропускаем установку.")
+        return
+
+    r = requests.get(f"{link}{model_name}", stream=True)
     r.raise_for_status()
-    with open(os.path.join(dir_name, model_name), 'wb') as f:
+    with open(os.path.join(dir_name, model_name), "wb") as f:
         for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
 
-if __name__ == '__main__':
-    rvc_other_names = ['rmvpe.pt', 'fcpe.pt']
-    for model in rvc_other_names:
-        print(f'Downloading {model}...')
-        dl_model(RVC_other_DOWNLOAD_LINK, model, assets_dir)
 
-    rvc_hubert_names = ['hubert_base.pt']
-    for model in rvc_hubert_names:
-        print(f'Downloading {model}...')
-        dl_model(RVC_hubert_DOWNLOAD_LINK, model, assets_dir)
+if __name__ == "__main__":
+    try:
+        predictors_names = ["rmvpe.pt", "fcpe.pt"]
+        for model in predictors_names:
+            print(f"Установка {model}...")
+            dl_model(PREDICTORS, model, predictors_dir)
 
-    print('All models downloaded!')
+        embedder_names = ["hubert_base.pt"]
+        for model in embedder_names:
+            print(f"Установка {model}...")
+            dl_model(EMBEDDERS, model, embedders_dir)
+
+        print("Все модели успешно установлены!")
+    except requests.exceptions.RequestException as e:
+        print(f"Произошла ошибка при загрузке модели: {e}")
+    except Exception as e:
+        print(f"Произошла непредвиденная ошибка: {e}")
