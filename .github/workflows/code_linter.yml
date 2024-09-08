@@ -1,0 +1,32 @@
+name: Линтер кода
+
+on:
+  push:
+    branches:
+      - dev/PolGen-Lite
+  pull_request:
+    branches:
+      - dev/PolGen-Lite
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Проверка кода
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Настройка Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Установка flake8
+        run: |
+          pip install flake8
+
+      - name: Запуск flake8
+        run: flake8 . --max-line-length 90
+        continue-on-error: true

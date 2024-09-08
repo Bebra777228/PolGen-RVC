@@ -1,0 +1,55 @@
+name: Тест ссылок
+
+on:
+  push:
+    branches:
+      - dev/PolGen-Lite
+    paths:
+      - '.github/workflows/test_links.yml'
+      - 'rvc/modules/download_source.py'
+      - 'rvc/modules/model_manager.py'
+  pull_request:
+    branches:
+      - dev/PolGen-Lite
+    paths:
+      - '.github/workflows/test_links.yml'
+      - 'rvc/modules/download_source.py'
+      - 'rvc/modules/model_manager.py'
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Проверка кода
+      uses: actions/checkout@v4
+
+    - name: Настройка Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Установка зависимостей
+      run: |
+        pip install --upgrade pip==23.1
+        pip install requests gdown mega.py gradio
+
+    - name: Google Drive
+      run: |
+        python3 -m rvc.modules.model_manager "https://drive.google.com/file/d/1lVQuCq5sQXRnAb_Z6m0nKb9305aePowy/view?usp=sharing" "test1"
+        
+    - name: HuggingFace
+      run: |
+        python3 -m rvc.modules.model_manager "https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/Victor_Tsoi.zip?download=true" "test2"
+
+    - name: Pixeldrain
+      run: |
+        python3 -m rvc.modules.model_manager "https://pixeldrain.com/u/mN7BsdZb" "test3"
+
+    - name: Mega
+      run: |
+        python3 -m rvc.modules.model_manager "https://mega.nz/file/vgMBFB5I#-ZUtYEvV-OImhRjs9b1UpFyE2lm-BuEbODD3N9b3sg4" "test4"
+
+    - name: Яндекс Диск
+      run: |
+        python3 -m rvc.modules.model_manager "https://disk.yandex.ru/d/njvq8NEQgS2OhQ" "test5"
