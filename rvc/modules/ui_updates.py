@@ -6,7 +6,7 @@ def process_file_upload(file):
 
 
 def show_hop_slider(pitch_detection_algo):
-    if pitch_detection_algo in ["rmvpe+", "mangio-crepe"]:
+    if pitch_detection_algo in ["mangio-crepe"]:
         return gr.update(visible=True)
     else:
         return gr.update(visible=False)

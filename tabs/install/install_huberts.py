@@ -35,7 +35,7 @@ def download_and_replace_model(model_name, custom_url, progress=gr.Progress()):
 
         tmp_model_path = os.path.join(embedders_dir, "tmp_model.pt")
 
-        progress(0.4, desc=f'[~] Установка модели "{model_desc}"...')
+        progress(0.4, desc=f'[~] Установка модели "{model_name}"...')
         download_file(model_url, tmp_model_path)
 
         progress(0.8, desc="[~] Удаление старой HuBERT модели...")
@@ -43,9 +43,9 @@ def download_and_replace_model(model_name, custom_url, progress=gr.Progress()):
             os.remove(hubert_base_path)
 
         os.rename(tmp_model_path, hubert_base_path)
-        return f'Модель "{model_desc}" успешно установлена.'
+        return f'Модель "{model_name}" успешно установлена.'
     except Exception as e:
-        return f'Ошибка при установке модели "{model_desc}": {str(e)}'
+        return f'Ошибка при установке модели "{model_name}": {str(e)}'
 
 
 def toggle_custom_url(checkbox_value):

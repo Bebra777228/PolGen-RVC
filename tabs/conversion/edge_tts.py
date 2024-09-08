@@ -111,7 +111,8 @@ def edge_tts_tab():
                         value=128,
                         step=8,
                         visible=False,
-                        label="Длина шага Crepe",
+                        label="Длина шага",
+                        info="Меньшие значения приводят к более длительным преобразованиям, что увеличивает риск появления артефактов в голосе, однако при этом достигается более точная передача тона.",
                     )
                     f0_method.change(
                         show_hop_slider, inputs=f0_method, outputs=hop_length
