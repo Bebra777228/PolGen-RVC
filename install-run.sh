@@ -57,6 +57,8 @@ if [ ! -d "env" ]; then
     conda activate "$INSTALL_ENV_DIR" || exit 1
     pip install --upgrade setuptools || exit 1
     pip install -r "$principal/requirements.txt" || exit 1
+    pip uninstall torch torchvision torchaudio -y
+    pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121 || exit 1
     conda deactivate
     echo "Dependencies installation complete."
     echo
