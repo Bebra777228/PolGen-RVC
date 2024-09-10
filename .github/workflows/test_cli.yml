@@ -27,9 +27,9 @@ jobs:
 
     - name: Установка зависимостей
       run: |
-        python3 -m pip install pip<24.1
-        python3 -m pip install --no-cache-dir --no-deps -r requirements-test.txt
-        python3 -m pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+        pip install pip<24.1
+        pip install --no-cache-dir --no-deps -r requirements-test.txt
+        pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
@@ -63,9 +63,9 @@ jobs:
 
     - name: Установка зависимостей
       run: |
-        python3 -m pip install pip<24.1
-        python3 -m pip install --no-cache-dir --no-deps -r requirements-test.txt
-        python3 -m pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+        pip install pip<24.1
+        pip install --no-cache-dir --no-deps -r requirements-test.txt
+        pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
