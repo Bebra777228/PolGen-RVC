@@ -27,7 +27,7 @@ jobs:
 
     - name: Установка зависимостей
       run: |
-        pip install --upgrade pip==23.1
+        pip install --upgrade pip==24.0
         pip install --no-warn-script-location --no-cache-dir --no-deps -r requirements-linux.txt
         pip install --no-warn-script-location --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
@@ -63,7 +63,7 @@ jobs:
 
     - name: Установка зависимостей
       run: |
-        pip install --upgrade pip==23.1
+        pip install --upgrade pip==24.0
         pip install --no-warn-script-location --no-cache-dir --no-deps -r requirements-linux.txt
         pip install --no-warn-script-location --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
