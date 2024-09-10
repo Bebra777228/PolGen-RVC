@@ -28,12 +28,8 @@ jobs:
     - name: Установка зависимостей
       run: |
         pip install --upgrade pip==23.1
-        pip install --no-cache-dir -r requirements.txt
-
-    - name: Установка ffmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+        pip install --no-cache-dir --no-deps -r requirements-linux.txt
+        pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
@@ -68,12 +64,8 @@ jobs:
     - name: Установка зависимостей
       run: |
         pip install --upgrade pip==23.1
-        pip install --no-cache-dir -r requirements.txt
-
-    - name: Установка ffmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+        pip install --no-cache-dir --no-deps -r requirements-linux.txt
+        pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
