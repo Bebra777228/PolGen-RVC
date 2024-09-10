@@ -28,8 +28,8 @@ jobs:
     - name: Установка зависимостей
       run: |
         pip install --upgrade pip==23.1
-        pip install --no-cache-dir --no-deps -r requirements-test.txt
-        pip install --no-cache-dir torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+        pip install --no-warn-script-location --no-cache-dir --no-deps -r requirements-test.txt
+        pip install --no-warn-script-location --no-cache-dir torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
@@ -64,8 +64,8 @@ jobs:
     - name: Установка зависимостей
       run: |
         pip install --upgrade pip==23.1
-        pip install --no-cache-dir --no-deps -r requirements-test.txt
-        pip install --no-cache-dir torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
+        pip install --no-warn-script-location --no-cache-dir --no-deps -r requirements-test.txt
+        pip install --no-warn-script-location --no-cache-dir torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
