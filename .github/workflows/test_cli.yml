@@ -27,20 +27,15 @@ jobs:
 
     - name: Установка зависимостей
       run: |
-        pip install --upgrade pip==23.1
+        pip install --upgrade pip==24.0
         pip install --no-cache-dir -r requirements.txt
-
-    - name: Установка ffmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+        pip uninstall torch torchvision torchaudio -y
+        pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
         python download_models.py
-        mkdir -p models/Tsoi
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/Tsoi/model.index
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/Tsoi/model.pth
+        python3 -m rvc.modules.model_manager "https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/Victor_Tsoi.zip?download=true" "Tsoi"
 
     - name: Установка аудио для теста
       run: |
@@ -69,20 +64,15 @@ jobs:
 
     - name: Установка зависимостей
       run: |
-        pip install --upgrade pip==23.1
+        pip install --upgrade pip==24.0
         pip install --no-cache-dir -r requirements.txt
-
-    - name: Установка ffmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+        pip uninstall torch torchvision torchaudio -y
+        pip install --no-cache-dir torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
 
     - name: Установка необходимых моделей
       run: |
         python download_models.py
-        mkdir -p models/Tsoi
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.index -O models/Tsoi/model.index
-        wget https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/model.pth -O models/Tsoi/model.pth
+        python3 -m rvc.modules.model_manager "https://huggingface.co/Politrees/Victor_Tsoi/resolve/main/Victor_Tsoi.zip?download=true" "Tsoi"
 
     - name: Запуск скрипта tts_cli
       run: |
