@@ -132,27 +132,19 @@ def edge_tts_pipeline(
     if not voice_model:
         raise ValueError("Выберите модель голоса для преобразования.")
 
+    display_progress(0, "Запуск конвейера генерации...", progress)
     tts_voice_path = os.path.join(OUTPUT_DIR, "TTS_Voice.wav")
-    tts_voice_stereo_path = os.path.join(OUTPUT_DIR, "TTS_Voice_Stereo.wav")
     tts_voice_convert_path = os.path.join(
         OUTPUT_DIR, f"TTS_Voice_Converted.{output_format}"
     )
 
-    if os.path.exists(tts_voice_convert_path):
-        os.remove(tts_voice_convert_path)
-
-    display_progress(0, "[~] Запуск конвейера генерации...", progress)
-
-    display_progress(0.2, "[~] Синтез речи...", progress)
+    display_progress(0.25, "Синтез речи...", progress)
     asyncio.run(text_to_speech(text, voice, tts_voice_path))
 
-    display_progress(0.4, "Конвертация аудио в стерео...", progress)
-    convert_to_stereo(tts_voice_path, tts_voice_stereo_path)
-
-    display_progress(0.8, "[~] Преобразование голоса...", progress)
+    display_progress(0.5, "Преобразование речи...", progress)
     voice_conversion(
         voice_model,
-        tts_voice_stereo_path,
+        tts_voice_path,
         tts_voice_convert_path,
         pitch,
         f0_method,
@@ -165,4 +157,7 @@ def edge_tts_pipeline(
         f0_max,
     )
 
-    return tts_voice_convert_path, tts_voice_stereo_path
+    display_progress(0.75, "Конвертация речи в стерео формат...", progress)
+    convert_to_stereo(tts_voice_convert_path, tts_voice_convert_path)
+
+    return tts_voice_convert_path, tts_voice_path

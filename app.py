@@ -14,7 +14,7 @@ MAX_PORT_ATTEMPTS = 10
 
 
 with gr.Blocks(
-    title="PolGen Lite - Politrees",
+    title="PolGen - Politrees",
     theme=gr.themes.Soft(
         primary_hue="green",
         secondary_hue="green",

@@ -126,21 +126,13 @@ def voice_pipeline(
     if not os.path.exists(uploaded_file):
         raise ValueError(f"Файл {uploaded_file} не найден.")
 
-    voice_stereo_path = os.path.join(OUTPUT_DIR, "Voice_Stereo.wav")
+    display_progress(0, "Запуск конвейера генерации...", progress)
     voice_convert_path = os.path.join(OUTPUT_DIR, f"Voice_Converted.{output_format}")
 
-    if os.path.exists(voice_convert_path):
-        os.remove(voice_convert_path)
-
-    display_progress(0, "[~] Запуск конвейера генерации...", progress)
-
-    display_progress(0.4, "Конвертация аудио в стерео...", progress)
-    convert_to_stereo(uploaded_file, voice_stereo_path)
-
-    display_progress(0.8, "[~] Преобразование вокала...", progress)
+    display_progress(0.4, "Преобразование голоса...", progress)
     voice_conversion(
         voice_model,
-        voice_stereo_path,
+        uploaded_file,
         voice_convert_path,
         pitch,
         f0_method,
@@ -152,5 +144,8 @@ def voice_pipeline(
         f0_min,
         f0_max,
     )
+
+    display_progress(0.8, "Конвертация голоса в стерео формат...", progress)
+    convert_to_stereo(voice_convert_path, voice_convert_path)
 
     return voice_convert_path

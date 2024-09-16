@@ -141,7 +141,6 @@ def rvc_infer(
         pitch_guidance,
         filter_radius,
         tgt_sr,
-        0,
         volume_envelope,
         version,
         protect,

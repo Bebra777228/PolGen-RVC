@@ -7,6 +7,7 @@ import faiss
 import librosa
 import numpy as np
 from scipy import signal
+from torch import Tensor
 
 from rvc.lib.predictors.FCPE import FCPEF0Predictor
 from rvc.lib.predictors.RMVPE import RMVPE0Predictor
@@ -21,14 +22,19 @@ CUTOFF_FREQUENCY = 48  # Частота среза (в Гц)
 SAMPLE_RATE = 16000  # Частота дискретизации (в Гц)
 bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE)
 
-
 input_audio_path2wav = {}
 
 
 # Класс для обработки аудио
 class AudioProcessor:
     @staticmethod
-    def change_rms(source_audio, source_rate, target_audio, target_rate, rate):
+    def change_rms(
+        source_audio: np.ndarray,
+        source_rate: int,
+        target_audio: np.ndarray,
+        target_rate: int,
+        rate: float,
+    ) -> np.ndarray:
         """
         Изменяет RMS (среднеквадратичное значение) аудио.
         """
@@ -89,11 +95,13 @@ class VC:
         """
         x = x.astype(np.float32)
         x /= np.quantile(np.abs(x), 0.999)
-        audio = torch.from_numpy(x).to(self.device, copy=True).unsqueeze(0)
+        audio = torch.from_numpy(x).to(self.device, copy=True)
+        audio = torch.unsqueeze(audio, dim=0)
         if audio.ndim == 2 and audio.shape[0] > 1:
-            audio = torch.mean(audio, dim=0, keepdim=True)
+            audio = torch.mean(audio, dim=0, keepdim=True).detach()
+        audio = audio.detach()
 
-        pitch = torchcrepe.predict(
+        pitch: Tensor = torchcrepe.predict(
             audio,
             self.sample_rate,
             hop_length,
@@ -300,7 +308,6 @@ class VC:
         pitch_guidance,
         filter_radius,
         tgt_sr,
-        resample_sr,
         volume_envelope,
         version,
         protect,
@@ -312,6 +319,7 @@ class VC:
         """
         Основной конвейер для преобразования аудио.
         """
+        index = big_npy = None
         if (
             file_index is not None
             and file_index != ""
@@ -323,9 +331,7 @@ class VC:
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as e:
                 print(f"Произошла ошибка при чтении индекса FAISS: {e}")
-                index = big_npy = None
-        else:
-            index = big_npy = None
+
         audio = signal.filtfilt(bh, ah, audio)
         audio_pad = np.pad(audio, (self.window // 2, self.window // 2), mode="reflect")
         opt_ts = []
@@ -348,14 +354,14 @@ class VC:
         audio_pad = np.pad(audio, (self.t_pad, self.t_pad), mode="reflect")
         p_len = audio_pad.shape[0] // self.window
         inp_f0 = None
-        if f0_file and hasattr(f0_file, "name"):
+        if hasattr(f0_file, "name"):
             try:
                 with open(f0_file.name, "r") as f:
                     lines = f.read().strip("\n").split("\n")
-                inp_f0 = np.array(
-                    [[float(i) for i in line.split(",")] for line in lines],
-                    dtype="float32",
-                )
+                inp_f0 = []
+                for line in lines:
+                    inp_f0.append([float(i) for i in line.split(",")])
+                inp_f0 = np.array(inp_f0, dtype="float32")
             except Exception as e:
                 print(f"Произошла ошибка при чтении файла F0: {e}")
         sid = torch.tensor(sid, device=self.device).unsqueeze(0).long()
@@ -451,14 +457,10 @@ class VC:
             audio_opt = AudioProcessor.change_rms(
                 audio, self.sample_rate, audio_opt, tgt_sr, volume_envelope
             )
-        if resample_sr >= self.sample_rate and tgt_sr != resample_sr:
-            audio_opt = librosa.resample(audio_opt, orig_sr=tgt_sr, target_sr=resample_sr)
 
         audio_max = np.abs(audio_opt).max() / 0.99
-        max_int16 = 32768
         if audio_max > 1:
-            max_int16 /= audio_max
-        audio_opt = (audio_opt * max_int16).astype(np.int16)
+            audio_opt /= audio_max
 
         del pitch, pitchf, sid
         if torch.cuda.is_available():
