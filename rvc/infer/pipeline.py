@@ -22,8 +22,6 @@ CUTOFF_FREQUENCY = 48  # Частота среза (в Гц)
 SAMPLE_RATE = 16000  # Частота дискретизации (в Гц)
 bh, ah = signal.butter(N=FILTER_ORDER, Wn=CUTOFF_FREQUENCY, btype="high", fs=SAMPLE_RATE)
 
-input_audio_path2wav = {}
-
 
 # Класс для обработки аудио
 class AudioProcessor:
@@ -153,7 +151,6 @@ class VC:
         """
         Получает F0 с использованием выбранного метода.
         """
-        global input_audio_path2wav
         f0_mel_min = 1127 * np.log(1 + f0_min / 700)
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 
@@ -319,7 +316,6 @@ class VC:
         """
         Основной конвейер для преобразования аудио.
         """
-        index = big_npy = None
         if (
             file_index is not None
             and file_index != ""
@@ -331,7 +327,9 @@ class VC:
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as e:
                 print(f"Произошла ошибка при чтении индекса FAISS: {e}")
-
+                index = big_npy = None
+        else:
+            index = big_npy = None
         audio = signal.filtfilt(bh, ah, audio)
         audio_pad = np.pad(audio, (self.window // 2, self.window // 2), mode="reflect")
         opt_ts = []
