@@ -28,10 +28,10 @@ class Generator(nn.Module):
             initial_channel, upsample_initial_channel, 7, 1, padding=3
         )
         resblock = ResBlock1 if resblock == "1" else ResBlock2
-          
+
         self.ups = nn.ModuleList()
         self.resblocks = nn.ModuleList()
-        
+
         for i, (u, k) in enumerate(zip(upsample_rates, upsample_kernel_sizes)):
             self.ups.append(
                 weight_norm(
@@ -125,14 +125,10 @@ class SineGen(nn.Module):
             f0_buf[:, :, 0] = f0[:, :, 0]
             f0_buf[:, :, 1:] = (
                 f0_buf[:, :, 0:1]
-                * torch.arange(2, self.harmonic_num + 2, device=f0.device)[
-                    None, None, :
-                ]
+                * torch.arange(2, self.harmonic_num + 2, device=f0.device)[None, None, :]
             )
             rad_values = (f0_buf / float(self.sample_rate)) % 1
-            rand_ini = torch.rand(
-                f0_buf.shape[0], f0_buf.shape[2], device=f0_buf.device
-            )
+            rand_ini = torch.rand(f0_buf.shape[0], f0_buf.shape[2], device=f0_buf.device)
             rand_ini[:, 0] = 0
             rad_values[:, 0, :] = rad_values[:, 0, :] + rand_ini
             tmp_over_one = torch.cumsum(rad_values, 1)
