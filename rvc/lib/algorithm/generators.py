@@ -28,10 +28,12 @@ class Generator(nn.Module):
             initial_channel, upsample_initial_channel, 7, 1, padding=3
         )
         resblock = ResBlock1 if resblock == "1" else ResBlock2
-
-        self.ups_and_resblocks = nn.ModuleList()
+          
+        self.ups = nn.ModuleList()
+        self.resblocks = nn.ModuleList()
+        
         for i, (u, k) in enumerate(zip(upsample_rates, upsample_kernel_sizes)):
-            self.ups_and_resblocks.append(
+            self.ups.append(
                 weight_norm(
                     nn.ConvTranspose1d(
                         upsample_initial_channel // (2**i),
@@ -46,35 +48,35 @@ class Generator(nn.Module):
             for j, (k, d) in enumerate(
                 zip(resblock_kernel_sizes, resblock_dilation_sizes)
             ):
-                self.ups_and_resblocks.append(resblock(ch, k, d))
+                self.resblocks.append(resblock(ch, k, d))
 
         self.conv_post = nn.Conv1d(ch, 1, 7, 1, padding=3, bias=False)
-        self.ups_and_resblocks.apply(init_weights)
+        self.ups.apply(init_weights)
 
         if gin_channels != 0:
             self.cond = nn.Conv1d(gin_channels, upsample_initial_channel, 1)
 
-        def forward(self, x: torch.Tensor, g: Optional[torch.Tensor] = None):
-            x = self.conv_pre(x)
-            if g is not None:
-                x = x + self.cond(g)
+    def forward(self, x: torch.Tensor, g: Optional[torch.Tensor] = None):
+        x = self.conv_pre(x)
+        if g is not None:
+            x = x + self.cond(g)
 
-            resblock_idx = 0
-            for _ in range(self.num_upsamples):
-                x = F.leaky_relu(x, LRELU_SLOPE)
-                x = self.ups_and_resblocks[resblock_idx](x)
-                resblock_idx += 1
-                xs = 0
-                for _ in range(self.num_kernels):
-                    xs += self.ups_and_resblocks[resblock_idx](x)
-                    resblock_idx += 1
-                x = xs / self.num_kernels
+        for i in range(self.num_upsamples):
+            x = F.leaky_relu(x, LRELU_SLOPE)
+            x = self.ups[i](x)
+            xs = None
+            for j in range(self.num_kernels):
+                if xs == None:
+                    xs = self.resblocks[i * self.num_kernels + j](x)
+                else:
+                    xs += self.resblocks[i * self.num_kernels + j](x)
+            x = xs / self.num_kernels
 
-            x = F.leaky_relu(x)
-            x = self.conv_post(x)
-            x = torch.tanh(x)
+        x = F.leaky_relu(x)
+        x = self.conv_post(x)
+        x = torch.tanh(x)
 
-            return x
+        return x
 
     def __prepare_scriptable__(self):
         for l in self.ups_and_resblocks:
@@ -87,8 +89,10 @@ class Generator(nn.Module):
         return self
 
     def remove_weight_norm(self):
-        for l in self.ups_and_resblocks:
-            remove_weight_norm(l)
+        for l in self.ups:
+            l.remove_weight_norm()
+        for l in self.resblocks:
+            l.remove_weight_norm()
 
 
 class SineGen(nn.Module):
@@ -121,10 +125,14 @@ class SineGen(nn.Module):
             f0_buf[:, :, 0] = f0[:, :, 0]
             f0_buf[:, :, 1:] = (
                 f0_buf[:, :, 0:1]
-                * torch.arange(2, self.harmonic_num + 2, device=f0.device)[None, None, :]
+                * torch.arange(2, self.harmonic_num + 2, device=f0.device)[
+                    None, None, :
+                ]
             )
             rad_values = (f0_buf / float(self.sample_rate)) % 1
-            rand_ini = torch.rand(f0_buf.shape[0], f0_buf.shape[2], device=f0_buf.device)
+            rand_ini = torch.rand(
+                f0_buf.shape[0], f0_buf.shape[2], device=f0_buf.device
+            )
             rand_ini[:, 0] = 0
             rad_values[:, 0, :] = rad_values[:, 0, :] + rand_ini
             tmp_over_one = torch.cumsum(rad_values, 1)
