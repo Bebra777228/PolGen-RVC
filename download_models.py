@@ -4,8 +4,8 @@ import requests
 PREDICTORS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/"
 EMBEDDERS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/"
 
-predictors_dir = os.path.join(os.getcwd(), "rvc", "models", "predictors")
-embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
+PREDICTORS_DIR = os.path.join(os.getcwd(), "rvc", "models", "predictors")
+EMBEDDERS_DIR = os.path.join(os.getcwd(), "rvc", "models", "embedders")
 
 
 def dl_model(link, model_name, dir_name):
@@ -25,12 +25,12 @@ if __name__ == "__main__":
         predictors_names = ["rmvpe.pt", "fcpe.pt"]
         for model in predictors_names:
             print(f"Установка {model}...")
-            dl_model(PREDICTORS, model, predictors_dir)
+            dl_model(PREDICTORS, model, PREDICTORS_DIR)
 
         embedder_names = ["hubert_base.pt"]
         for model in embedder_names:
             print(f"Установка {model}...")
-            dl_model(EMBEDDERS, model, embedders_dir)
+            dl_model(EMBEDDERS, model, EMBEDDERS_DIR)
 
         print("Все модели успешно установлены!")
     except requests.exceptions.RequestException as e:

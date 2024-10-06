@@ -35,10 +35,10 @@ def download_and_replace_model(model_name, custom_url, progress=gr.Progress()):
 
         tmp_model_path = os.path.join(embedders_dir, "tmp_model.pt")
 
-        progress(0.4, desc=f'[~] Установка модели "{model_name}"...')
+        progress(0.4, desc=f'Установка модели "{model_name}"...')
         download_file(model_url, tmp_model_path)
 
-        progress(0.8, desc="[~] Удаление старой HuBERT модели...")
+        progress(0.8, desc="Удаление старой HuBERT модели...")
         if os.path.exists(hubert_base_path):
             os.remove(hubert_base_path)
 
@@ -54,17 +54,11 @@ def toggle_custom_url(checkbox_value):
 
 def install_hubert_tab():
     with gr.Tab("Установка HuBERT моделей"):
-        gr.HTML(
-            "<center><h2>Если вы не меняли HuBERT при тренировке модели, "
-            "то не трогайте этот блок.</h2></center>"
-        )
         with gr.Row(variant="panel"):
             with gr.Column(variant="panel"):
                 custom_url_checkbox = gr.Checkbox(label="Другой HuBERT", value=False)
                 custom_url_textbox = gr.Textbox(label="URL модели", visible=False)
-                hubert_model_dropdown = gr.Dropdown(
-                    models, label="HuBERT модели:", visible=True
-                )
+                hubert_model_dropdown = gr.Dropdown(models, label="HuBERT модели:", visible=True)
             hubert_download_btn = gr.Button("Скачать", variant="primary")
         hubert_output_message = gr.Text(label="Сообщение вывода", interactive=False)
 

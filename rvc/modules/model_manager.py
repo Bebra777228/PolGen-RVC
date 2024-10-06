@@ -81,7 +81,7 @@ def rename_and_cleanup(extraction_folder, model_filepath, index_filepath):
 # Основная функция для скачивания модели по ссылке и распаковки zip-файла
 def download_from_url(url, dir_name, progress=gr.Progress()):
     try:
-        progress(0, desc=f"[~] Загрузка голосовой модели {dir_name}...")
+        progress(0, desc=f"Загрузка голосовой модели {dir_name}...")
         zip_name = os.path.join(rvc_models_dir, dir_name + ".zip")
         extraction_folder = os.path.join(rvc_models_dir, dir_name)
         if os.path.exists(extraction_folder):
@@ -92,9 +92,9 @@ def download_from_url(url, dir_name, progress=gr.Progress()):
             )
 
         download_file(url, zip_name, progress)  # Скачивание файла
-        progress(0.8, desc="[~] Распаковка zip-файла...")
+        progress(0.8, desc="Распаковка zip-файла...")
         extract_zip(extraction_folder, zip_name)  # Распаковка zip-файла
-        return f"[+] Модель {dir_name} успешно загружена!"
+        return f"Модель {dir_name} успешно загружена!"
     except Exception as e:
         # Обработка ошибок при загрузке модели
         raise gr.Error(f"Ошибка при загрузке модели: {str(e)}")
@@ -111,9 +111,9 @@ def upload_zip_file(zip_path, dir_name, progress=gr.Progress()):
             )
 
         zip_name = zip_path.name
-        progress(0.8, desc="[~] Распаковка zip-файла...")
+        progress(0.8, desc="Распаковка zip-файла...")
         extract_zip(extraction_folder, zip_name)  # Распаковка zip-файла
-        return f"[+] Модель {dir_name} успешно загружена!"
+        return f"Модель {dir_name} успешно загружена!"
     except Exception as e:
         # Обработка ошибок при загрузке и распаковке
         raise gr.Error(f"Ошибка при загрузке модели: {str(e)}")
@@ -142,7 +142,7 @@ def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()
                 extraction_folder, os.path.basename(index_file.name)
             )
             shutil.copyfile(index_file.name, index_path)
-        return f"[+] Модель {dir_name} успешно загружена!"
+        return f"Модель {dir_name} успешно загружена!"
     except Exception as e:
         # Обработка ошибок при загрузке файлов
         raise gr.Error(f"Ошибка при загрузке модели: {str(e)}")

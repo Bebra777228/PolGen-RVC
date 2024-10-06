@@ -15,6 +15,7 @@ MAX_PORT_ATTEMPTS = 10
 
 with gr.Blocks(
     title="PolGen - Politrees",
+    css="footer{display:none !important}",
     theme=gr.themes.Soft(
         primary_hue="green",
         secondary_hue="green",
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         except OSError:
             print(
                 f"Не удалось запустить на порту {port}, "
-                "повторите попытку на порту {port - 1}..."
+                f"повторите попытку на порту {port - 1}..."
             )
             port -= 1
         except Exception as error:

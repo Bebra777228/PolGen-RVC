@@ -154,7 +154,7 @@ def process_audio(
     if os.path.exists(aicover_path):
         os.remove(aicover_path)
 
-    display_progress(0, "[~] Запуск конвейера генерации...", progress)
+    display_progress(0, "Запуск конвейера генерации...", progress)
 
     display_progress(0.2, "Конвертация аудио в стерео...", progress)
     convert_to_stereo(vocal_audio_path, voice_stereo_path)

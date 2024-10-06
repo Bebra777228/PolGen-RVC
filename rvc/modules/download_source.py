@@ -29,7 +29,7 @@ def download_file(url, zip_name, progress):
 
 # Скачивание файла с Google Drive с помощью библиотеки gdown
 def download_from_google_drive(url, zip_name, progress):
-    progress(0.5, desc="[~] Загрузка модели с Google Drive...")
+    progress(0.5, desc="Загрузка модели с Google Drive...")
     file_id = (
         url.split("file/d/")[1].split("/")[0]  # Извлекаем ID файла
         if "file/d/" in url
@@ -40,13 +40,13 @@ def download_from_google_drive(url, zip_name, progress):
 
 # Скачивание файла с HuggingFace через urllib
 def download_from_huggingface(url, zip_name, progress):
-    progress(0.5, desc="[~] Загрузка модели с HuggingFace...")
+    progress(0.5, desc="Загрузка модели с HuggingFace...")
     urllib.request.urlretrieve(url, zip_name)
 
 
 # Скачивание файла с Pixeldrain через API
 def download_from_pixeldrain(url, zip_name, progress):
-    progress(0.5, desc="[~] Загрузка модели с Pixeldrain...")
+    progress(0.5, desc="Загрузка модели с Pixeldrain...")
     file_id = url.split("pixeldrain.com/u/")[1]  # Извлекаем ID файла
     response = requests.get(f"https://pixeldrain.com/api/file/{file_id}")
     with open(zip_name, "wb") as f:
@@ -55,14 +55,14 @@ def download_from_pixeldrain(url, zip_name, progress):
 
 # Скачивание файла с Mega через библиотеку Mega
 def download_from_mega(url, zip_name, progress):
-    progress(0.5, desc="[~] Загрузка модели с Mega...")
+    progress(0.5, desc="Загрузка модели с Mega...")
     m = Mega()
     m.download_url(url, dest_filename=str(zip_name))
 
 
 # Скачивание файла с Яндекс Диска через публичное API
 def download_from_yandex(url, zip_name, progress):
-    progress(0.5, desc="[~] Загрузка модели с Яндекс Диска...")
+    progress(0.5, desc="Загрузка модели с Яндекс Диска...")
     yandex_public_key = f"download?public_key={url}"  # Формируем публичный ключ
     yandex_api_url = (
         f"https://cloud-api.yandex.net/v1/disk/public/resources/{yandex_public_key}"
