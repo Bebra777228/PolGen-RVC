@@ -14,7 +14,10 @@ def url_download():
                 link = gr.Text(label="Ссылка на загрузку модели")
             with gr.Column(variant="panel"):
                 with gr.Group():
-                    model_name = gr.Text(label="Имя модели", info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.")
+                    model_name = gr.Text(
+                        label="Имя модели",
+                        info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.",
+                    )
                     download_btn = gr.Button("Загрузить модель", variant="primary")
 
         gr.HTML(
@@ -40,10 +43,15 @@ def zip_upload():
     with gr.Tab("Загрузить ZIP архивом"):
         with gr.Row(equal_height=False):
             with gr.Column():
-                zip_file = gr.File(label="Zip-файл", file_types=[".zip"], file_count="single")
+                zip_file = gr.File(
+                    label="Zip-файл", file_types=[".zip"], file_count="single"
+                )
             with gr.Column(variant="panel"):
                 with gr.Group():
-                    model_name = gr.Text(label="Имя модели", info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.")
+                    model_name = gr.Text(
+                        label="Имя модели",
+                        info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.",
+                    )
                     upload_btn = gr.Button("Загрузить модель", variant="primary")
 
         output_message = gr.Text(label="Сообщение вывода", interactive=False)
@@ -57,11 +65,18 @@ def zip_upload():
 def files_upload():
     with gr.Tab("Загрузить файлами"):
         with gr.Row(equal_height=False):
-            pth_file = gr.File(label="pth-файл", file_types=[".pth"], file_count="single")
-            index_file = gr.File(label="index-файл", file_types=[".index"], file_count="single")
+            pth_file = gr.File(
+                label="pth-файл", file_types=[".pth"], file_count="single"
+            )
+            index_file = gr.File(
+                label="index-файл", file_types=[".index"], file_count="single"
+            )
         with gr.Column(variant="panel"):
             with gr.Group():
-                model_name = gr.Text(label="Имя модели", info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.")
+                model_name = gr.Text(
+                    label="Имя модели",
+                    info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.",
+                )
                 upload_btn = gr.Button("Загрузить модель", variant="primary")
 
         output_message = gr.Text(label="Сообщение вывода", interactive=False)
