@@ -176,7 +176,9 @@ class ConvBlockRes(nn.Module):
 
 
 class ResEncoderBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, n_blocks=1, momentum=0.01):
+    def __init__(
+        self, in_channels, out_channels, kernel_size, n_blocks=1, momentum=0.01
+    ):
         super(ResEncoderBlock, self).__init__()
         self.conv = nn.ModuleList(
             [

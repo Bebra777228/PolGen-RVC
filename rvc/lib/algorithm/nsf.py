@@ -59,7 +59,9 @@ class GeneratorNSF(nn.Module):
         self.num_kernels = len(resblock_kernel_sizes)
         self.num_upsamples = len(upsample_rates)
         self.f0_upsamp = nn.Upsample(scale_factor=math.prod(upsample_rates))
-        self.m_source = SourceModuleHnNSF(sample_rate=sr, harmonic_num=0, is_half=is_half)
+        self.m_source = SourceModuleHnNSF(
+            sample_rate=sr, harmonic_num=0, is_half=is_half
+        )
 
         self.conv_pre = nn.Conv1d(
             initial_channel, upsample_initial_channel, 7, 1, padding=3
@@ -70,7 +72,8 @@ class GeneratorNSF(nn.Module):
         self.noise_convs = nn.ModuleList()
 
         channels = [
-            upsample_initial_channel // (2 ** (i + 1)) for i in range(len(upsample_rates))
+            upsample_initial_channel // (2 ** (i + 1))
+            for i in range(len(upsample_rates))
         ]
         stride_f0s = [
             math.prod(upsample_rates[i + 1 :]) if i + 1 < len(upsample_rates) else 1
