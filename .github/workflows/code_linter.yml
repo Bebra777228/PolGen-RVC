@@ -28,5 +28,5 @@ jobs:
           pip install flake8
 
       - name: Запуск flake8
-        run: flake8 . --max-line-length 90
+        run: flake8 .
         continue-on-error: true
