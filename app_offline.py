@@ -37,6 +37,7 @@ with gr.Blocks(
         zip_upload()
         files_upload()
 
+
 def launch(port):
     PolGen.launch(
         favicon_path=os.path.join(os.getcwd(), "assets", "logo.ico"),

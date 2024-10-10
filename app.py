@@ -46,6 +46,7 @@ with gr.Blocks(
         with gr.Tab("Загрузка HuBERT моделей"):
             install_hubert_tab()
 
+
 def launch(port):
     PolGen.launch(
         favicon_path=os.path.join(os.getcwd(), "assets", "logo.ico"),
