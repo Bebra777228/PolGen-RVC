@@ -8,9 +8,8 @@ echo $title
 principal=$(pwd)
 CONDA_ROOT_PREFIX="$HOME/miniconda3"
 INSTALL_ENV_DIR="$principal/env"
-MINICONDA_DOWNLOAD_URL="https://repo.anaconda.com/miniconda/Miniconda3-py39_23.9.0-0-Linux-x86_64.sh"
+MINICONDA_DOWNLOAD_URL="https://repo.anaconda.com/miniconda/Miniconda3-py310_24.7.1-0-Linux-x86_64.sh"
 CONDA_EXECUTABLE="$CONDA_ROOT_PREFIX/bin/conda"
-PYTHON_VERSION_REQUIRED="3.10"
 step=1
 
 # Function to handle errors
@@ -29,31 +28,6 @@ if ping -c 1 google.com &> /dev/null; then
 else
     echo "No internet connection detected."
     INTERNET_AVAILABLE=0
-fi
-echo
-step=$((step + 1))
-
-# Check Python version
-echo "[~!$step~] - Checking Python version..."
-if ! command -v python &> /dev/null; then
-    echo "Python is not installed on your system. Please install Python $PYTHON_VERSION_REQUIRED and try again."
-    error
-fi
-
-PYTHON_VERSION=$(python -V 2>&1 | grep -Po '(?<=Python )[0-9]+\.[0-9]+' | cut -d. -f2)
-if [ "$PYTHON_VERSION" != "10" ]; then
-    echo "Unsupported Python version detected: 3.$PYTHON_VERSION"
-    echo
-    while true; do
-        read -p "Your Python version is not $PYTHON_VERSION_REQUIRED. The program may not work correctly. Continue anyway? (y/n): " CONTINUE
-        case $CONTINUE in
-            [Yy]* ) echo "Continuing with the script..."; break;;
-            [Nn]* ) echo "Exiting the script..."; error;;
-            * ) echo "Invalid input. Please enter 'y' or 'n'.";;
-        esac
-    done
-else
-    echo "Compatible Python version detected. Proceeding with the script..."
 fi
 echo
 step=$((step + 1))
@@ -84,7 +58,7 @@ if [ ! -d "env" ]; then
     step=$((step + 1))
 
     echo "[~!$step~] - Creating Conda environment..."
-    $CONDA_EXECUTABLE create --no-shortcuts -y -k --prefix "$INSTALL_ENV_DIR" python=3.9
+    $CONDA_EXECUTABLE create --no-shortcuts -y -k --prefix "$INSTALL_ENV_DIR" python=3.10
     if [ $? -ne 0 ]; then
         error
     fi

@@ -4,9 +4,8 @@ title PolGen
 set "principal=%cd%"
 set "CONDA_ROOT_PREFIX=%UserProfile%\Miniconda3"
 set "INSTALL_ENV_DIR=%principal%\env"
-set "MINICONDA_DOWNLOAD_URL=https://repo.anaconda.com/miniconda/Miniconda3-py39_23.9.0-0-Windows-x86_64.exe"
+set "MINICONDA_DOWNLOAD_URL=https://repo.anaconda.com/miniconda/Miniconda3-py310_24.7.1-0-Windows-x86_64.exe"
 set "CONDA_EXECUTABLE=%CONDA_ROOT_PREFIX%\Scripts\conda.exe"
-set "PYTHON_VERSION_REQUIRED=3.10"
 set "step=1"
 
 :check_internet_connection
@@ -18,36 +17,6 @@ if errorlevel 1 (
 ) else (
     echo Internet connection is available.
     set "INTERNET_AVAILABLE=1"
-)
-echo.
-set /a step+=1
-
-:check_python_version
-echo [~!step!~] - Checking Python version...
-where python >nul 2>&1
-if errorlevel 1 (
-    echo Python is not installed on your system. Please install Python %PYTHON_VERSION_REQUIRED% and try again.
-    goto :error
-)
-
-for /f "tokens=2 delims==." %%a in ('python -V 2^>^&1 ^| findstr /i "Python"') do set "PYTHON_VERSION=%%a"
-if "%PYTHON_VERSION%" neq "10" (
-    echo Unsupported Python version detected: 3.%PYTHON_VERSION%
-    echo.
-    :prompt_continue
-    set /p "CONTINUE=Your Python version is not %PYTHON_VERSION_REQUIRED%. The program may not work correctly. Continue anyway? (y/n): "
-    if /i "!CONTINUE!"=="y" (
-        echo Continuing with the script...
-    ) else if /i "!CONTINUE!"=="n" (
-        echo Exiting the script...
-        goto :error
-    ) else (
-        echo Invalid input. Please enter 'y' or 'n'.
-		echo.
-        goto :prompt_continue
-    )
-) else (
-    echo Compatible Python version detected. Proceeding with the script...
 )
 echo.
 set /a step+=1
@@ -78,7 +47,7 @@ if not exist env (
     set /a step+=1
 
     echo [~!step!~] - Creating Conda environment...
-    call "%CONDA_ROOT_PREFIX%\_conda.exe" create --no-shortcuts -y -k --prefix "%INSTALL_ENV_DIR%" python=3.9
+    call "%CONDA_ROOT_PREFIX%\_conda.exe" create --no-shortcuts -y -k --prefix "%INSTALL_ENV_DIR%" python=3.10
     if errorlevel 1 goto :error
     echo Conda environment created successfully.
     echo.
