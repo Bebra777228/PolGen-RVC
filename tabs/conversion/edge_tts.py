@@ -5,8 +5,6 @@ from rvc.scripts.edge_tts_conversion import edge_tts_pipeline
 from rvc.modules.model_manager import get_folders, update_models_list
 from rvc.modules.ui_updates import show_hop_slider
 
-from tabs.install.install_huberts import install_hubert_tab
-
 rvc_models_dir = os.path.join(os.getcwd(), "models")
 voice_models = get_folders(rvc_models_dir)
 
@@ -94,7 +92,7 @@ def edge_tts_tab():
                 scale=1,
             )
 
-    with gr.Tab("Настройки преобразования"):
+    with gr.Accordion("Настройки преобразования", open=False):
         with gr.Accordion("Стандартные настройки", open=False):
             with gr.Group():
                 with gr.Column(variant="panel"):
@@ -170,8 +168,6 @@ def edge_tts_tab():
                         label="Максимальный диапазон тона",
                         info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.",
                     )
-
-    install_hubert_tab()
 
     ref_btn.click(update_models_list, None, outputs=rvc_model)
     generate_btn.click(

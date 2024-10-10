@@ -1,7 +1,10 @@
+# Main libraries
 requests
 tensorboardX
 fairseq==0.12.2
 faiss-cpu==1.7.3
+
+# Audio libraries
 numpy==1.23.5
 ffmpeg-python>=0.2.0
 praat-parselmouth>=0.4.2
@@ -9,9 +12,13 @@ pyworld==0.3.4
 torchcrepe==0.0.23
 pedalboard
 edge-tts
+
+# Optimization
 einops
 local-attention
-gradio==4.43.0
+
+# Interfaces and cloud services
+gradio==5.0.1
 mega.py
 wget
 gdown

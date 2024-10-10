@@ -13,10 +13,12 @@ set "step=1"
 echo [~!step!~] - Checking internet connection...
 ping -n 1 google.com >nul 2>&1
 if errorlevel 1 (
-    echo No internet connection detected. Please check your connection and try again.
-    goto :error
+    echo No internet connection detected.
+    set "INTERNET_AVAILABLE=0"
+) else (
+    echo Internet connection is available.
+    set "INTERNET_AVAILABLE=1"
 )
-echo Internet connection is available.
 echo.
 set /a step+=1
 
@@ -92,7 +94,7 @@ if not exist env (
     set /a step+=1
 
     echo [!step!] - Installing dependencies...
-    "%INSTALL_ENV_DIR%\python.exe" -m pip install --no-warn-script-location --no-deps -r requirements-win.txt
+    "%INSTALL_ENV_DIR%\python.exe" -m pip install --no-warn-script-location --no-deps -r requirements.txt
     "%INSTALL_ENV_DIR%\python.exe" -m pip uninstall torch torchvision torchaudio -y
     "%INSTALL_ENV_DIR%\python.exe" -m pip install --no-warn-script-location torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
     if errorlevel 1 goto :error
@@ -101,8 +103,6 @@ if not exist env (
     echo.
     set /a step+=1
 )
-
-"%INSTALL_ENV_DIR%\python.exe" -m pip install --no-warn-script-location watchdog
 
 echo [~!step!~] - Checking for required models...
 set "hubert_base=%principal%\rvc\models\embedders\hubert_base.pt"
@@ -125,7 +125,13 @@ echo.
 set /a step+=1
 
 echo [~!step!~] - Running Interface...
-env\python app.py --open
+if "%INTERNET_AVAILABLE%"=="1" (
+    echo Running app.py...
+    env\python app.py --open
+) else (
+    echo Running app_offline.py...
+    env\python app_offline.py --open
+)
 if errorlevel 1 goto :error
 set /a step+=1
 

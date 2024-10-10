@@ -5,76 +5,146 @@ set -e
 title="PolGen"
 echo $title
 
-if [ ! -d "env" ]; then
-    principal=$(pwd)
-    CONDA_ROOT_PREFIX="$HOME/miniconda3"
-    INSTALL_ENV_DIR="$principal/env"
-    MINICONDA_DOWNLOAD_URL="https://repo.anaconda.com/miniconda/Miniconda3-py39_23.9.0-0-Linux-x86_64.sh"
-    CONDA_EXECUTABLE="$CONDA_ROOT_PREFIX/bin/conda"
+principal=$(pwd)
+CONDA_ROOT_PREFIX="$HOME/miniconda3"
+INSTALL_ENV_DIR="$principal/env"
+MINICONDA_DOWNLOAD_URL="https://repo.anaconda.com/miniconda/Miniconda3-py39_23.9.0-0-Linux-x86_64.sh"
+CONDA_EXECUTABLE="$CONDA_ROOT_PREFIX/bin/conda"
+PYTHON_VERSION_REQUIRED="3.10"
+step=1
 
+# Function to handle errors
+error() {
+    echo "An error occurred during the process. Exiting the script..."
+    read -p "Press any key to continue..." -n1 -s
+    exit 1
+}
+trap error ERR
+
+# Check internet connection
+echo "[~!$step~] - Checking internet connection..."
+if ping -c 1 google.com &> /dev/null; then
+    echo "Internet connection is available."
+    INTERNET_AVAILABLE=1
+else
+    echo "No internet connection detected."
+    INTERNET_AVAILABLE=0
+fi
+echo
+step=$((step + 1))
+
+# Check Python version
+echo "[~!$step~] - Checking Python version..."
+if ! command -v python &> /dev/null; then
+    echo "Python is not installed on your system. Please install Python $PYTHON_VERSION_REQUIRED and try again."
+    error
+fi
+
+PYTHON_VERSION=$(python -V 2>&1 | grep -Po '(?<=Python )[0-9]+\.[0-9]+' | cut -d. -f2)
+if [ "$PYTHON_VERSION" != "10" ]; then
+    echo "Unsupported Python version detected: 3.$PYTHON_VERSION"
+    echo
+    while true; do
+        read -p "Your Python version is not $PYTHON_VERSION_REQUIRED. The program may not work correctly. Continue anyway? (y/n): " CONTINUE
+        case $CONTINUE in
+            [Yy]* ) echo "Continuing with the script..."; break;;
+            [Nn]* ) echo "Exiting the script..."; error;;
+            * ) echo "Invalid input. Please enter 'y' or 'n'.";;
+        esac
+    done
+else
+    echo "Compatible Python version detected. Proceeding with the script..."
+fi
+echo
+step=$((step + 1))
+
+if [ ! -d "env" ]; then
+    echo "[~!$step~] - Checking for Miniconda installation..."
     if [ ! -f "$CONDA_EXECUTABLE" ]; then
-        echo "Miniconda not found. Starting download and installation..."
+        echo "Miniconda is not installed. Starting download and installation..."
         echo "Downloading Miniconda..."
         curl -o miniconda.sh $MINICONDA_DOWNLOAD_URL
         if [ ! -f "miniconda.sh" ]; then
-            echo "Download failed. Please check your internet connection and try again."
-            exit 1
+            echo "Miniconda download failed. Please check your internet connection and try again."
+            error
         fi
 
         echo "Installing Miniconda..."
         bash miniconda.sh -b -p $CONDA_ROOT_PREFIX
         if [ $? -ne 0 ]; then
             echo "Miniconda installation failed."
-            exit 1
+            error
         fi
         rm miniconda.sh
-        echo "Miniconda installation complete."
+        echo "Miniconda installation completed successfully."
     else
-        echo "Miniconda already installed. Skipping installation."
+        echo "Miniconda is already installed. Skipping installation."
     fi
     echo
+    step=$((step + 1))
 
-    echo "Creating Conda environment..."
+    echo "[~!$step~] - Creating Conda environment..."
     $CONDA_EXECUTABLE create --no-shortcuts -y -k --prefix "$INSTALL_ENV_DIR" python=3.9
     if [ $? -ne 0 ]; then
-        exit 1
+        error
     fi
     echo "Conda environment created successfully."
     echo
+    step=$((step + 1))
 
+    echo "[~!$step~] - Installing specific pip version..."
     if [ -f "$INSTALL_ENV_DIR/bin/python" ]; then
-        echo "Installing specific pip version..."
         $INSTALL_ENV_DIR/bin/python -m pip install "pip<24.1"
         if [ $? -ne 0 ]; then
-            exit 1
+            error
         fi
-        echo "Pip installation complete."
+        echo "Pip installed successfully."
         echo
     fi
+    step=$((step + 1))
 
-    echo "Installing dependencies..."
+    echo "[~!$step~] - Installing dependencies..."
     source "$CONDA_ROOT_PREFIX/etc/profile.d/conda.sh"
-    conda activate "$INSTALL_ENV_DIR" || exit 1
-    pip install --upgrade setuptools || exit 1
-    pip install -r "$principal/requirements.txt" || exit 1
+    conda activate "$INSTALL_ENV_DIR" || error
+    pip install --upgrade setuptools || error
+    pip install -r "$principal/requirements-win.txt" || error
     pip uninstall torch torchvision torchaudio -y
-    pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121 || exit 1
+    pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121 || error
     conda deactivate
-    echo "Dependencies installation complete."
+    echo "Dependencies installed successfully."
     echo
+    step=$((step + 1))
 fi
 
-$INSTALL_ENV_DIR/bin/python download_models.py
-echo
+echo "[~!$step~] - Checking for required models..."
+hubert_base="$principal/rvc/models/embedders/hubert_base.pt"
+fcpe="$principal/rvc/models/predictors/fcpe.pt"
+rmvpe="$principal/rvc/models/predictors/rmvpe.pt"
 
-$INSTALL_ENV_DIR/bin/python app.py --open
+if [ ! -f "$hubert_base" ] || [ ! -f "$fcpe" ] || [ ! -f "$rmvpe" ]; then
+    echo "Required models were not found. Installing models..."
+    echo
+    $INSTALL_ENV_DIR/bin/python download_models.py
+    if [ $? -ne 0 ]; then
+        error
+    fi
+fi
 echo
+step=$((step + 1))
+
+echo "[~!$step~] - Running Interface..."
+if [ "$INTERNET_AVAILABLE" == "1" ]; then
+    echo "Running app.py..."
+    $INSTALL_ENV_DIR/bin/python app.py --open
+else
+    echo "Running app_offline.py..."
+    $INSTALL_ENV_DIR/bin/python app_offline.py --open
+fi
+if [ $? -ne 0 ]; then
+    error
+fi
+step=$((step + 1))
+
+echo "Script completed successfully."
 read -p "Press any key to continue..." -n1 -s
 exit 0
-
-error() {
-    echo "An error occurred during installation. Please check the output above for details."
-    read -p "Press any key to continue..." -n1 -s
-    exit 1
-}
-trap error ERR

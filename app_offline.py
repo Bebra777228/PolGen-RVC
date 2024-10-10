@@ -4,10 +4,8 @@ import gradio as gr
 
 from tabs.welcome import welcome_tab
 from tabs.conversion.conversion import conversion_tab
-from tabs.conversion.edge_tts import edge_tts_tab
 from tabs.processing.processing import processing_tab
-from tabs.install.install_models import url_download, zip_upload, files_upload
-from tabs.install.install_huberts import install_hubert_tab
+from tabs.install.install_models import zip_upload, files_upload
 
 DEFAULT_PORT = 4000
 MAX_PORT_ATTEMPTS = 10
@@ -35,16 +33,9 @@ with gr.Blocks(
         with gr.Tab("Объединение/Обработка"):
             processing_tab()
 
-    with gr.Tab("Преобразование текста в речь (TTS)"):
-        edge_tts_tab()
-
-    with gr.Tab("Загрузка моделей"):
-        with gr.Tab("Загрузка RVC моделей"):
-            url_download()
-            zip_upload()
-            files_upload()
-        with gr.Tab("Загрузка HuBERT моделей"):
-            install_hubert_tab()
+    with gr.Tab("Загрузка RVC моделей"):
+        zip_upload()
+        files_upload()
 
 def launch(port):
     PolGen.launch(

@@ -1,7 +1,7 @@
 import os
 import re
 import shutil
-import urllib.request
+import requests
 import gradio as gr
 
 embedders_dir = os.path.join(os.getcwd(), "rvc", "models", "embedders")
@@ -20,8 +20,11 @@ models = [
 
 
 def download_file(url, destination):
-    with urllib.request.urlopen(url) as response, open(destination, "wb") as out_file:
-        shutil.copyfileobj(response, out_file)
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    with open(destination, "wb") as out_file:
+        for chunk in response.iter_content(chunk_size=8192):
+            out_file.write(chunk)
 
 
 def download_and_replace_model(model_name, custom_url, progress=gr.Progress()):
@@ -53,22 +56,21 @@ def toggle_custom_url(checkbox_value):
 
 
 def install_hubert_tab():
-    with gr.Tab("Установка HuBERT моделей"):
-        with gr.Row(variant="panel"):
-            with gr.Column(variant="panel"):
-                custom_url_checkbox = gr.Checkbox(label="Другой HuBERT", value=False)
-                custom_url_textbox = gr.Textbox(label="URL модели", visible=False)
-                hubert_model_dropdown = gr.Dropdown(
-                    models, label="HuBERT модели:", visible=True
-                )
-            hubert_download_btn = gr.Button("Скачать", variant="primary")
-        hubert_output_message = gr.Text(label="Сообщение вывода", interactive=False)
+    with gr.Row(variant="panel"):
+        with gr.Column(variant="panel"):
+            custom_url_checkbox = gr.Checkbox(label="Другой HuBERT", value=False)
+            custom_url_textbox = gr.Textbox(label="URL модели", visible=False)
+            hubert_model_dropdown = gr.Dropdown(
+                models, label="HuBERT модели:", visible=True
+            )
+        hubert_download_btn = gr.Button("Скачать", variant="primary")
+    hubert_output_message = gr.Text(label="Сообщение вывода", interactive=False)
 
-        custom_url_checkbox.change(
-            toggle_custom_url,
-            inputs=custom_url_checkbox,
-            outputs=[custom_url_textbox, hubert_model_dropdown],
-        )
+    custom_url_checkbox.change(
+        toggle_custom_url,
+        inputs=custom_url_checkbox,
+        outputs=[custom_url_textbox, hubert_model_dropdown],
+    )
 
     hubert_download_btn.click(
         download_and_replace_model,
