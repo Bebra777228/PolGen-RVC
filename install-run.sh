@@ -81,7 +81,7 @@ if [ ! -d "env" ]; then
     source "$CONDA_ROOT_PREFIX/etc/profile.d/conda.sh"
     conda activate "$INSTALL_ENV_DIR" || error
     pip install --upgrade setuptools || error
-    pip install -r "$principal/requirements-win.txt" || error
+    pip install -r "$principal/requirements.txt" || error
     pip uninstall torch torchvision torchaudio -y
     pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121 || error
     conda deactivate
