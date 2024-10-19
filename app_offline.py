@@ -5,11 +5,12 @@ import gradio as gr
 from tabs.welcome import welcome_tab
 from tabs.conversion.conversion import conversion_tab
 from tabs.processing.processing import processing_tab
-from tabs.install.install_models import zip_upload, files_upload
+from tabs.install.install_models import zip_upload, files_upload, output_message
 
 DEFAULT_PORT = 4000
 MAX_PORT_ATTEMPTS = 10
 
+output_message_component = output_message()
 
 with gr.Blocks(
     title="PolGen - Politrees",
@@ -34,8 +35,9 @@ with gr.Blocks(
             processing_tab()
 
     with gr.Tab("Загрузка RVC моделей"):
-        zip_upload()
-        files_upload()
+        zip_upload(output_message_component)
+        files_upload(output_message_component)
+        output_message_component.render()
 
 
 def launch(port):

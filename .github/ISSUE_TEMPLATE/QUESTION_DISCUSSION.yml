@@ -1,0 +1,20 @@
+name: Ask/Discuss
+description: Ask questions or give a topic for discussion
+title: "[Question/Discussion]: "
+labels: ["Question", "Discussion"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Have you looked at the existing questions and discussions already?
+      description: Please check to see if a similar question or discussion has already been started.
+      options:
+        - label: I searched and found no questions or discussions similar to mine
+          required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Clearly and concisely describe your question or discussion topic.
+      placeholder: Tell us your question or topic for discussion.
+    validations:
+      required: true

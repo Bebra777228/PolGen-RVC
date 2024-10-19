@@ -157,7 +157,8 @@ def edge_tts_pipeline(
         f0_max,
     )
 
-    display_progress(0.75, "Конвертация речи в стерео формат...", progress)
+    device = "CUDA" if torch.cuda.is_available() else "CPU"
+    display_progress(0.75, f"Конвертация речи в стерео формат ({device})...", progress)
     convert_to_stereo(tts_voice_convert_path, tts_voice_convert_path)
 
     return tts_voice_convert_path, tts_voice_path

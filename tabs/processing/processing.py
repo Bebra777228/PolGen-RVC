@@ -141,7 +141,6 @@ def processing_tab():
             instrumental_gain = gr.Slider(
                 value=0, step=1, minimum=-10, maximum=10, label="Инструментал", scale=3
             )
-            clear_btn = gr.Button("Сбросить все эффекты", visible=False, scale=1)
 
         use_effects = gr.Checkbox(label="Добавить эффекты на голос", value=False)
         with gr.Column(variant="panel", visible=False) as effects_accordion:
@@ -318,7 +317,7 @@ def processing_tab():
                                 )
 
     use_effects.change(
-        show_effects, inputs=use_effects, outputs=[effects_accordion, clear_btn]
+        show_effects, inputs=use_effects, outputs=effects_accordion
     )
     process_btn.click(
         process_audio,
@@ -349,48 +348,4 @@ def processing_tab():
             use_effects,
         ],
         outputs=[ai_cover],
-    )
-
-    default_values = [
-        0.1,
-        1.0,
-        0.1,
-        0.8,
-        0.9,
-        0,
-        0,
-        0,
-        0,
-        0,
-        4,
-        -12,
-        0,
-        0,
-        -40,
-        8,
-        10,
-        100,
-    ]
-    clear_btn.click(
-        lambda: default_values,
-        outputs=[
-            reverb_rm_size,
-            reverb_width,
-            reverb_wet,
-            reverb_dry,
-            reverb_damping,
-            chorus_rate_hz,
-            chorus_depth,
-            chorus_centre_delay_ms,
-            chorus_feedback,
-            chorus_mix,
-            compressor_ratio,
-            compressor_threshold,
-            low_shelf_gain,
-            high_shelf_gain,
-            noise_gate_threshold,
-            noise_gate_ratio,
-            noise_gate_attack,
-            noise_gate_release,
-        ],
     )

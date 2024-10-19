@@ -65,7 +65,7 @@ if not exist env (
     echo [!step!] - Installing dependencies...
     "%INSTALL_ENV_DIR%\python.exe" -m pip install --no-warn-script-location -r requirements.txt
     "%INSTALL_ENV_DIR%\python.exe" -m pip uninstall torch torchvision torchaudio -y
-    "%INSTALL_ENV_DIR%\python.exe" -m pip install --no-warn-script-location torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu121
+    "%INSTALL_ENV_DIR%\python.exe" -m pip install --no-warn-script-location torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu121
     if errorlevel 1 goto :error
     cls
     echo Dependencies installed successfully.

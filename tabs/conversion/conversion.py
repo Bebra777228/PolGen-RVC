@@ -58,27 +58,6 @@ def conversion_tab():
                 )
                 show_enter_button = gr.Button("Ввод пути к локальному файлу")
 
-        uploaded_file.upload(
-            process_file_upload,
-            inputs=[uploaded_file],
-            outputs=[song_input, local_file],
-        )
-        uploaded_file.upload(update_button_text, outputs=[uploaded_file])
-        show_upload_button.click(
-            swap_visibility,
-            outputs=[upload_file, enter_local_file, song_input, local_file],
-        )
-        show_enter_button.click(
-            swap_visibility,
-            outputs=[enter_local_file, upload_file, song_input, local_file],
-        )
-        show_upload_button.click(
-            swap_buttons, outputs=[show_upload_button, show_enter_button]
-        )
-        show_enter_button.click(
-            swap_buttons, outputs=[show_enter_button, show_upload_button]
-        )
-
     with gr.Group():
         with gr.Row():
             generate_btn = gr.Button("Генерировать", variant="primary", scale=2)
@@ -93,83 +72,96 @@ def conversion_tab():
             )
 
     with gr.Accordion("Настройки преобразования", open=False):
-        with gr.Accordion("Стандартные настройки", open=False):
-            with gr.Group():
-                with gr.Column(variant="panel"):
-                    f0_method = gr.Dropdown(
-                        ["rmvpe+", "fcpe", "mangio-crepe"],
-                        value="rmvpe+",
-                        label="Метод выделения тона",
-                        allow_custom_value=False,
-                        filterable=False,
-                    )
-                    hop_length = gr.Slider(
-                        value=128,
-                        step=8,
-                        minimum=8,
-                        maximum=512,
-                        label="Длина шага",
-                        info="Меньшие значения приводят к более длительным преобразованиям, что увеличивает риск появления артефактов в голосе, однако при этом достигается более точная передача тона.",
-                        visible=False,
-                    )
-                    f0_method.change(
-                        show_hop_slider, inputs=f0_method, outputs=hop_length
-                    )
-                with gr.Column(variant="panel"):
-                    index_rate = gr.Slider(
-                        value=0,
-                        step=0.1,
-                        minimum=0,
-                        maximum=1,
-                        label="Влияние индекса",
-                        info="Влияние, оказываемое индексным файлом; Чем выше значение, тем больше влияние. Однако выбор более низких значений может помочь смягчить артефакты, присутствующие в аудио.",
-                    )
-                    filter_radius = gr.Slider(
-                        value=3,
-                        step=1,
-                        minimum=0,
-                        maximum=7,
-                        label="Радиус фильтра",
-                        info="Если это число больше или равно трем, использование медианной фильтрации по собранным результатам тона может привести к снижению дыхания..",
-                    )
-                    volume_envelope = gr.Slider(
-                        value=0.25,
-                        step=0.01,
-                        minimum=0,
-                        maximum=1,
-                        label="Скорость смешивания RMS",
-                        info="Заменить или смешать с огибающей громкости выходного сигнала. Чем ближе значение к 1, тем больше используется огибающая выходного сигнала.",
-                    )
-                    protect = gr.Slider(
-                        value=0.33,
-                        step=0.01,
-                        minimum=0,
-                        maximum=0.5,
-                        label="Защита согласных",
-                        info="Защитить согласные и звуки дыхания, чтобы избежать электроакустических разрывов и артефактов. Максимальное значение параметра 0.5 обеспечивает полную защиту. Уменьшение этого значения может снизить защиту, но уменьшить эффект индексирования.",
-                    )
+        with gr.Column(variant="panel"):
+            with gr.Accordion("Стандартные настройки", open=False):
+                with gr.Group():
+                    with gr.Column():
+                        f0_method = gr.Dropdown(
+                            ["rmvpe+", "fcpe", "mangio-crepe"],
+                            value="rmvpe+",
+                            label="Метод выделения тона",
+                            allow_custom_value=False,
+                            filterable=False,
+                        )
+                        hop_length = gr.Slider(
+                            value=128,
+                            step=8,
+                            minimum=8,
+                            maximum=512,
+                            label="Длина шага",
+                            info="Меньшие значения приводят к более длительным преобразованиям, что увеличивает риск появления артефактов в голосе, однако при этом достигается более точная передача тона.",
+                            visible=False,
+                        )
+                        index_rate = gr.Slider(
+                            value=0,
+                            step=0.1,
+                            minimum=0,
+                            maximum=1,
+                            label="Влияние индекса",
+                            info="Влияние, оказываемое индексным файлом; Чем выше значение, тем больше влияние. Однако выбор более низких значений может помочь смягчить артефакты, присутствующие в аудио.",
+                        )
+                        filter_radius = gr.Slider(
+                            value=3,
+                            step=1,
+                            minimum=0,
+                            maximum=7,
+                            label="Радиус фильтра",
+                            info="Если это число больше или равно трем, использование медианной фильтрации по собранным результатам тона может привести к снижению дыхания..",
+                        )
+                        volume_envelope = gr.Slider(
+                            value=0.25,
+                            step=0.01,
+                            minimum=0,
+                            maximum=1,
+                            label="Скорость смешивания RMS",
+                            info="Заменить или смешать с огибающей громкости выходного сигнала. Чем ближе значение к 1, тем больше используется огибающая выходного сигнала.",
+                        )
+                        protect = gr.Slider(
+                            value=0.33,
+                            step=0.01,
+                            minimum=0,
+                            maximum=0.5,
+                            label="Защита согласных",
+                            info="Защитить согласные и звуки дыхания, чтобы избежать электроакустических разрывов и артефактов. Максимальное значение параметра 0.5 обеспечивает полную защиту. Уменьшение этого значения может снизить защиту, но уменьшить эффект индексирования.",
+                        )
 
-        with gr.Accordion("Расширенные настройки", open=False):
-            with gr.Column(variant="panel"):
-                with gr.Row():
-                    f0_min = gr.Slider(
-                        value=50,
-                        step=1,
-                        minimum=1,
-                        maximum=120,
-                        label="Минимальный диапазон тона",
-                        info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.",
-                    )
-                    f0_max = gr.Slider(
-                        value=1100,
-                        step=1,
-                        minimum=380,
-                        maximum=16000,
-                        label="Максимальный диапазон тона",
-                        info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.",
-                    )
+            with gr.Accordion("Расширенные настройки", open=False):
+                with gr.Column():
+                    with gr.Row():
+                        f0_min = gr.Slider(
+                            value=50,
+                            step=1,
+                            minimum=1,
+                            maximum=120,
+                            label="Минимальный диапазон тона",
+                            info="Определяет нижнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.",
+                        )
+                        f0_max = gr.Slider(
+                            value=1100,
+                            step=1,
+                            minimum=380,
+                            maximum=16000,
+                            label="Максимальный диапазон тона",
+                            info="Определяет верхнюю границу диапазона тона, который алгоритм будет использовать для определения основной частоты (F0) в аудиосигнале.",
+                        )
 
+    # Загрузка файлов
+    uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[song_input, local_file])
+    
+    # Обновление кнопок
+    uploaded_file.upload(update_button_text, outputs=[uploaded_file])
+    show_upload_button.click(swap_visibility, outputs=[upload_file, enter_local_file, song_input, local_file])
+    show_enter_button.click(swap_visibility, outputs=[enter_local_file, upload_file, song_input, local_file])
+    show_upload_button.click(swap_buttons, outputs=[show_upload_button, show_enter_button])
+    show_enter_button.click(swap_buttons, outputs=[show_enter_button, show_upload_button])
+    
+    # Показать hop_length
+    f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
+
+    # Обновление списка моделей
     ref_btn.click(update_models_list, None, outputs=rvc_model)
+    
+    # Запуск процесса преобразования
     generate_btn.click(
         voice_pipeline,
         inputs=[

@@ -56,14 +56,14 @@ def toggle_custom_url(checkbox_value):
 
 
 def install_hubert_tab():
-    with gr.Row(variant="panel"):
-        with gr.Column(variant="panel"):
-            custom_url_checkbox = gr.Checkbox(label="Другой HuBERT", value=False)
-            custom_url_textbox = gr.Textbox(label="URL модели", visible=False)
-            hubert_model_dropdown = gr.Dropdown(
-                models, label="HuBERT модели:", visible=True
-            )
+    with gr.Column():
+        custom_url_checkbox = gr.Checkbox(label="Другой HuBERT", value=False)
+        custom_url_textbox = gr.Textbox(label="URL модели", visible=False)
+        hubert_model_dropdown = gr.Dropdown(
+            models, label="HuBERT модели:", visible=True
+        )
         hubert_download_btn = gr.Button("Скачать", variant="primary")
+
     hubert_output_message = gr.Text(label="Сообщение вывода", interactive=False)
 
     custom_url_checkbox.change(

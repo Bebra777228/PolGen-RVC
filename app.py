@@ -6,12 +6,13 @@ from tabs.welcome import welcome_tab
 from tabs.conversion.conversion import conversion_tab
 from tabs.conversion.edge_tts import edge_tts_tab
 from tabs.processing.processing import processing_tab
-from tabs.install.install_models import url_download, zip_upload, files_upload
+from tabs.install.install_models import url_download, zip_upload, files_upload, output_message
 from tabs.install.install_huberts import install_hubert_tab
 
 DEFAULT_PORT = 4000
 MAX_PORT_ATTEMPTS = 10
 
+output_message_component = output_message()
 
 with gr.Blocks(
     title="PolGen - Politrees",
@@ -40,9 +41,10 @@ with gr.Blocks(
 
     with gr.Tab("Загрузка моделей"):
         with gr.Tab("Загрузка RVC моделей"):
-            url_download()
-            zip_upload()
-            files_upload()
+            url_download(output_message_component)
+            zip_upload(output_message_component)
+            files_upload(output_message_component)
+            output_message_component.render()
         with gr.Tab("Загрузка HuBERT моделей"):
             install_hubert_tab()
 
