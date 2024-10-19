@@ -2,13 +2,15 @@ import gradio as gr
 
 
 def welcome_tab():
-    gr.HTML("""
+    gr.HTML(
+        """
     <center>
         <h1 style="font-size: 3em;">
             <b>Добро пожаловать в PolGen</b>
         </h1>
     </center>
-    """)
+    """
+    )
     with gr.Row():
         with gr.Column(variant="panel"):
             gr.HTML(

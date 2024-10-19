@@ -6,7 +6,12 @@ from tabs.welcome import welcome_tab
 from tabs.conversion.conversion import conversion_tab
 from tabs.conversion.edge_tts import edge_tts_tab
 from tabs.processing.processing import processing_tab
-from tabs.install.install_models import url_download, zip_upload, files_upload, output_message
+from tabs.install.install_models import (
+    url_download,
+    zip_upload,
+    files_upload,
+    output_message,
+)
 from tabs.install.install_huberts import install_hubert_tab
 
 DEFAULT_PORT = 4000

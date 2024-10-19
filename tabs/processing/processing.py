@@ -316,9 +316,7 @@ def processing_tab():
                                     info="Этот параметр контролирует скорость, с которой шумовой шлюз закрывается, когда звук становится достаточно тихим. Большее значение означает, что шлюз закрывается медленнее.",
                                 )
 
-    use_effects.change(
-        show_effects, inputs=use_effects, outputs=effects_accordion
-    )
+    use_effects.change(show_effects, inputs=use_effects, outputs=effects_accordion)
     process_btn.click(
         process_audio,
         inputs=[
