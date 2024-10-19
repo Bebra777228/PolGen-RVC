@@ -146,21 +146,31 @@ def conversion_tab():
                         )
 
     # Загрузка файлов
-    uploaded_file.upload(process_file_upload, inputs=[uploaded_file], outputs=[song_input, local_file])
-    
+    uploaded_file.upload(
+        process_file_upload, inputs=[uploaded_file], outputs=[song_input, local_file]
+    )
+
     # Обновление кнопок
     uploaded_file.upload(update_button_text, outputs=[uploaded_file])
-    show_upload_button.click(swap_visibility, outputs=[upload_file, enter_local_file, song_input, local_file])
-    show_enter_button.click(swap_visibility, outputs=[enter_local_file, upload_file, song_input, local_file])
-    show_upload_button.click(swap_buttons, outputs=[show_upload_button, show_enter_button])
-    show_enter_button.click(swap_buttons, outputs=[show_enter_button, show_upload_button])
-    
+    show_upload_button.click(
+        swap_visibility, outputs=[upload_file, enter_local_file, song_input, local_file]
+    )
+    show_enter_button.click(
+        swap_visibility, outputs=[enter_local_file, upload_file, song_input, local_file]
+    )
+    show_upload_button.click(
+        swap_buttons, outputs=[show_upload_button, show_enter_button]
+    )
+    show_enter_button.click(
+        swap_buttons, outputs=[show_enter_button, show_upload_button]
+    )
+
     # Показать hop_length
     f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
 
     # Обновление списка моделей
     ref_btn.click(update_models_list, None, outputs=rvc_model)
-    
+
     # Запуск процесса преобразования
     generate_btn.click(
         voice_pipeline,

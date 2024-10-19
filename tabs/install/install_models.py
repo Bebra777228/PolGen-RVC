@@ -6,8 +6,10 @@ from rvc.modules.model_manager import (
     upload_separate_files,
 )
 
+
 def output_message():
     return gr.Text(label="Сообщение вывода", interactive=False)
+
 
 def url_download(output_message):
     with gr.Accordion("Загрузить по ссылке", open=False):
@@ -41,7 +43,9 @@ def zip_upload(output_message):
     with gr.Accordion("Загрузить ZIP архивом", open=False):
         with gr.Column():
             with gr.Group():
-                zip_file = gr.File(label="Zip-файл", file_types=[".zip"], file_count="single")
+                zip_file = gr.File(
+                    label="Zip-файл", file_types=[".zip"], file_count="single"
+                )
                 model_name = gr.Text(
                     label="Имя модели",
                     info="Дайте вашей загружаемой модели уникальное имя, отличное от других голосовых моделей.",
