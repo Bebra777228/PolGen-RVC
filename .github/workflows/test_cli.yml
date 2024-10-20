@@ -12,10 +12,6 @@ jobs:
   rvc_cli:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9', '3.10']
-
     steps:
     - name: Проверка кода
       uses: actions/checkout@v4
@@ -23,7 +19,7 @@ jobs:
     - name: Настройка Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.10'
 
     - name: Установка зависимостей
       run: |
@@ -49,10 +45,6 @@ jobs:
   tts_cli:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9', '3.10']
-
     steps:
     - name: Проверка кода
       uses: actions/checkout@v4
@@ -60,7 +52,7 @@ jobs:
     - name: Настройка Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.10'
 
     - name: Установка зависимостей
       run: |
