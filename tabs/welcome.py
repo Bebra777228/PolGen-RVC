@@ -6,7 +6,7 @@ def welcome_tab():
         """
     <center>
         <h1 style="font-size: 3em;">
-            <b>Добро пожаловать в PolGen</b>
+            <b>Добро пожаловать в PolGen (v1.3.0-Beta)</b>
         </h1>
     </center>
     """
