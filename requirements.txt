@@ -12,7 +12,9 @@ tqdm
 ffmpeg-python>=0.2.0
 torchcrepe==0.0.23
 PolUVR[gpu]
+PolFlashSR
 edge-tts
+pydub
 
 # Машинное обучение и нейронные сети
 torch==2.6

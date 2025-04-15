@@ -69,6 +69,12 @@ def inference_tab():
                     interactive=True,
                     visible=True,
                 )
+                audio_upscaling = gr.Checkbox(
+                    label="Улучшить качество аудио (долгая обработка)",
+                    value=False,
+                    interactive=True,
+                    visible=True,
+                )
 
         with gr.Column(scale=2, variant="panel"):
             with gr.Column() as upload_file:
@@ -238,6 +244,7 @@ def inference_tab():
             gr.Slider(value=0, visible=False),  # tts_rate
             gr.Slider(value=0, visible=False),  # tts_volume
             gr.Slider(value=0, visible=False),  # tts_pitch
+            audio_upscaling,
         ],
         outputs=[converted_voice],
     )

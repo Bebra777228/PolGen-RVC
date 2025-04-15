@@ -15,6 +15,8 @@ from rvc.infer.pipeline import VC
 from rvc.lib.algorithm.synthesizers import Synthesizer
 from rvc.lib.my_utils import load_audio
 
+from rvc.modules.FlashSR import upscale
+
 # Определяем пути к папкам и файлам (константы)
 RVC_MODELS_DIR = os.path.join(os.getcwd(), "models", "RVC_models")
 OUTPUT_DIR = os.path.join(os.getcwd(), "output", "RVC_output")
@@ -146,6 +148,10 @@ def rvc_infer(
     tts_rate=0,
     tts_volume=0,
     tts_pitch=0,
+    # FlashSR
+    audio_upscaling=False,
+    # Progress-Bar
+    progress=gr.Progress(track_tqdm=True),
 ):
     if not rvc_model:
         raise ValueError("Выберите модель голоса для преобразования.")
@@ -209,12 +215,16 @@ def rvc_infer(
     display_progress(0.8, "[💫] Конвертация аудио в стерео...")
     convert_audio(output_path, output_path, output_format)
 
-    display_progress(1.0, f"[✅] Преобразование завершено — {output_path}")
-
     # Освобождаем память
     del hubert_model, cpt, net_g, vc
     gc.collect()
     torch.cuda.empty_cache()
+
+    if audio_upscaling:
+        display_progress(0.9, "[💫] Улучшение качества аудио...")
+        upscale(output_path, OUTPUT_DIR, 2, config.device)
+
+    display_progress(1.0, f"[✅] Преобразование завершено — {output_path}")
 
     if use_tts:
         return output_path, input_path
