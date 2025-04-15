@@ -21,6 +21,7 @@ def create_parser():
     base_parser.add_argument("--protect", type=float, default=0.5, help="Защита согласных")
     base_parser.add_argument("--index_rate", type=float, default=0, help="Коэффициент индекса")
     base_parser.add_argument("--volume_envelope", type=float, default=1, help="Огибающая громкости")
+    base_parser.add_argument("--upscale", type=float, default=1, help="Улучшение качества звука")
     base_parser.add_argument("--output_format", type=str, default="mp3", help="Формат выходного файла")
 
     # Главный парсер с субкомандами
@@ -56,6 +57,7 @@ def main():
         "protect": args.protect,
         "index_rate": args.index_rate,
         "volume_envelope": args.volume_envelope,
+        "audio_upscaling": args.upscale,
         "output_format": args.output_format,
     }
 

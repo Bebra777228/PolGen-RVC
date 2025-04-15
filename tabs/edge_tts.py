@@ -99,6 +99,12 @@ def edge_tts_tab():
                     interactive=True,
                     visible=True,
                 )
+                audio_upscaling = gr.Checkbox(
+                    label="Улучшить качество аудио (долгая обработка)",
+                    value=False,
+                    interactive=True,
+                    visible=True,
+                )
         with gr.Column(variant="panel", scale=2):
             rvc_pitch = gr.Slider(
                 minimum=-24,
@@ -272,6 +278,7 @@ def edge_tts_tab():
             tts_rate,
             tts_volume,
             tts_pitch,
+            audio_upscaling,
         ],
         outputs=[converted_tts_voice, synth_voice],
     )
