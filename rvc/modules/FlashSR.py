@@ -89,7 +89,7 @@ def process_audio(input_path, output_path, overlap, flashsr, device):
 
 
 def upscale(input, output, overlap, device):
-    flashsr = FlashSR(student_ldm_ckpt_path, sr_vocoder_ckpt_path, vae_ckpt_path)
+    flashsr = FlashSR(student_ldm_ckpt_path, sr_vocoder_ckpt_path, vae_ckpt_path, device)
     flashsr = flashsr.to(device)
 
     if Path(input).is_file():
