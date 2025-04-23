@@ -205,7 +205,56 @@ def rvc_infer(
     torch.cuda.empty_cache()
 
     print_display_progress(1.0, f"[✅] Преобразование завершено — {output_path}")
-    return gr.Audio(output_path, label=os.path.basename(output_path))
+    return output_path
+
+
+def rvc_infer_batch(
+    rvc_model=None,
+    input_paths=None,
+    f0_method="rmvpe",
+    f0_min=50,
+    f0_max=1100,
+    hop_length=128,
+    rvc_pitch=0,
+    protect=0.5,
+    index_rate=0,
+    volume_envelope=1,
+    output_format="wav",
+):
+    # Если передан путь к папке, получаем список файлов в этой папке
+    if isinstance(input_paths, str) and os.path.isdir(input_paths):
+        input_paths = [os.path.join(input_paths, f) for f in os.listdir(input_paths)]
+
+    # Фильтруем только аудиофайлы
+    audio_extensions = {'.wav', '.mp3', '.flac', '.ogg', '.aac'}
+    audio_files = [f for f in input_paths if os.path.splitext(f)[1].lower() in audio_extensions]
+
+    if not audio_files:
+        raise ValueError("Не найдены аудиофайлы для обработки.")
+
+    results = []
+    total_files = len(audio_files)
+
+    for index, input_path in enumerate(audio_files):
+        print_display_progress(0, f"\n[⚙️] Обработка файла {index + 1}/{total_files}: {input_path}")
+
+        output_path = rvc_infer(
+            rvc_model=rvc_model,
+            input_path=input_path,
+            f0_method=f0_method,
+            f0_min=f0_min,
+            f0_max=f0_max,
+            hop_length=hop_length,
+            rvc_pitch=rvc_pitch,
+            protect=protect,
+            index_rate=index_rate,
+            volume_envelope=volume_envelope,
+            output_format=output_format,
+        )
+
+        results.append(output_path)
+
+    return results
 
 
 def rvc_edgetts_infer(
