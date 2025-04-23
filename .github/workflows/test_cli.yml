@@ -93,7 +93,7 @@ jobs:
 
     - name: Run rvc script
       run: |
-        python3 -m rvc.infer.infer_cli rvc-batch --input_path "./audio/" --rvc_model "Tsoi" --f0_method "rmvpe" --f0_min 1 --f0_max 1100 --hop_length 32 --rvc_pitch -6 --protect 0.5 --index_rate 0 --volume_envelope 1 --output_format "mp3"
+        python3 -m rvc.infer.infer_cli rvc-batch --input_dir "./audio/" --rvc_model "Tsoi" --f0_method "rmvpe" --f0_min 1 --f0_max 1100 --hop_length 32 --rvc_pitch -6 --protect 0.5 --index_rate 0 --volume_envelope 1 --output_format "mp3"
 
   tts_cli:
     runs-on: ubuntu-latest
