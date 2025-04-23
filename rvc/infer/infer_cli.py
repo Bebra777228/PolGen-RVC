@@ -6,7 +6,7 @@ check_and_install_models()
 
 import argparse
 
-from rvc.infer.infer import rvc_edgetts_infer, rvc_infer
+from rvc.infer.infer import rvc_edgetts_infer, rvc_infer, rvc_infer_batch
 
 
 def create_parser():
@@ -29,7 +29,7 @@ def create_parser():
 
     # Субкоманда для RVC
     rvc_parser = subparsers.add_parser("rvc", parents=[base_parser], help="Конвертация аудио-файла")
-    rvc_parser.add_argument("--input_path", type=str, required=True, help="Путь к аудио-файлу")
+    rvc_parser.add_argument("--input_path", type=str, required=True, help="Путь к файлу или папке")
 
     # Субкоманда для TTS
     tts_parser = subparsers.add_parser("tts", parents=[base_parser], help="Синтез речи из текста")
@@ -61,6 +61,8 @@ def main():
 
     if args.command == "rvc":
         rvc_infer(**common_params, input_path=args.input_path)
+    if args.command == "rvc-batch":
+        rvc_infer_batch(**common_params, input_paths=args.input_path)
     elif args.command == "tts":
         rvc_edgetts_infer(
             **common_params,
