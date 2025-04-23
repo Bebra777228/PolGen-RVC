@@ -11,35 +11,40 @@ from rvc.infer.infer import rvc_edgetts_infer, rvc_infer, rvc_infer_batch
 
 def create_parser():
     # Базовый парсер с общими аргументами
-    base_parser = argparse.ArgumentParser(add_help=False)
-    base_parser.add_argument("--rvc_model", type=str, required=True, help="Название RVC модели")
-    base_parser.add_argument("--f0_method", type=str, default="rmvpe", help="Метод извлечения F0")
-    base_parser.add_argument("--f0_min", type=int, default=50, help="Минимальная частота F0")
-    base_parser.add_argument("--f0_max", type=int, default=1100, help="Максимальная частота F0")
-    base_parser.add_argument("--hop_length", type=int, default=128, help="Длина шага для обработки")
-    base_parser.add_argument("--rvc_pitch", type=float, default=0, help="Высота тона RVC модели")
-    base_parser.add_argument("--protect", type=float, default=0.5, help="Защита согласных")
-    base_parser.add_argument("--index_rate", type=float, default=0, help="Коэффициент индекса")
-    base_parser.add_argument("--volume_envelope", type=float, default=1, help="Огибающая громкости")
-    base_parser.add_argument("--output_format", type=str, default="mp3", help="Формат выходного файла")
+    base = argparse.ArgumentParser(add_help=False)
+    base.add_argument("--rvc_model", type=str, required=True, help="Название RVC модели")
+    base.add_argument("--f0_method", type=str, default="rmvpe", help="Метод извлечения F0")
+    base.add_argument("--f0_min", type=int, default=50, help="Минимальная частота F0")
+    base.add_argument("--f0_max", type=int, default=1100, help="Максимальная частота F0")
+    base.add_argument("--hop_length", type=int, default=128, help="Длина шага для Crepe")
+    base.add_argument("--rvc_pitch", type=float, default=0, help="Высота тона RVC модели")
+    base.add_argument("--protect", type=float, default=0.5, help="Защита согласных")
+    base.add_argument("--index_rate", type=float, default=0, help="Коэффициент индекса")
+    base.add_argument("--volume_envelope", type=float, default=1, help="Огибающая громкости")
+    base.add_argument("--output_format", type=str, default="mp3", help="Формат выходного файла")
 
     # Главный парсер с субкомандами
     parser = argparse.ArgumentParser(description="Инструмент для замены голоса при помощи RVC")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Субкоманда для RVC
-    rvc_parser = subparsers.add_parser("rvc", parents=[base_parser], help="Конвертация аудио-файла")
-    rvc_parser.add_argument("--input_path", type=str, required=True, help="Путь к файлу или папке")
+    rvc = subparsers.add_parser("rvc", parents=[base], help="Конвертация аудио")
+    rvc.add_argument("--input_path", type=str, required=True, help="Путь к аудио")
+
+    # Субкоманда для RVC-batch
+    rvc_batch = subparsers.add_parser("rvc-batch", parents=[base], help="Пакетная конвертация аудио")
+    rvc_batch.add_argument("--input_dir", type=str, required=True, help="Путь к папке с аудио")
 
     # Субкоманда для TTS
-    tts_parser = subparsers.add_parser("tts", parents=[base_parser], help="Синтез речи из текста")
-    tts_parser.add_argument("--tts_voice", type=str, required=True, help="Голос для синтеза речи")
-    tts_parser.add_argument("--tts_text", type=str, required=True, help="Текст для синтеза речи")
-    tts_parser.add_argument("--tts_rate", type=int, default=0, help="Скорость синтеза речи")
-    tts_parser.add_argument("--tts_volume", type=int, default=0, help="Скорость синтеза речи")
-    tts_parser.add_argument("--tts_pitch", type=int, default=0, help="Скорость синтеза речи")
+    edge_tts = subparsers.add_parser("tts", parents=[base], help="Синтез речи из текста")
+    edge_tts.add_argument("--tts_voice", type=str, required=True, help="Голос для синтеза речи")
+    edge_tts.add_argument("--tts_text", type=str, required=True, help="Текст для синтеза речи")
+    edge_tts.add_argument("--tts_rate", type=int, default=0, help="Скорость синтеза речи")
+    edge_tts.add_argument("--tts_volume", type=int, default=0, help="Громкость синтеза речи")
+    edge_tts.add_argument("--tts_pitch", type=int, default=0, help="Высота тона синтеза речи")
 
     return parser
+
 
 
 def main():
@@ -62,7 +67,7 @@ def main():
     if args.command == "rvc":
         rvc_infer(**common_params, input_path=args.input_path)
     elif args.command == "rvc-batch":
-        rvc_infer_batch(**common_params, input_paths=args.input_path)
+        rvc_infer_batch(**common_params, input_paths=args.input_dir)
     elif args.command == "tts":
         rvc_edgetts_infer(
             **common_params,
