@@ -61,7 +61,7 @@ def main():
 
     if args.command == "rvc":
         rvc_infer(**common_params, input_path=args.input_path)
-    if args.command == "rvc-batch":
+    elif args.command == "rvc-batch":
         rvc_infer_batch(**common_params, input_paths=args.input_path)
     elif args.command == "tts":
         rvc_edgetts_infer(
