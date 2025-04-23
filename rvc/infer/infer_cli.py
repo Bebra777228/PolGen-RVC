@@ -25,18 +25,18 @@ def create_parser():
 
     # Главный парсер с субкомандами
     parser = argparse.ArgumentParser(description="Инструмент для замены голоса при помощи RVC")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    subpars = parser.add_subparsers(dest="command", required=True)
 
     # Субкоманда для RVC
-    rvc = subparsers.add_parser("rvc", parents=[base], help="Конвертация аудио")
+    rvc = subpars.add_parser("rvc", parents=[base], help="Конвертация аудио")
     rvc.add_argument("--input_path", type=str, required=True, help="Путь к аудио")
 
     # Субкоманда для RVC-batch
-    rvc_batch = subparsers.add_parser("rvc-batch", parents=[base], help="Пакетная конвертация аудио")
+    rvc_batch = subpars.add_parser("rvc-batch", parents=[base], help="Пакетная конвертация аудио")
     rvc_batch.add_argument("--input_dir", type=str, required=True, help="Путь к папке с аудио")
 
     # Субкоманда для TTS
-    edge_tts = subparsers.add_parser("tts", parents=[base], help="Синтез речи из текста")
+    edge_tts = subpars.add_parser("tts", parents=[base], help="Синтез речи из текста")
     edge_tts.add_argument("--tts_voice", type=str, required=True, help="Голос для синтеза речи")
     edge_tts.add_argument("--tts_text", type=str, required=True, help="Текст для синтеза речи")
     edge_tts.add_argument("--tts_rate", type=int, default=0, help="Скорость синтеза речи")
