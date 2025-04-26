@@ -1,6 +1,6 @@
 import gradio as gr
 
-from rvc.infer.infer import rvc_edgetts_infer, rvc_infer
+from rvc.infer.infer import rvc_edgetts_infer, rvc_infer, rvc_infer_batch
 from tabs.components.modules import (
     OUTPUT_FORMAT,
     edge_voices,
@@ -119,6 +119,127 @@ def inference_tab():
     # Запуск процесса преобразования
     generate_btn.click(
         rvc_infer,
+        inputs=[
+            rvc_model,
+            song_input,
+            f0_method,
+            f0_min,
+            f0_max,
+            hop_length,
+            rvc_pitch,
+            protect,
+            index_rate,
+            volume_envelope,
+            output_format,
+        ],
+        outputs=[converted_voice],
+    )
+
+
+def inference_batch_tab():
+    with gr.Row():
+        with gr.Column(scale=1, variant="panel"):
+            with gr.Group():
+                rvc_model = gr.Dropdown(
+                    label="Голосовые модели:",
+                    choices=get_folders(),
+                    interactive=True,
+                    visible=True,
+                )
+                ref_btn = gr.Button(
+                    value="Обновить список моделей",
+                    variant="primary",
+                    interactive=True,
+                    visible=True,
+                )
+            with gr.Group():
+                rvc_pitch = gr.Slider(
+                    minimum=-24,
+                    maximum=24,
+                    step=1,
+                    value=0,
+                    label="Регулировка тона",
+                    info="-24 - мужской голос || 24 - женский голос",
+                    interactive=True,
+                    visible=True,
+                )
+
+        with gr.Column(scale=2, variant="panel"):
+            with gr.Column() as upload_file:
+                local_files = gr.Files(
+                    label="Аудио",
+                    type="filepath",
+                    show_download_button=False,
+                    show_share_button=False,
+                    interactive=True,
+                    visible=True,
+                )
+
+            with gr.Column(visible=False) as enter_local_file:
+                song_input = gr.Text(
+                    label="Путь к папке:",
+                    info="Введите полный путь к папке с аудио-файлами.",
+                    interactive=True,
+                    visible=True,
+                )
+
+            with gr.Column():
+                show_upload_button = gr.Button(
+                    value="Загрузить файлы с устройства",
+                    interactive=True,
+                    visible=False,
+                )
+                show_enter_button = gr.Button(
+                    value="Ввести путь к папке",
+                    interactive=True,
+                    visible=True,
+                )
+
+    with gr.Group():
+        with gr.Row(equal_height=True):
+            generate_btn = gr.Button(
+                value="Генерировать",
+                variant="primary",
+                interactive=True,
+                visible=True,
+                scale=2,
+            )
+            converted_voice = gr.Files(
+                label="Преобразованные файлы",
+                interactive=False,
+                visible=True,
+                scale=9,
+            )
+            with gr.Column(min_width=160):
+                output_format = gr.Dropdown(
+                    value="mp3",
+                    label="Формат файла",
+                    choices=OUTPUT_FORMAT,
+                    interactive=True,
+                    visible=True,
+                )
+
+    # Компонент настроек
+    f0_method, hop_length, index_rate, volume_envelope, protect, f0_min, f0_max = settings()
+
+    # Загрузка файлов
+    local_files.input(process_file_upload, inputs=[local_files], outputs=[song_input, local_files])
+
+    # Обновление кнопок
+    show_upload_button.click(swap_visibility, outputs=[upload_file, enter_local_file, song_input, local_files])
+    show_enter_button.click(swap_visibility, outputs=[enter_local_file, upload_file, song_input, local_files])
+    show_upload_button.click(swap_buttons, outputs=[show_upload_button, show_enter_button])
+    show_enter_button.click(swap_buttons, outputs=[show_enter_button, show_upload_button])
+
+    # Показать hop_length
+    f0_method.change(show_hop_slider, inputs=f0_method, outputs=hop_length)
+
+    # Обновление списка моделей
+    ref_btn.click(update_models_list, None, outputs=rvc_model)
+
+    # Запуск процесса преобразования
+    generate_btn.click(
+        rvc_infer_batch,
         inputs=[
             rvc_model,
             song_input,

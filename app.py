@@ -12,7 +12,7 @@ from typing import Any
 import gradio as gr
 from PolUVR.utils import PolUVR_UI
 
-from tabs.inference import edge_tts_tab, inference_tab
+from tabs.inference import edge_tts_tab, inference_tab, inference_batch_tab
 from tabs.install import files_upload, install_hubert_tab, output_message, url_zip_download, zip_upload
 from tabs.welcome import welcome_tab
 
@@ -43,7 +43,10 @@ with gr.Blocks(
         welcome_tab()
 
     with gr.Tab("Преобразование голоса (RVC)"):
-        inference_tab()
+        with gr.Tab("Одиночное преобразование"):
+            inference_tab()
+        with gr.Tab("Пакетное преобразование"):
+            inference_batch_tab()
 
     if not is_offline_mode():
         with gr.Tab("Преобразование текста в речь (TTS)"):
