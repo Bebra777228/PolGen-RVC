@@ -92,7 +92,6 @@ class VC:
             f0 = model.get_f0(x, p_len, filter_radius = 0.006)
             del model
 
-        print(f0.shape)
         if f0 is None:
             raise ValueError("Метод F0 не распознан или не смог рассчитать F0.")
 
