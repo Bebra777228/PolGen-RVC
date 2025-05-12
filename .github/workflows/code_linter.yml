@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --no-cache-dir uv
-          uv pip install --no-cache-dir flake8 pylint vulture -r requirements.txt -qq
+          uv pip install --no-cache-dir flake8 pylint vulture -r requirements.txt -qq --system
 
       - name: Run flake8
         run: flake8 .
