@@ -10,11 +10,7 @@ import torchcrepe
 from scipy import signal
 from torch import Tensor
 
-from rvc.lib.predictors.FCPE import FCPEF0Predictor
-from rvc.lib.predictors.RMVPE import RMVPE0Predictor
-
-RMVPE_PATH = os.path.join(os.getcwd(), "rvc", "models", "predictors", "rmvpe.pt")
-FCPE_PATH = os.path.join(os.getcwd(), "rvc", "models", "predictors", "fcpe.pt")
+from rvc.lib.predictors.f0 import CREPE, FCPE, RMVPE
 
 # Фильтр Баттерворта для высоких частот
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
@@ -61,40 +57,6 @@ class VC:
         self.t_max = self.sample_rate * self.x_max
         self.time_step = self.window / self.sample_rate * 1000
         self.device = config.device
-        self.model_rmvpe = RMVPE0Predictor(RMVPE_PATH, device=self.device)
-
-    def get_f0_crepe(self, x, f0_min, f0_max, p_len, hop_length, model="full"):
-        """
-        Получает F0 с использованием модели crepe.
-        """
-        x = x.astype(np.float32)
-        x /= np.quantile(np.abs(x), 0.999)
-        audio = torch.from_numpy(x).to(self.device, copy=True)
-        audio = torch.unsqueeze(audio, dim=0)
-        if audio.ndim == 2 and audio.shape[0] > 1:
-            audio = torch.mean(audio, dim=0, keepdim=True).detach()
-        audio = audio.detach()
-        pitch: Tensor = torchcrepe.predict(
-            audio,
-            self.sample_rate,
-            hop_length,
-            f0_min,
-            f0_max,
-            model,
-            batch_size=hop_length * 2,
-            device=self.device,
-            pad=True,
-        )
-        p_len = p_len or x.shape[0] // hop_length
-        source = np.array(pitch.squeeze(0).cpu().float().numpy())
-        source[source < 0.001] = np.nan
-        target = np.interp(
-            np.arange(0, len(source) * p_len, len(source)) / p_len,
-            np.arange(0, len(source)),
-            source,
-        )
-        f0 = np.nan_to_num(target)
-        return f0
 
     def get_f0(
         self,
@@ -114,25 +76,23 @@ class VC:
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 
         if f0_method == "crepe":
-            f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length))
+            model = CREPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
+            f0 = model.get_f0(x, f0_min, f0_max, p_len, "full")
+            del model
         elif f0_method == "crepe-tiny":
-            f0 = self.get_f0_crepe(x, f0_min, f0_max, p_len, int(hop_length), "tiny")
+            model = CREPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
+            f0 = model.get_f0(x, f0_min, f0_max, p_len, "tiny")
+            del model
         elif f0_method == "rmvpe":
-            f0 = self.model_rmvpe.infer_from_audio(x, thred=0.03)
+            model = RMVPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
+            f0 = model.get_f0(x, filter_radius=0.03)
+            del model
         elif f0_method == "fcpe":
-            self.model_fcpe = FCPEF0Predictor(
-                FCPE_PATH,
-                f0_min=int(f0_min),
-                f0_max=int(f0_max),
-                dtype=torch.float32,
-                device=self.device,
-                sample_rate=self.sample_rate,
-                threshold=0.03,
-            )
-            f0 = self.model_fcpe.compute_f0(x, p_len=p_len)
-            del self.model_fcpe
-            gc.collect()
+            model = FCPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
+            f0 = model.get_f0(x, p_len, filter_radius = 0.006)
+            del model
 
+        print(f0.shape)
         if f0 is None:
             raise ValueError("Метод F0 не распознан или не смог рассчитать F0.")
 
