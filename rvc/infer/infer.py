@@ -4,6 +4,7 @@ import os
 
 import edge_tts
 import gradio as gr
+import numpy as np
 import torch
 from fairseq.checkpoint_utils import load_model_ensemble_and_task
 from fairseq.data.dictionary import Dictionary
@@ -29,12 +30,9 @@ config = Config()
 
 
 # Отображает прогресс выполнения задачи.
-def display_progress(percent, message, progress=gr.Progress()):
-    progress(percent, desc=message)
-
-
-def print_display_progress(percent, message, progress=gr.Progress()):
-    print(message)
+def display_progress(percent, message, is_print, progress=gr.Progress()):
+    if is_print:
+        print(message)
     progress(percent, desc=message)
 
 
@@ -99,19 +97,6 @@ def get_vc(model_path):
     return cpt, version, net_g, tgt_sr, vc
 
 
-# Конвертируем файл в стерео и выбранный пользователем формат
-def convert_audio(input_audio, output_audio, output_format):
-    # Загружаем аудиофайл
-    audio = AudioSegment.from_file(input_audio)
-
-    # Если аудио моно, конвертируем его в стерео
-    if audio.channels == 1:
-        audio = audio.set_channels(2)
-
-    # Сохраняем аудиофайл в выбранном формате
-    audio.export(output_audio, format=output_format)
-
-
 # Синтезирует текст в речь с использованием edge_tts.
 async def text_to_speech(voice, text, rate, volume, pitch, output_path):
     if not -100 <= rate <= 100:
@@ -148,16 +133,16 @@ def rvc_infer(
     if not os.path.exists(input_path):
         raise ValueError(f"Не удалось найти файл '{input_path}'. Убедитесь, что он загрузился или проверьте правильность пути к нему.")
 
-    print_display_progress(0, "\n[⚙️] Запуск конвейера генерации...")
+    display_progress(0, "\n[⚙️] Запуск конвейера генерации...", True)
 
     # Загружаем модель Hubert
-    display_progress(0.1, "Загружаем модель Hubert...")
+    display_progress(0.1, "Загружаем модель Hubert...", False)
     hubert_model = load_hubert(HUBERT_BASE_PATH)
     # Загружаем модель RVC и индекс
-    display_progress(0.2, "Загружаем модель RVC и индекс...")
+    display_progress(0.2, "Загружаем модель RVC и индекс...", False)
     model_path, index_path = load_rvc_model(rvc_model)
     # Получаем конвертер голоса
-    display_progress(0.3, "Получаем конвертер голоса...")
+    display_progress(0.3, "Получаем конвертер голоса...", False)
     cpt, version, net_g, tgt_sr, vc = get_vc(model_path)
     pitch_guidance = cpt.get("f0", 1)
 
@@ -169,10 +154,10 @@ def rvc_infer(
     output_path = os.path.join(OUTPUT_DIR, f"{base_name}_({rvc_model}).{output_format}")
 
     # Загружаем аудиофайл
-    display_progress(0.4, "Загружаем аудиофайл...")
+    display_progress(0.4, "Загружаем аудиофайл...", False)
     audio = load_audio(input_path, 16000)
 
-    print_display_progress(0.5, f"[🌌] Преобразование аудио — {base_name}...")
+    display_progress(0.5, f"[🌌] Преобразование аудио — {base_name}...", True)
     audio_opt = vc.pipeline(
         hubert_model,
         net_g,
@@ -190,21 +175,33 @@ def rvc_infer(
         f0_min=f0_min,
         f0_max=f0_max,
     )
-    # Сохраняем результат в wav файл
-    display_progress(0.6, "Сохраняем результат...")
-    wavfile.write(output_path, tgt_sr, audio_opt)
 
-    # Конвертируем файл в стерео и выбранный пользователем формат
-    print_display_progress(0.8, "[💫] Конвертация аудио в стерео...")
-    convert_audio(output_path, output_path, output_format)
+    # Определяем тип данных и нормализуем
+    if audio_opt.dtype == np.float32:
+        # Масштабируем float32 [-1, 1] в int16
+        audio_opt = (audio_opt * 32767).astype(np.int16)
+    elif audio_opt.dtype == np.int16:
+        pass
+    else:
+        raise ValueError(f"Неподдерживаемый формат аудио: {audio_opt.dtype}")
+
+    # Сохраняем результат в файл
+    display_progress(0.8, "Сохраняем результат...", False)
+    audio_segment = AudioSegment(
+        audio_opt.tobytes(),
+        frame_rate=tgt_sr,
+        sample_width=audio_opt.dtype.itemsize,
+        channels=1
+    )
+    audio_segment.export(output_path, format=output_format)
 
     # Освобождаем память
-    display_progress(0.9, "Освобождаем память...")
+    display_progress(0.9, "Освобождаем память...", False)
     del hubert_model, cpt, net_g, vc
     gc.collect()
     torch.cuda.empty_cache()
 
-    print_display_progress(1.0, f"[✅] Преобразование завершено — {output_path}")
+    display_progress(1.0, f"[✅] Преобразование завершено — {output_path}", True)
     return gr.Audio(output_path, label=os.path.basename(output_path))
 
 
@@ -232,7 +229,7 @@ def rvc_edgetts_infer(
     if not tts_voice:
         raise ValueError("Выберите язык и голос для синтеза речи.")
 
-    display_progress(1.0, "[🎙️] Синтезируем речь...")
+    display_progress(1.0, "[🎙️] Синтезируем речь...", False)
     input_path = os.path.join(OUTPUT_DIR, "TTS_Voice.wav")
     asyncio.run(text_to_speech(tts_voice, tts_text, tts_rate, tts_volume, tts_pitch, input_path))
 
