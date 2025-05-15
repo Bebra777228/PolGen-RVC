@@ -1,14 +1,12 @@
 import os
 
 import torch
-import torchcrepe
-from torchfcpe import spawn_bundled_infer_model
-
-from rvc.lib.predictors.RMVPE import RMVPE0Predictor
 
 
 class RMVPE:
     def __init__(self, device, sample_rate=16000, hop_size=160):
+        from rvc.lib.predictors.RMVPE import RMVPE0Predictor
+
         self.device = device
         self.sample_rate = sample_rate
         self.hop_size = hop_size
@@ -26,6 +24,8 @@ class CREPE:
         self.hop_size = hop_size
 
     def get_f0(self, x, f0_min=50, f0_max=1100, p_len=None, model="full"):
+        import torchcrepe
+
         if p_len is None:
             p_len = x.shape[0] // self.hop_size
 
@@ -55,6 +55,8 @@ class CREPE:
 
 class FCPE:
     def __init__(self, device, sample_rate=16000, hop_size=160):
+        from torchfcpe import spawn_bundled_infer_model
+
         self.device = device
         self.sample_rate = sample_rate
         self.hop_size = hop_size

@@ -1,16 +1,10 @@
-import gc
 import os
 
-import faiss
 import librosa
 import numpy as np
 import torch
 import torch.nn.functional as F
-import torchcrepe
 from scipy import signal
-from torch import Tensor
-
-from rvc.lib.predictors.f0 import CREPE, FCPE, RMVPE
 
 # Фильтр Баттерворта для высоких частот
 bh, ah = signal.butter(N=5, Wn=48, btype="high", fs=16000)
@@ -76,18 +70,22 @@ class VC:
         f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 
         if f0_method == "crepe":
+            from rvc.lib.predictors.f0 import CREPE
             model = CREPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
             f0 = model.get_f0(x, f0_min, f0_max, p_len, "full")
             del model
         elif f0_method == "crepe-tiny":
+            from rvc.lib.predictors.f0 import CREPE
             model = CREPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
             f0 = model.get_f0(x, f0_min, f0_max, p_len, "tiny")
             del model
         elif f0_method == "rmvpe":
+            from rvc.lib.predictors.f0 import RMVPE
             model = RMVPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
             f0 = model.get_f0(x, filter_radius=0.03)
             del model
         elif f0_method == "fcpe":
+            from rvc.lib.predictors.f0 import FCPE
             model = FCPE(device=self.device, sample_rate=self.sample_rate, hop_size=self.window)
             f0 = model.get_f0(x, p_len, filter_radius=0.006)
             del model
@@ -207,6 +205,7 @@ class VC:
         index = big_npy = None
         if file_index and os.path.exists(file_index) and index_rate != 0:
             try:
+                import faiss
                 index = faiss.read_index(file_index)
                 big_npy = index.reconstruct_n(0, index.ntotal)
             except Exception as error:
