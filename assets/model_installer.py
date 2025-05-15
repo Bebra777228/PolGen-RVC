@@ -1,7 +1,6 @@
 import os
 
 import requests
-from tqdm import tqdm
 
 PREDICTORS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/predictors/"
 EMBEDDERS = "https://huggingface.co/Politrees/RVC_resources/resolve/main/embedders/pytorch/"
@@ -24,7 +23,9 @@ def dl_model(link, model_name, dir_name):
 
     # Получаем общий размер файла
     total_size = int(r.headers.get("content-length", 0))
+
     # Используем tqdm для отображения прогресса
+    from tqdm import tqdm
     with open(file_path, "wb") as f, tqdm(
         desc=f"Установка {model_name}",
         total=total_size,

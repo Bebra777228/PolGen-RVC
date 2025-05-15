@@ -2,7 +2,6 @@ import asyncio
 import gc
 import os
 
-import edge_tts
 import gradio as gr
 import torch
 from fairseq.checkpoint_utils import load_model_ensemble_and_task
@@ -122,6 +121,7 @@ async def text_to_speech(voice, text, rate, volume, pitch, output_path):
     volume = f"+{volume}%" if volume >= 0 else f"{volume}%"
     pitch = f"+{pitch}Hz" if pitch >= 0 else f"{pitch}Hz"
 
+    import edge_tts
     communicate = edge_tts.Communicate(voice=voice, text=text, rate=rate, volume=volume, pitch=pitch)
     await communicate.save(output_path)
 

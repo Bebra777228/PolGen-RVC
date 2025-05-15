@@ -1,10 +1,8 @@
 import urllib.request
 from urllib.parse import urlparse
 
-import gdown
 import gradio as gr
 import requests
-from mega import Mega
 
 
 # Универсальная функция для скачивания файла с разных источников
@@ -33,6 +31,8 @@ def download_file(url, zip_name, progress):
 def download_from_google_drive(url, zip_name, progress):
     progress(0.5, desc="[~] Загрузка модели с Google Drive...")
     file_id = url.split("file/d/")[1].split("/")[0] if "file/d/" in url else url.split("id=")[1].split("&")[0]  # Извлекаем ID файла
+
+    import gdown
     gdown.download(id=file_id, output=str(zip_name), quiet=False)
 
 
@@ -54,6 +54,8 @@ def download_from_pixeldrain(url, zip_name, progress):
 # Скачивание файла с Mega через библиотеку Mega
 def download_from_mega(url, zip_name, progress):
     progress(0.5, desc="[~] Загрузка модели с Mega...")
+    
+    from mega import Mega
     m = Mega()
     m.download_url(url, dest_filename=str(zip_name))
 

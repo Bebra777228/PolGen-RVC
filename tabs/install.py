@@ -1,7 +1,4 @@
 import os
-import shutil
-import urllib.parse
-import urllib.request
 
 import gradio as gr
 
@@ -32,6 +29,8 @@ def output_message():
 
 
 def download_file(url, destination):
+    import shutil
+    import urllib.request
     with urllib.request.urlopen(url) as response, open(destination, "wb") as out_file:
         shutil.copyfileobj(response, out_file)
 
@@ -41,9 +40,12 @@ def download_and_replace_model(model_name, custom_url, progress=gr.Progress()):
         if custom_url:
             if not custom_url.endswith((".pt", "?download=true")):
                 return "Ошибка: указанный URL не соответствует требованиям. Он должен вести к файлу с расширением .pt или заканчиваться на '?download=true'"
+
+            import urllib.parse
             parsed_url = urllib.parse.urlparse(custom_url)
             if parsed_url.netloc not in ["huggingface.co"]:
                 return "Ошибка: указанный URL не принадлежит к разрешенным доменам."
+
             model_url = custom_url
             model_name = os.path.basename(parsed_url.path)
         else:

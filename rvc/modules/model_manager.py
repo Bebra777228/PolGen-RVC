@@ -1,11 +1,7 @@
 import os
 import shutil
-import sys
-import zipfile
 
 import gradio as gr
-
-from rvc.modules.download_source import download_file
 
 # Путь к директории, где будут храниться модели RVC
 rvc_models_dir = os.path.join(os.getcwd(), "models", "RVC_models")
@@ -15,8 +11,11 @@ os.makedirs(rvc_models_dir, exist_ok=True)
 # Распаковывает zip-файл в указанную директорию и находит файлы модели (.pth и .index)
 def extract_zip(extraction_folder, zip_name):
     os.makedirs(extraction_folder, exist_ok=True)  # Создаем директорию для распаковки, если она не существует
+
+    import zipfile
     with zipfile.ZipFile(zip_name, "r") as zip_ref:
         zip_ref.extractall(extraction_folder)  # Распаковываем zip-файл
+
     os.remove(zip_name)  # Удаляем zip-файл после распаковки
 
     index_filepath, model_filepath = None, None
@@ -66,6 +65,7 @@ def download_from_url(url, dir_name, progress=gr.Progress()):
             # Проверка на наличие директории с таким именем
             raise gr.Error(f"Директория голосовой модели {dir_name} уже существует! Выберите другое имя для вашей голосовой модели.")
 
+        from rvc.modules.download_source import download_file
         download_file(url, zip_name, progress)  # Скачивание файла
         progress(0.8, desc="[~] Распаковка zip-файла...")
         extract_zip(extraction_folder, zip_name)  # Распаковка zip-файла
@@ -120,6 +120,7 @@ def upload_separate_files(pth_file, index_file, dir_name, progress=gr.Progress()
 
 # Основная функция для вызова из командной строки
 def main():
+    import sys
     if len(sys.argv) != 3:
         print('\nИспользование:\npython3 -m rvc.modules.model_manager "url" "dir_name"\n')
         sys.exit(1)
