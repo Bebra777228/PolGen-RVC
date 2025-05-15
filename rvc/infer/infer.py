@@ -4,7 +4,6 @@ import os
 
 import edge_tts
 import gradio as gr
-import numpy as np
 import torch
 from fairseq.checkpoint_utils import load_model_ensemble_and_task
 from fairseq.data.dictionary import Dictionary
@@ -97,6 +96,19 @@ def get_vc(model_path):
     return cpt, version, net_g, tgt_sr, vc
 
 
+# Конвертируем файл в стерео и выбранный пользователем формат
+def convert_audio(input_audio, output_audio, output_format):
+    # Загружаем аудиофайл
+    audio = AudioSegment.from_file(input_audio)
+
+    # Если аудио моно, конвертируем его в стерео
+    if audio.channels == 1:
+        audio = audio.set_channels(2)
+
+    # Сохраняем аудиофайл в выбранном формате
+    audio.export(output_audio, format=output_format)
+
+
 # Синтезирует текст в речь с использованием edge_tts.
 async def text_to_speech(voice, text, rate, volume, pitch, output_path):
     if not -100 <= rate <= 100:
@@ -175,25 +187,13 @@ def rvc_infer(
         f0_min=f0_min,
         f0_max=f0_max,
     )
+    # Сохраняем результат в wav файл
+    display_progress(0.6, "Сохраняем результат...", False)
+    wavfile.write(output_path, tgt_sr, audio_opt)
 
-    # Определяем тип данных и нормализуем
-    if audio_opt.dtype == np.float32:
-        # Масштабируем float32 [-1, 1] в int16
-        audio_opt = (audio_opt * 32767).astype(np.int16)
-    elif audio_opt.dtype == np.int16:
-        pass
-    else:
-        raise ValueError(f"Неподдерживаемый формат аудио: {audio_opt.dtype}")
-
-    # Сохраняем результат в файл
-    display_progress(0.8, "Сохраняем результат...", False)
-    audio_segment = AudioSegment(
-        audio_opt.tobytes(),
-        frame_rate=tgt_sr,
-        sample_width=audio_opt.dtype.itemsize,
-        channels=1
-    )
-    audio_segment.export(output_path, format=output_format)
+    # Конвертируем файл в стерео и выбранный пользователем формат
+    display_progress(0.8, "[💫] Конвертация аудио в стерео...", True)
+    convert_audio(output_path, output_path, output_format)
 
     # Освобождаем память
     display_progress(0.9, "Освобождаем память...", False)
