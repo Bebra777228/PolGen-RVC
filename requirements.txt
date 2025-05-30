@@ -16,7 +16,7 @@ torchfcpe
 edge-tts
 
 # Машинное обучение и нейронные сети
-torch==2.6
+torch==2.7.0
 torchaudio==2.6
 torchvision==0.21
 faiss-cpu==1.7.3
